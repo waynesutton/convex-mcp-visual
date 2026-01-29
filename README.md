@@ -21,6 +21,7 @@ Works with Claude Code and any MCP-compatible client.
 - [Usage](#usage)
 - [Switching Convex Backends](#switching-convex-backends)
 - [Tools Reference](#tools-reference)
+- [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
 - [Keyboard Shortcuts](#keyboard-shortcuts)
 - [Testing](#testing)
@@ -29,6 +30,11 @@ Works with Claude Code and any MCP-compatible client.
 - [Troubleshooting](#troubleshooting)
 - [Development](#development)
 - [Security](#security)
+- [Why This Project Exists](#why-this-project-exists)
+- [Current Limitations](#current-limitations)
+- [Wishlist & Future Plans](#wishlist--future-plans)
+- [Claude.ai Web Integration](#claudeai-web-integration-future)
+- [Contributing](#contributing)
 - [License](#license)
 
 ---
@@ -83,29 +89,87 @@ MCP (Model Context Protocol) is a standard protocol that allows AI assistants li
 
 ### Option 1: npx (Recommended)
 
+The easiest way - no local installation needed:
+
 ```bash
-# Add to Claude Code directly
 claude mcp add convex-visual -- npx convex-mcp-visual --stdio
 ```
 
+That's it! Claude Code will automatically download and run the package from npm.
+
+**npm package:** [npmjs.com/package/convex-mcp-visual](https://www.npmjs.com/package/convex-mcp-visual)
+
 ### Option 2: Global Install
 
+Install once, use anywhere:
+
 ```bash
+# Install globally
 npm install -g convex-mcp-visual
+
+# Add to Claude Code
 claude mcp add convex-visual -- convex-mcp-visual --stdio
 ```
 
-### Option 3: Local Development
+### Option 3: From GitHub (For Development)
+
+Clone and build locally if you want to modify the code:
 
 ```bash
-git clone https://github.com/your-username/convex-mcp-visual.git
+# 1. Clone the repository
+git clone https://github.com/waynesutton/convex-mcp-visual.git
 cd convex-mcp-visual
+
+# 2. Install dependencies
 npm install
+
+# 3. Build the project
 npm run build
-claude mcp add convex-visual -- node /absolute/path/to/convex-mcp-visual/dist/index.js --stdio
+
+# 4. Add to Claude Code (use YOUR absolute path)
+claude mcp add convex-visual -- node /Users/yourname/path/to/convex-mcp-visual/dist/index.js --stdio
 ```
 
-**Important**: Always use absolute paths when adding local MCP servers.
+**Important**: When using local installation, you must use the **absolute path** to `dist/index.js`.
+
+**Example paths:**
+- macOS: `/Users/yourname/projects/convex-mcp-visual/dist/index.js`
+- Linux: `/home/yourname/projects/convex-mcp-visual/dist/index.js`
+- Windows: `C:\Users\yourname\projects\convex-mcp-visual\dist\index.js`
+
+### Verify Installation
+
+```bash
+# Check it's registered
+claude mcp list
+
+# You should see: convex-visual
+```
+
+### How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  claude mcp add convex-visual -- npx convex-mcp-visual --stdio  │
+│                                                                 │
+│  This tells Claude Code:                                        │
+│  1. Register a server named "convex-visual"                     │
+│  2. When tools are needed, run: npx convex-mcp-visual           │
+│  3. Communicate via --stdio (stdin/stdout JSON-RPC)             │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  When you say "Show me my Convex schema":                       │
+│                                                                 │
+│  1. Claude Code starts the MCP server process                   │
+│  2. Sends JSON-RPC request: { method: "tools/call", ... }       │
+│  3. Server queries your Convex deployment                       │
+│  4. Server opens browser UI on localhost:3456                   │
+│  5. Server returns markdown to Claude                           │
+│  6. You see both: terminal output + browser visualization       │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -280,6 +344,54 @@ Real-time dashboard with metrics and charts.
 **Metric Aggregations:** count, sum, avg, min, max
 
 **Chart Types:** line, bar, pie
+
+---
+
+## Tech Stack
+
+### Server
+
+| Technology | Purpose |
+|------------|---------|
+| **Node.js 18+** | Runtime environment |
+| **TypeScript** | Type-safe JavaScript |
+| **@modelcontextprotocol/sdk** | Official MCP protocol implementation |
+| **Convex SDK** | Convex database client |
+
+### UI Applications
+
+| Technology | Purpose |
+|------------|---------|
+| **Vanilla TypeScript** | No framework dependencies (React, Vue, etc.) |
+| **HTML5 Canvas** | Graph rendering with pan/zoom/drag |
+| **CSS3 Variables** | Theming (light/dark mode) |
+| **Vite** | Fast bundling and hot reload |
+
+### Why These Choices?
+
+- **No UI framework**: Keeps bundle small (~62KB for schema browser), loads instantly
+- **Canvas for graphs**: Smooth 60fps rendering, handles 100+ nodes easily
+- **CSS Variables**: Runtime theme switching without JavaScript
+- **TypeScript everywhere**: Catches errors at build time, better IDE support
+- **Vanilla over frameworks**: Fewer dependencies = fewer security vulnerabilities
+
+### Dependencies
+
+```json
+{
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "convex": "^1.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^6.4.1"
+  }
+}
+```
+
+Only **2 runtime dependencies** - minimal attack surface, fast installs.
 
 ---
 
@@ -562,7 +674,188 @@ If using `CONVEX_DEPLOY_KEY`:
 
 ---
 
+## Why This Project Exists
+
+### The Problem
+
+When working with Convex databases, developers often need to:
+- Quickly visualize table relationships and schema structure
+- Browse documents without writing queries
+- Understand how data flows between tables
+- Get a high-level overview before diving into code
+
+The official `npx convex mcp` is optimized for AI-assisted coding—it returns structured text that Claude can parse and use to help you write code. But humans often want to *see* their data visually.
+
+### The Solution
+
+This project bridges that gap by providing:
+- **Visual schema diagrams** that show relationships at a glance
+- **Interactive exploration** with drag, pan, and zoom
+- **Real-time dashboards** for monitoring data
+- **Dual output** so Claude still gets structured data while you get visuals
+
+---
+
+## Current Limitations
+
+### What's Not Yet Supported
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Write operations | Not planned | Read-only by design for safety |
+| Custom queries | Not implemented | Would require query builder UI |
+| Real-time subscriptions | Partial | Dashboard refreshes on interval, not live |
+| Multiple deployments | Manual | Must switch via env vars or re-login |
+| Schema editing | Not planned | Use Convex dashboard for schema changes |
+| Index visualization | Partial | Shows index names, not full definitions |
+| Function introspection | Not implemented | Would show Convex functions |
+
+### Known Issues
+
+- **Large schemas**: Performance may degrade with 50+ tables
+- **Complex relationships**: Only detects `Id<"table">` patterns, not custom references
+- **Browser popup blockers**: May need to allow popups for localhost:3456
+
+---
+
+## Wishlist & Future Plans
+
+### Short-Term (Next Release)
+
+- [ ] **Export schema as image** - PNG/SVG export of graph view
+- [ ] **Query builder** - Visual interface to build simple queries
+- [ ] **Improved relationship detection** - Detect array references, nested IDs
+- [ ] **Table statistics** - Show min/max/avg for numeric fields
+- [ ] **Search within documents** - Full-text search across all tables
+
+### Medium-Term
+
+- [ ] **Schema diff view** - Compare schema between environments
+- [ ] **Data sampling** - Statistical overview of field values
+- [ ] **Relationship path finder** - Show how two tables connect
+- [ ] **Custom themes** - User-defined color schemes
+- [ ] **Bookmarks** - Save frequently accessed tables/views
+
+### Long-Term Vision
+
+- [ ] **Claude.ai web integration** (see below)
+- [ ] **Collaborative viewing** - Share schema view with team
+- [ ] **Schema history** - Track schema changes over time
+- [ ] **AI-powered insights** - Claude analyzes schema and suggests optimizations
+
+---
+
+## Claude.ai Web Integration (Future)
+
+### Current State
+
+This MCP server currently works with:
+- **Claude Code (CLI)** - Full support via stdio
+- **Claude Desktop** - Full support via MCP configuration
+- **Any MCP client** - Standard MCP protocol
+
+It does **not** yet work with:
+- **Claude.ai (web)** - Browser-based Claude at claude.ai
+
+### Why It Doesn't Work on Claude.ai Web (Yet)
+
+MCP servers run as local processes that communicate via stdio or HTTP. The Claude.ai web interface runs in a browser sandbox and cannot:
+1. Spawn local processes
+2. Access localhost servers
+3. Read local files (~/.convex/)
+
+### How It Could Work in the Future
+
+Several approaches are being explored in the MCP ecosystem:
+
+#### Option 1: MCP Gateway Service
+```
+Claude.ai (web) → MCP Gateway (cloud) → Your local MCP server
+                      ↑
+              Authenticated tunnel
+```
+
+A cloud gateway that securely proxies MCP requests to your local server. This would require:
+- Secure authentication (OAuth, API keys)
+- Tunnel software running locally
+- Trust model for cloud proxy
+
+#### Option 2: Browser Extension
+```
+Claude.ai (web) → Browser Extension → Local MCP server
+```
+
+A Chrome/Firefox extension that:
+- Intercepts MCP tool requests from Claude.ai
+- Routes them to localhost MCP servers
+- Returns results to the web page
+
+#### Option 3: Convex-Hosted MCP
+```
+Claude.ai (web) → Convex Cloud MCP endpoint
+                      ↓
+              Your Convex deployment
+```
+
+Convex could host MCP endpoints directly, eliminating the need for local servers. This would require:
+- Convex adding MCP protocol support
+- Authentication via Convex dashboard
+- No local installation needed
+
+#### Option 4: Claude.ai Native MCP Support
+
+Anthropic could add native MCP support to Claude.ai with:
+- Secure server registration in account settings
+- OAuth-based authentication to your servers
+- Sandboxed execution environment
+
+### What You Can Do Now
+
+1. **Use Claude Code CLI** - Full MCP support today
+2. **Use Claude Desktop** - Configure MCP in settings
+3. **Watch for updates** - MCP ecosystem is evolving rapidly
+4. **Star the repo** - Show interest in web integration
+
+### Preparing for Web Support
+
+When web integration becomes available, this project is designed to be ready:
+
+- **Stateless design**: Each request is independent
+- **HTTP mode**: Already supports HTTP transport (`--http` flag)
+- **Standard MCP**: Uses official MCP SDK
+- **No local file requirements**: Can work with `CONVEX_DEPLOY_KEY` env var
+
+---
+
+## Contributing
+
+### Areas Where Help Is Needed
+
+1. **Testing on Windows** - Verify cmd wrapper works correctly
+2. **Performance optimization** - Large schema handling
+3. **Accessibility** - Keyboard navigation, screen reader support
+4. **Documentation** - More examples, video tutorials
+5. **UI polish** - Animations, transitions, edge cases
+
+### Development Setup
+
+```bash
+git clone https://github.com/waynesutton/convex-mcp-visual.git
+cd convex-mcp-visual
+npm install
+npm run dev  # Watch mode
+```
+
+### Submitting Changes
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run `npm run build` to verify
+5. Submit a pull request
+
+---
+
 ## License
 
 MIT
-# convex-mcp-visual

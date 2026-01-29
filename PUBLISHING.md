@@ -227,7 +227,7 @@ npx convex-mcp-visual --test
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/convex-mcp-visual"
+    "url": "https://github.com/waynesutton/convex-mcp-visual"
   }
 }
 ```

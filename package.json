@@ -1,6 +1,6 @@
 {
   "name": "convex-mcp-visual",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Visual MCP tools for exploring Convex databases - graph view, schema browser, and dashboards",
   "type": "module",
   "main": "dist/index.js",
@@ -48,8 +48,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/anthropics/convex-mcp-visual"
+    "url": "https://github.com/waynesutton/convex-mcp-visual"
   },
-  "author": "",
-  "homepage": "https://github.com/anthropics/convex-mcp-visual#readme"
+  "author": "Wayne Sutton",
+  "homepage": "https://github.com/waynesutton/convex-mcp-visual#readme"
 }
