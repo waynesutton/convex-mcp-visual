@@ -1,0 +1,55 @@
+{
+  "name": "convex-mcp-visual",
+  "version": "1.0.0",
+  "description": "Visual MCP tools for exploring Convex databases - graph view, schema browser, and dashboards",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "convex-mcp-visual": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "npm run build:server && npm run build:apps",
+    "build:server": "tsc -p tsconfig.server.json",
+    "build:apps": "vite build",
+    "dev": "tsc -p tsconfig.server.json --watch",
+    "start": "node dist/index.js --stdio",
+    "start:http": "node dist/index.js --http --port 3001",
+    "test": "node dist/index.js --test",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "convex": "^1.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^6.4.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "convex",
+    "mcp",
+    "model-context-protocol",
+    "schema-browser",
+    "database",
+    "visualization",
+    "graph",
+    "dashboard",
+    "claude",
+    "claude-code"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anthropics/convex-mcp-visual"
+  },
+  "author": "",
+  "homepage": "https://github.com/anthropics/convex-mcp-visual#readme"
+}

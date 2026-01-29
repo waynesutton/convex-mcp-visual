@@ -1,0 +1,304 @@
+/**
+ * Schema Browser Tool
+ *
+ * MCP tool that displays database schema in terminal AND
+ * opens an interactive schema browser UI in the browser.
+ */
+
+import type { Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { ConvexClient } from '../convex-client.js';
+import { launchUIApp } from '../ui-server.js';
+
+export const schemaBrowserTool: Tool = {
+  name: 'schema_browser',
+  description: `Opens an interactive Schema Browser for exploring your Convex database.
+
+Features:
+- Browse all tables with document counts
+- View declared vs inferred schemas side-by-side
+- Paginate through documents
+- Build and run read-only queries
+
+The Schema Browser renders as an interactive UI panel where you can click through tables,
+inspect field types, and explore your data visually.`,
+  inputSchema: {
+    type: 'object',
+    properties: {
+      deployment: {
+        type: 'string',
+        description:
+          'Deployment selector (from status tool). If not provided, uses the default deployment.',
+      },
+      table: {
+        type: 'string',
+        description: 'Pre-select a specific table to view',
+      },
+      showInferred: {
+        type: 'boolean',
+        description: 'Show inferred schemas alongside declared schemas (default: true)',
+        default: true,
+      },
+      pageSize: {
+        type: 'number',
+        description: 'Number of documents per page (default: 50)',
+        default: 50,
+      },
+    },
+    required: [],
+  },
+};
+
+interface ToolResponse {
+  content: Array<{ type: string; text: string }>;
+  isError?: boolean;
+}
+
+export async function handleSchemaBrowser(
+  client: ConvexClient,
+  args: Record<string, unknown> = {}
+): Promise<ToolResponse> {
+  const { table, showInferred = true, pageSize = 50 } = args as {
+    table?: string;
+    showInferred?: boolean;
+    pageSize?: number;
+  };
+
+  // Check if client is connected
+  if (!client.isConnected()) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `## Schema Browser
+
+**Connection Error**: No Convex deployment configured.
+
+To connect:
+1. Run \`npx convex login\` to authenticate
+2. Or set \`CONVEX_URL\` and \`CONVEX_DEPLOY_KEY\` environment variables
+
+Once connected, the Schema Browser will display your tables and schemas.`,
+        },
+      ],
+      isError: true,
+    };
+  }
+
+  try {
+    // Get table list and document counts
+    const tables = await client.listTables();
+
+    // Get all documents for schema inference
+    const allDocuments = await client.getAllDocuments();
+
+    // Build table info with schema data
+    const tableInfos = tables.map((t) => {
+      const docs = allDocuments[t.name] || [];
+      const inferredFields = inferSchemaFromDocuments(docs);
+
+      return {
+        name: t.name,
+        documentCount: docs.length || t.documentCount,
+        hasIndexes: t.indexes.length > 0,
+        indexes: t.indexes,
+        documents: docs.slice(0, pageSize),
+        inferredFields,
+      };
+    });
+
+    // Get schema for selected table if specified
+    let selectedTableInfo = null;
+    if (table) {
+      selectedTableInfo = tableInfos.find((t) => t.name === table);
+    }
+
+    // Build config for UI app
+    const config = {
+      deploymentUrl: client.getDeploymentUrl(),
+      selectedTable: table || null,
+      showInferred,
+      pageSize,
+      tables: tableInfos,
+      selectedSchema: selectedTableInfo
+        ? {
+            tableName: selectedTableInfo.name,
+            declaredFields: [], // Would come from schema.ts if defined
+            inferredFields: selectedTableInfo.inferredFields,
+            indexes: selectedTableInfo.indexes,
+          }
+        : null,
+      allDocuments,
+    };
+
+    // Launch the interactive UI in browser
+    let uiUrl = '';
+    try {
+      const uiServer = await launchUIApp({
+        appName: 'schema-browser',
+        config,
+        port: 3456,
+        autoClose: 30 * 60 * 1000, // Auto-close after 30 minutes
+      });
+      uiUrl = uiServer.url;
+    } catch (error) {
+      console.error('Failed to launch UI:', error);
+    }
+
+    // Build terminal output (markdown tables)
+    const terminalOutput = buildTerminalOutput(tableInfos, table, client.getDeploymentUrl(), uiUrl);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: terminalOutput,
+        },
+      ],
+    };
+  } catch (error) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `## Schema Browser
+
+**Error**: ${error instanceof Error ? error.message : String(error)}
+
+Please check:
+1. Your Convex credentials are valid
+2. You have access to this deployment
+3. The deployment URL is correct`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+/**
+ * Infer schema from document samples
+ */
+function inferSchemaFromDocuments(
+  documents: Array<Record<string, unknown>>
+): Array<{ name: string; type: string; optional: boolean }> {
+  if (documents.length === 0) return [];
+
+  const fieldStats = new Map<string, { types: Set<string>; count: number }>();
+  const totalDocs = documents.length;
+
+  for (const doc of documents) {
+    for (const [key, value] of Object.entries(doc)) {
+      const stats = fieldStats.get(key) || { types: new Set(), count: 0 };
+      stats.types.add(getValueType(value));
+      stats.count++;
+      fieldStats.set(key, stats);
+    }
+  }
+
+  return Array.from(fieldStats.entries())
+    .map(([name, stats]) => ({
+      name,
+      type: Array.from(stats.types).join(' | '),
+      optional: stats.count < totalDocs,
+    }))
+    .sort((a, b) => {
+      // Sort system fields first
+      const aIsSystem = a.name.startsWith('_');
+      const bIsSystem = b.name.startsWith('_');
+      if (aIsSystem && !bIsSystem) return -1;
+      if (!aIsSystem && bIsSystem) return 1;
+      return a.name.localeCompare(b.name);
+    });
+}
+
+/**
+ * Get the type of a value for schema inference
+ */
+function getValueType(value: unknown): string {
+  if (value === null) return 'null';
+  if (value === undefined) return 'undefined';
+  if (Array.isArray(value)) return 'array';
+  if (typeof value === 'object') return 'object';
+  return typeof value;
+}
+
+/**
+ * Build terminal-friendly markdown output
+ */
+function buildTerminalOutput(
+  tables: Array<{
+    name: string;
+    documentCount: number;
+    inferredFields: Array<{ name: string; type: string; optional: boolean }>;
+    documents: Array<Record<string, unknown>>;
+  }>,
+  selectedTable: string | undefined,
+  deploymentUrl: string | null,
+  uiUrl: string
+): string {
+  const lines: string[] = [];
+
+  lines.push('## Schema Browser');
+  lines.push('');
+  if (uiUrl) {
+    lines.push(`**Interactive UI**: ${uiUrl}`);
+    lines.push('');
+  }
+  lines.push(`Connected to: \`${deploymentUrl}\``);
+  lines.push('');
+
+  if (tables.length === 0) {
+    lines.push('*No tables found in this deployment.*');
+    return lines.join('\n');
+  }
+
+  // If a specific table is selected, show detailed view
+  if (selectedTable) {
+    const tableInfo = tables.find((t) => t.name === selectedTable);
+    if (tableInfo) {
+      lines.push(`### ${selectedTable} (${tableInfo.documentCount} documents)`);
+      lines.push('');
+      lines.push('**Schema:**');
+      lines.push('');
+      lines.push('| Field | Type | Required |');
+      lines.push('|-------|------|----------|');
+      for (const field of tableInfo.inferredFields) {
+        lines.push(`| ${field.name} | ${field.type} | ${field.optional ? 'No' : 'Yes'} |`);
+      }
+      lines.push('');
+
+      if (tableInfo.documents.length > 0) {
+        lines.push('**Sample Documents:**');
+        lines.push('');
+        lines.push('```json');
+        lines.push(JSON.stringify(tableInfo.documents.slice(0, 3), null, 2));
+        lines.push('```');
+      }
+
+      return lines.join('\n');
+    }
+  }
+
+  // Show all tables overview
+  lines.push(`Here's your complete database schema:`);
+  lines.push('');
+
+  for (const table of tables) {
+    lines.push('---');
+    lines.push(`${table.name} (${table.documentCount} documents)`);
+    lines.push('');
+    lines.push('| Field | Type | Required |');
+    lines.push('|-------|------|----------|');
+
+    if (table.inferredFields.length === 0) {
+      lines.push('| *(empty table)* | - | - |');
+    } else {
+      for (const field of table.inferredFields) {
+        lines.push(`| ${field.name} | ${field.type} | ${field.optional ? 'No' : 'Yes'} |`);
+      }
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
