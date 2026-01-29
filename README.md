@@ -89,15 +89,56 @@ MCP (Model Context Protocol) is a standard protocol that allows AI assistants li
 
 ### Option 1: npx (Recommended)
 
-The easiest way - no local installation needed:
+The easiest way - no local installation needed. Works with any MCP client.
+
+**npm package:** [npmjs.com/package/convex-mcp-visual](https://www.npmjs.com/package/convex-mcp-visual)
+
+#### Claude Code (CLI)
 
 ```bash
 claude mcp add convex-visual -- npx convex-mcp-visual --stdio
 ```
 
-That's it! Claude Code will automatically download and run the package from npm.
+#### Claude Desktop
 
-**npm package:** [npmjs.com/package/convex-mcp-visual](https://www.npmjs.com/package/convex-mcp-visual)
+Add to your Claude Desktop config file:
+
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "convex-visual": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"]
+    }
+  }
+}
+```
+
+#### Cursor / VS Code with MCP Extension
+
+Add to your MCP settings:
+
+```json
+{
+  "mcp.servers": {
+    "convex-visual": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"]
+    }
+  }
+}
+```
+
+#### Any MCP Client
+
+The server uses standard MCP protocol over stdio:
+
+```bash
+npx convex-mcp-visual --stdio
+```
 
 ### Option 2: Global Install
 
@@ -107,8 +148,25 @@ Install once, use anywhere:
 # Install globally
 npm install -g convex-mcp-visual
 
-# Add to Claude Code
+# Then configure your MCP client to run:
+convex-mcp-visual --stdio
+```
+
+**Claude Code:**
+```bash
 claude mcp add convex-visual -- convex-mcp-visual --stdio
+```
+
+**Claude Desktop / Other clients:**
+```json
+{
+  "mcpServers": {
+    "convex-visual": {
+      "command": "convex-mcp-visual",
+      "args": ["--stdio"]
+    }
+  }
+}
 ```
 
 ### Option 3: From GitHub (For Development)
@@ -126,8 +184,8 @@ npm install
 # 3. Build the project
 npm run build
 
-# 4. Add to Claude Code (use YOUR absolute path)
-claude mcp add convex-visual -- node /Users/yourname/path/to/convex-mcp-visual/dist/index.js --stdio
+# 4. Configure your MCP client to run:
+node /absolute/path/to/convex-mcp-visual/dist/index.js --stdio
 ```
 
 **Important**: When using local installation, you must use the **absolute path** to `dist/index.js`.
@@ -139,12 +197,17 @@ claude mcp add convex-visual -- node /Users/yourname/path/to/convex-mcp-visual/d
 
 ### Verify Installation
 
+**Claude Code:**
 ```bash
-# Check it's registered
 claude mcp list
-
 # You should see: convex-visual
 ```
+
+**Claude Desktop:**
+Restart the app, then check the MCP icon in the input area.
+
+**Other clients:**
+Check your client's MCP server status panel.
 
 ### How It Works
 
