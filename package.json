@@ -8,7 +8,8 @@
     "convex-mcp-visual": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "build": "npm run build:server && npm run build:apps",
