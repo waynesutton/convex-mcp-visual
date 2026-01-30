@@ -238,11 +238,9 @@ Check your client's MCP server status panel.
 
 ## Setup
 
-### 1. Get Your Deploy Key (Required)
+### Step 1: Get Your Deploy Key
 
-You need a **deploy key** from the Convex dashboard. This is different from `npx convex login`.
-
-**Step-by-step:**
+Get a **deploy key** from the Convex dashboard:
 
 1. Go to [dashboard.convex.dev](https://dashboard.convex.dev)
 2. Select your project
@@ -252,16 +250,35 @@ You need a **deploy key** from the Convex dashboard. This is different from `npx
 6. Choose "Development" or "Production"
 7. Copy the key (format: `prod:happy-animal-123|convex_deploy_abc123...`)
 
-### 2. Add MCP Server with Deploy Key
+### Step 2: Save Your Deploy Key
+
+Add the key to your shell profile so it's always available.
+
+**For macOS/Linux (zsh):**
+```bash
+echo 'export CONVEX_DEPLOY_KEY="prod:your-deployment|your-key-here"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**For macOS/Linux (bash):**
+```bash
+echo 'export CONVEX_DEPLOY_KEY="prod:your-deployment|your-key-here"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+**For Windows (PowerShell):**
+```powershell
+[Environment]::SetEnvironmentVariable("CONVEX_DEPLOY_KEY", "prod:your-deployment|your-key-here", "User")
+```
+
+### Step 3: Add the MCP Server
 
 **For Claude Code:**
-
 ```bash
-claude mcp add convex-visual -e CONVEX_DEPLOY_KEY=prod:your-deployment|your-key-here -- npx convex-mcp-visual --stdio
+claude mcp add convex-visual -- npx convex-mcp-visual --stdio
 ```
 
 **For Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
-
 ```json
 {
   "mcpServers": {
@@ -276,23 +293,77 @@ claude mcp add convex-visual -e CONVEX_DEPLOY_KEY=prod:your-deployment|your-key-
 }
 ```
 
-### 3. Verify Installation
-
-```bash
-# Check MCP server is registered
-claude mcp list
-
-# You should see: convex-visual
+**For Cursor/VS Code** (MCP settings):
+```json
+{
+  "mcp.servers": {
+    "convex-visual": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"]
+    }
+  }
+}
 ```
 
-### 3. Test Connection
+### Step 4: Verify Setup
 
 ```bash
-# If installed globally or via npx
-npx convex-mcp-visual --test
+# Check MCP server is registered (Claude Code)
+claude mcp list
 
-# If local development
-npm test
+# Test the connection
+npx convex-mcp-visual --test
+```
+
+You should see:
+```
+Testing Convex connection...
+✓ Connected to: https://your-deployment.convex.cloud
+✓ Found X tables: users, posts, ...
+```
+
+---
+
+## Changing or Updating Your Deploy Key
+
+To switch to a different Convex project or update your key:
+
+**1. Edit your shell profile:**
+```bash
+# Open in your editor
+nano ~/.zshrc    # or ~/.bashrc
+
+# Find and update this line:
+export CONVEX_DEPLOY_KEY="prod:new-deployment|new-key-here"
+
+# Save and reload
+source ~/.zshrc
+```
+
+**2. Test the new connection:**
+```bash
+npx convex-mcp-visual --test
+```
+
+---
+
+## Removing the MCP Server
+
+**For Claude Code:**
+```bash
+claude mcp remove convex-visual
+```
+
+**For Claude Desktop:**
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json` and remove the `convex-visual` entry.
+
+**Remove the environment variable (optional):**
+```bash
+# Edit your shell profile
+nano ~/.zshrc
+
+# Delete the CONVEX_DEPLOY_KEY line, then reload
+source ~/.zshrc
 ```
 
 ---

@@ -14,30 +14,34 @@ Key features:
 
 ## Quick Start - Testing in Claude Code
 
-### 1. Install Dependencies
+### 1. Get a Deploy Key
+
+Get a deploy key from [dashboard.convex.dev](https://dashboard.convex.dev):
+- Select your project → **Settings** → **Deploy Keys** → **Generate Deploy Key**
+- Copy the key (format: `prod:happy-animal-123|convex_deploy_abc123...`)
+
+### 2. Save the Deploy Key
+
+```bash
+echo 'export CONVEX_DEPLOY_KEY="prod:your-deployment|your-key-here"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+### 3. Install and Build
 
 ```bash
 cd /Users/waynesutton/Documents/sites/claudemcpconvex
 npm install
-```
-
-### 2. Build the Project
-
-```bash
 npm run build
 ```
 
-This compiles:
-- TypeScript server → `dist/index.js`
-- UI apps → `dist/apps/` (bundled HTML/JS/CSS)
-
-### 3. Add to Claude Code
+### 4. Add to Claude Code
 
 ```bash
 claude mcp add convex-visual -- node /Users/waynesutton/Documents/sites/claudemcpconvex/dist/index.js --stdio
 ```
 
-### 4. Verify Installation
+### 5. Verify Installation
 
 ```bash
 claude mcp list
@@ -45,16 +49,22 @@ claude mcp list
 
 You should see `convex-visual` in the list.
 
-### 5. Test the Tools
+### 6. Test Connection
+
+```bash
+npx convex-mcp-visual --test
+```
+
+### 7. Use It
 
 In Claude Code, try:
 - "Show me my Convex schema" → Opens Schema Browser (graph view + terminal output)
 - "Create a dashboard for my Convex data" → Opens Dashboard
 
-### 6. Test Connection (Optional)
+### Removing the MCP Server
 
 ```bash
-node dist/index.js --test
+claude mcp remove convex-visual
 ```
 
 ## Architecture
