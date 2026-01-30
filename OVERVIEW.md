@@ -119,7 +119,7 @@ For CI/CD or team setups, use a deploy key from your Convex dashboard instead of
 ## File structure
 
 ```
-convex-mcp-apps/
+convex-mcp-visual/
 ├── README.md                 # Project overview
 ├── package.json              # Dependencies and scripts
 ├── tsconfig.json             # TypeScript config (apps)
@@ -180,11 +180,11 @@ For team deployments:
 
 This project complements (doesn't replace) the official `npx convex mcp start`:
 
-| Official Convex MCP | This Project |
-|---------------------|--------------|
-| Text-only tools | Interactive UI tools |
+| Official Convex MCP     | This Project                       |
+| ----------------------- | ---------------------------------- |
+| Text-only tools         | Interactive UI tools               |
 | `tables`, `data`, `run` | `schema_browser`, `dashboard_view` |
-| CLI-integrated | Standalone package |
+| CLI-integrated          | Standalone package                 |
 
 You can run both together. The official server handles function execution and raw data queries. This project adds visual exploration.
 

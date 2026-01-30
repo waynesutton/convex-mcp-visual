@@ -72,10 +72,15 @@ mnt/
 .travis.yml
 Jenkinsfile
 
-# Documentation extras
-docs/
+# Documentation extras (keep docs/ folder and README.md)
+CLAUDE.md
+OVERVIEW.md
+SETUP.md
+PUBLISHING.md
+USER_GUIDE_*.md
 *.md
 !README.md
+!docs/*.md
 
 # Lock files (npm will use package.json)
 package-lock.json

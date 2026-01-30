@@ -4,9 +4,9 @@
  * MCP tool that creates real-time dashboard visualizations
  * for Convex data - both in terminal AND in browser.
  */
-import { launchUIApp } from '../ui-server.js';
+import { launchUIApp } from "../ui-server.js";
 export const dashboardTool = {
-    name: 'dashboard_view',
+    name: "dashboard_view",
     description: `Creates a real-time dashboard for visualizing Convex data.
 
 Features:
@@ -17,50 +17,63 @@ Features:
 
 The dashboard renders as an interactive UI panel with live data.`,
     inputSchema: {
-        type: 'object',
+        type: "object",
         properties: {
             deployment: {
-                type: 'string',
-                description: 'Deployment selector (from status tool)',
+                type: "string",
+                description: "Deployment selector (from status tool)",
             },
             metrics: {
-                type: 'array',
-                description: 'Metrics to display on the dashboard',
+                type: "array",
+                description: "Metrics to display on the dashboard",
                 items: {
-                    type: 'object',
+                    type: "object",
                     properties: {
-                        name: { type: 'string', description: 'Display name for the metric' },
-                        table: { type: 'string', description: 'Table to query' },
-                        aggregation: {
-                            type: 'string',
-                            enum: ['count', 'sum', 'avg', 'min', 'max'],
-                            description: 'Aggregation function',
+                        name: {
+                            type: "string",
+                            description: "Display name for the metric",
                         },
-                        field: { type: 'string', description: 'Field to aggregate (not needed for count)' },
-                        filter: { type: 'string', description: 'Optional filter expression' },
+                        table: { type: "string", description: "Table to query" },
+                        aggregation: {
+                            type: "string",
+                            enum: ["count", "sum", "avg", "min", "max"],
+                            description: "Aggregation function",
+                        },
+                        field: {
+                            type: "string",
+                            description: "Field to aggregate (not needed for count)",
+                        },
+                        filter: {
+                            type: "string",
+                            description: "Optional filter expression",
+                        },
                     },
-                    required: ['name', 'table', 'aggregation'],
+                    required: ["name", "table", "aggregation"],
                 },
             },
             charts: {
-                type: 'array',
-                description: 'Charts to display',
+                type: "array",
+                description: "Charts to display",
                 items: {
-                    type: 'object',
+                    type: "object",
                     properties: {
-                        type: { type: 'string', enum: ['line', 'bar', 'pie'], description: 'Chart type' },
-                        title: { type: 'string', description: 'Chart title' },
-                        table: { type: 'string', description: 'Table to query' },
-                        xField: { type: 'string', description: 'Field for X axis' },
-                        yField: { type: 'string', description: 'Field for Y axis' },
-                        groupBy: { type: 'string', description: 'Field to group by' },
+                        type: {
+                            type: "string",
+                            enum: ["line", "bar", "pie"],
+                            description: "Chart type",
+                        },
+                        title: { type: "string", description: "Chart title" },
+                        table: { type: "string", description: "Table to query" },
+                        xField: { type: "string", description: "Field for X axis" },
+                        yField: { type: "string", description: "Field for Y axis" },
+                        groupBy: { type: "string", description: "Field to group by" },
                     },
-                    required: ['type', 'title', 'table'],
+                    required: ["type", "title", "table"],
                 },
             },
             refreshInterval: {
-                type: 'number',
-                description: 'Refresh interval in seconds (default: 5)',
+                type: "number",
+                description: "Refresh interval in seconds (default: 5)",
                 default: 5,
             },
         },
@@ -68,12 +81,12 @@ The dashboard renders as an interactive UI panel with live data.`,
     },
 };
 export async function handleDashboard(client, args = {}) {
-    const { metrics = [], charts = [], refreshInterval = 5 } = args;
+    const { metrics = [], charts = [], refreshInterval = 5, } = args;
     if (!client.isConnected()) {
         return {
             content: [
                 {
-                    type: 'text',
+                    type: "text",
                     text: `## Realtime Dashboard
 
 **Connection Error**: No Convex deployment configured.
@@ -87,27 +100,30 @@ To connect:
         };
     }
     try {
-        // Get all documents for computing metrics
-        const allDocuments = await client.getAllDocuments();
+        // Get tables with actual counts
         const tables = await client.listTables();
+        const hasAdminAccess = client.hasAdminAccess();
+        // Get sample documents for computing metrics if admin access available
+        const allDocuments = hasAdminAccess ? await client.getAllDocuments() : {};
         // Compute actual metric values
         const computedMetrics = metrics.map((m) => {
             const docs = allDocuments[m.table] || [];
-            const value = computeAggregation(docs, m.aggregation, m.field);
+            const tableInfo = tables.find((t) => t.name === m.table);
+            const value = computeAggregation(docs, m.aggregation, m.field, tableInfo?.documentCount || 0);
             return {
                 ...m,
                 value,
-                documentCount: docs.length,
+                documentCount: tableInfo?.documentCount || 0,
             };
         });
-        // If no metrics specified, auto-generate from tables
+        // If no metrics specified, auto-generate from tables using actual counts
         const autoMetrics = metrics.length === 0
             ? tables.map((t) => ({
                 name: `${t.name} count`,
                 table: t.name,
-                aggregation: 'count',
-                value: (allDocuments[t.name] || []).length,
-                documentCount: (allDocuments[t.name] || []).length,
+                aggregation: "count",
+                value: t.documentCount,
+                documentCount: t.documentCount,
             }))
             : [];
         // Build config for UI app
@@ -117,16 +133,17 @@ To connect:
             charts,
             refreshInterval,
             allDocuments,
+            hasAdminAccess,
             tables: tables.map((t) => ({
                 name: t.name,
-                documentCount: (allDocuments[t.name] || []).length,
+                documentCount: t.documentCount,
             })),
         };
         // Launch the interactive UI in browser
-        let uiUrl = '';
+        let uiUrl = "";
         try {
             const uiServer = await launchUIApp({
-                appName: 'realtime-dashboard',
+                appName: "realtime-dashboard",
                 config,
                 port: 3457,
                 autoClose: 30 * 60 * 1000, // Auto-close after 30 minutes
@@ -134,14 +151,14 @@ To connect:
             uiUrl = uiServer.url;
         }
         catch (error) {
-            console.error('Failed to launch UI:', error);
+            console.error("Failed to launch UI:", error);
         }
         // Build terminal output
-        const terminalOutput = buildTerminalOutput(metrics.length > 0 ? computedMetrics : autoMetrics, charts, allDocuments, client.getDeploymentUrl(), uiUrl, refreshInterval);
+        const terminalOutput = buildTerminalOutput(metrics.length > 0 ? computedMetrics : autoMetrics, charts, allDocuments, client.getDeploymentUrl(), uiUrl, refreshInterval, hasAdminAccess);
         return {
             content: [
                 {
-                    type: 'text',
+                    type: "text",
                     text: terminalOutput,
                 },
             ],
@@ -151,7 +168,7 @@ To connect:
         return {
             content: [
                 {
-                    type: 'text',
+                    type: "text",
                     text: `## Realtime Dashboard
 
 **Error**: ${error instanceof Error ? error.message : String(error)}
@@ -165,42 +182,43 @@ Please check your Convex credentials and deployment URL.`,
 }
 /**
  * Compute aggregation on documents
+ * Note: For count, uses totalCount from system query if available
+ * For other aggregations, uses sample documents (may be approximate)
  */
-function computeAggregation(docs, aggregation, field) {
-    if (docs.length === 0)
-        return 0;
+function computeAggregation(docs, aggregation, field, totalCount) {
     switch (aggregation) {
-        case 'count':
-            return docs.length;
-        case 'sum':
-            if (!field)
+        case "count":
+            // Use actual table count if available, otherwise fall back to docs.length
+            return totalCount !== undefined ? totalCount : docs.length;
+        case "sum":
+            if (!field || docs.length === 0)
                 return 0;
             return docs.reduce((sum, doc) => {
                 const val = doc[field];
-                return sum + (typeof val === 'number' ? val : 0);
+                return sum + (typeof val === "number" ? val : 0);
             }, 0);
-        case 'avg':
-            if (!field)
+        case "avg":
+            if (!field || docs.length === 0)
                 return 0;
             const values = docs
                 .map((doc) => doc[field])
-                .filter((v) => typeof v === 'number');
+                .filter((v) => typeof v === "number");
             if (values.length === 0)
                 return 0;
             return values.reduce((a, b) => a + b, 0) / values.length;
-        case 'min':
-            if (!field)
+        case "min":
+            if (!field || docs.length === 0)
                 return 0;
             const minValues = docs
                 .map((doc) => doc[field])
-                .filter((v) => typeof v === 'number');
+                .filter((v) => typeof v === "number");
             return minValues.length > 0 ? Math.min(...minValues) : 0;
-        case 'max':
-            if (!field)
+        case "max":
+            if (!field || docs.length === 0)
                 return 0;
             const maxValues = docs
                 .map((doc) => doc[field])
-                .filter((v) => typeof v === 'number');
+                .filter((v) => typeof v === "number");
             return maxValues.length > 0 ? Math.max(...maxValues) : 0;
         default:
             return 0;
@@ -209,42 +227,46 @@ function computeAggregation(docs, aggregation, field) {
 /**
  * Build terminal-friendly dashboard output
  */
-function buildTerminalOutput(metrics, charts, allDocuments, deploymentUrl, uiUrl, refreshInterval) {
+function buildTerminalOutput(metrics, charts, allDocuments, deploymentUrl, uiUrl, refreshInterval, hasAdminAccess) {
     const lines = [];
-    lines.push('## Realtime Dashboard');
-    lines.push('');
+    lines.push("## Realtime Dashboard");
+    lines.push("");
     if (uiUrl) {
         lines.push(`**Interactive UI**: ${uiUrl}`);
-        lines.push('');
+        lines.push("");
     }
     lines.push(`Connected to: \`${deploymentUrl}\``);
     lines.push(`Refresh interval: ${refreshInterval}s`);
-    lines.push('');
+    if (!hasAdminAccess) {
+        lines.push("");
+        lines.push("*Note: Some metrics require admin access. Set CONVEX_DEPLOY_KEY for full data.*");
+    }
+    lines.push("");
     // Metrics section
     if (metrics.length > 0) {
-        lines.push('### Metrics');
-        lines.push('');
-        lines.push('| Metric | Value | Source |');
-        lines.push('|--------|-------|--------|');
+        lines.push("### Metrics");
+        lines.push("");
+        lines.push("| Metric | Value | Source |");
+        lines.push("|--------|-------|--------|");
         for (const m of metrics) {
             const formattedValue = formatNumber(m.value);
-            const source = `${m.table} / ${m.aggregation}${m.field ? `(${m.field})` : ''}`;
+            const source = `${m.table} / ${m.aggregation}${m.field ? `(${m.field})` : ""}`;
             lines.push(`| ${m.name} | **${formattedValue}** | ${source} |`);
         }
-        lines.push('');
+        lines.push("");
     }
     // Charts section (show what charts would be rendered)
     if (charts.length > 0) {
-        lines.push('### Charts');
-        lines.push('');
+        lines.push("### Charts");
+        lines.push("");
         for (const c of charts) {
             lines.push(`- **${c.title}** (${c.type} chart from \`${c.table}\`)`);
         }
-        lines.push('');
+        lines.push("");
     }
     // Recent activity
-    lines.push('### Recent Documents');
-    lines.push('');
+    lines.push("### Recent Documents");
+    lines.push("");
     const flatDocs = [];
     for (const [table, docs] of Object.entries(allDocuments)) {
         for (const d of docs) {
@@ -262,29 +284,29 @@ function buildTerminalOutput(metrics, charts, allDocuments, deploymentUrl, uiUrl
     })
         .slice(0, 5);
     if (allDocs.length > 0) {
-        lines.push('| Table | ID | Created |');
-        lines.push('|-------|-----|---------|');
+        lines.push("| Table | ID | Created |");
+        lines.push("|-------|-----|---------|");
         for (const doc of allDocs) {
-            const id = String(doc._id || '').slice(0, 10) + '...';
+            const id = String(doc._id || "").slice(0, 10) + "...";
             const created = doc._creationTime
                 ? formatTimeAgo(doc._creationTime)
-                : 'Unknown';
+                : "Unknown";
             lines.push(`| ${doc.table} | \`${id}\` | ${created} |`);
         }
     }
     else {
-        lines.push('*No documents found*');
+        lines.push("*No documents found*");
     }
-    return lines.join('\n');
+    return lines.join("\n");
 }
 /**
  * Format number for display
  */
 function formatNumber(num) {
     if (num >= 1000000)
-        return (num / 1000000).toFixed(1) + 'M';
+        return (num / 1000000).toFixed(1) + "M";
     if (num >= 1000)
-        return (num / 1000).toFixed(1) + 'k';
+        return (num / 1000).toFixed(1) + "k";
     if (Number.isInteger(num))
         return num.toString();
     return num.toFixed(2);
@@ -299,7 +321,7 @@ function formatTimeAgo(timestamp) {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
     if (minutes < 1)
-        return 'Just now';
+        return "Just now";
     if (minutes < 60)
         return `${minutes}m ago`;
     if (hours < 24)

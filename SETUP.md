@@ -15,8 +15,8 @@ Before you begin
 ### Step 1: Clone and install
 
 ```bash
-git clone https://github.com/your-org/convex-mcp-apps.git
-cd convex-mcp-apps
+git clone https://github.com/your-org/convex-mcp-visual.git
+cd convex-mcp-visual
 npm install
 ```
 
@@ -65,7 +65,7 @@ Add to the `mcpServers` section:
   "mcpServers": {
     "convex-apps": {
       "command": "node",
-      "args": ["/absolute/path/to/convex-mcp-apps/dist/index.js", "--stdio"]
+      "args": ["/absolute/path/to/convex-mcp-visual/dist/index.js", "--stdio"]
     }
   }
 }
@@ -82,7 +82,7 @@ Add to your VS Code settings or `.vscode/mcp.json`:
   "mcpServers": {
     "convex-apps": {
       "command": "node",
-      "args": ["/absolute/path/to/convex-mcp-apps/dist/index.js", "--stdio"]
+      "args": ["/absolute/path/to/convex-mcp-visual/dist/index.js", "--stdio"]
     }
   }
 }
@@ -97,7 +97,7 @@ Add to `~/.cursor/mcp.json` or your project's `.cursor/mcp.json`:
   "mcpServers": {
     "convex-apps": {
       "command": "node",
-      "args": ["/absolute/path/to/convex-mcp-apps/dist/index.js", "--stdio"]
+      "args": ["/absolute/path/to/convex-mcp-visual/dist/index.js", "--stdio"]
     }
   }
 }
@@ -254,12 +254,12 @@ For deploy key issues, generate a new key in the Convex dashboard.
 
 Optional configuration via environment variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `CONVEX_URL` | Override deployment URL | From local config |
-| `CONVEX_DEPLOY_KEY` | Deploy key for CI/CD | None |
-| `MCP_TIMEOUT` | Server startup timeout (ms) | 10000 |
-| `MAX_MCP_OUTPUT_TOKENS` | Max output size | 25000 |
+| Variable                | Description                 | Default           |
+| ----------------------- | --------------------------- | ----------------- |
+| `CONVEX_URL`            | Override deployment URL     | From local config |
+| `CONVEX_DEPLOY_KEY`     | Deploy key for CI/CD        | None              |
+| `MCP_TIMEOUT`           | Server startup timeout (ms) | 10000             |
+| `MAX_MCP_OUTPUT_TOKENS` | Max output size             | 25000             |
 
 Example:
 
@@ -291,7 +291,7 @@ claude mcp get convex-apps
 
 For always-on availability, run the server as a systemd service (Linux) or launchd daemon (macOS).
 
-**systemd example** (`/etc/systemd/system/convex-mcp-apps.service`):
+**systemd example** (`/etc/systemd/system/convex-mcp-visual.service`):
 
 ```ini
 [Unit]
@@ -301,7 +301,7 @@ After=network.target
 [Service]
 Type=simple
 User=youruser
-WorkingDirectory=/path/to/convex-mcp-apps
+WorkingDirectory=/path/to/convex-mcp-visual
 ExecStart=/usr/bin/node dist/index.js --http --port 3001
 Restart=on-failure
 
@@ -338,8 +338,8 @@ CMD ["node", "dist/index.js", "--http", "--port", "3001"]
 Build and run:
 
 ```bash
-docker build -t convex-mcp-apps .
-docker run -p 3001:3001 convex-mcp-apps
+docker build -t convex-mcp-visual .
+docker run -p 3001:3001 convex-mcp-visual
 ```
 
 ## Troubleshooting

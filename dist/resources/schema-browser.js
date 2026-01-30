@@ -3,15 +3,15 @@
  *
  * Serves the bundled Schema Browser HTML UI.
  */
-import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, existsSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export async function getSchemaResourceContent() {
     // Try to load the bundled HTML file
-    const bundledPath = join(__dirname, '..', 'apps', 'schema-browser.html');
+    const bundledPath = join(__dirname, "..", "apps", "schema-browser.html");
     if (existsSync(bundledPath)) {
-        return readFileSync(bundledPath, 'utf-8');
+        return readFileSync(bundledPath, "utf-8");
     }
     // Fallback: return inline HTML for development/testing
     return getInlineSchemaUI();
@@ -641,7 +641,8 @@ function getInlineSchemaUI() {
       },
 
       openQueryBuilder() {
-        alert('Query builder coming soon!');
+        // Query builder not yet implemented
+        console.log('Query builder coming soon');
       }
     };
 

@@ -74,7 +74,7 @@ interface TooltipState {
   y: number;
   title: string;
   content: string;
-  type: 'field' | 'system' | 'relationship' | 'shortcut';
+  type: "field" | "system" | "relationship" | "shortcut";
 }
 
 interface FilterState {
@@ -95,16 +95,16 @@ declare global {
   }
 }
 
-type ViewMode = 'list' | 'graph';
+type ViewMode = "list" | "graph";
 
 class SchemaBrowserApp {
   private config: AppConfig | null = null;
   private selectedTable: string | null = null;
   private currentPage = 1;
   private pageSize = 50;
-  private searchQuery = '';
+  private searchQuery = "";
   private queryModalOpen = false;
-  private viewMode: ViewMode = 'graph';
+  private viewMode: ViewMode = "graph";
 
   // Sidebar state
   private sidebarWidth = 260;
@@ -139,17 +139,17 @@ class SchemaBrowserApp {
   // Sidebar sections
   private sidebarSections: SidebarSections = {
     tables: { collapsed: false },
-    convex: { collapsed: true }
+    convex: { collapsed: true },
   };
-  private tableSortBy: 'name' | 'count' | 'fields' = 'name';
-  private tableSortOrder: 'asc' | 'desc' = 'asc';
+  private tableSortBy: "name" | "count" | "fields" = "name";
+  private tableSortOrder: "asc" | "desc" = "asc";
 
   // Filtering
   private filterState: FilterState = {
-    tableName: '',
-    fieldName: '',
-    fieldType: '',
-    showEmpty: true
+    tableName: "",
+    fieldName: "",
+    fieldType: "",
+    showEmpty: true,
   };
 
   // Tooltips
@@ -157,7 +157,7 @@ class SchemaBrowserApp {
   private tooltipTimeout: number | null = null;
 
   // Theme
-  private currentTheme: 'light' | 'dark' = 'light';
+  private currentTheme: "light" | "dark" = "light";
 
   constructor() {
     this.initTheme();
@@ -166,52 +166,59 @@ class SchemaBrowserApp {
 
   private initTheme(): void {
     // Check for saved theme preference or system preference
-    const savedTheme = localStorage.getItem('convex-schema-theme');
-    if (savedTheme === 'dark' || savedTheme === 'light') {
+    const savedTheme = localStorage.getItem("convex-schema-theme");
+    if (savedTheme === "dark" || savedTheme === "light") {
       this.currentTheme = savedTheme;
-    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    } else if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    ) {
       // Don't auto-switch to dark, keep tan as default
-      this.currentTheme = 'light';
+      this.currentTheme = "light";
     }
     this.applyTheme();
   }
 
   private applyTheme(): void {
-    document.documentElement.setAttribute('data-theme', this.currentTheme);
+    document.documentElement.setAttribute("data-theme", this.currentTheme);
   }
 
   private toggleTheme(): void {
-    this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
-    localStorage.setItem('convex-schema-theme', this.currentTheme);
+    this.currentTheme = this.currentTheme === "light" ? "dark" : "light";
+    localStorage.setItem("convex-schema-theme", this.currentTheme);
     this.applyTheme();
     // Redraw graph if in graph view
-    if (this.viewMode === 'graph') {
+    if (this.viewMode === "graph") {
       this.drawGraph();
     }
   }
 
   private getThemeColor(varName: string): string {
-    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    return getComputedStyle(document.documentElement)
+      .getPropertyValue(varName)
+      .trim();
   }
 
   private getThemeColors() {
     return {
-      bgPrimary: this.getThemeColor('--bg-primary') || '#faf8f5',
-      bgSecondary: this.getThemeColor('--bg-secondary') || '#f5f3f0',
-      bgHover: this.getThemeColor('--bg-hover') || '#ebe9e6',
-      textPrimary: this.getThemeColor('--text-primary') || '#1a1a1a',
-      textSecondary: this.getThemeColor('--text-secondary') || '#6b6b6b',
-      textMuted: this.getThemeColor('--text-muted') || '#999999',
-      border: this.getThemeColor('--border') || '#e6e4e1',
-      accent: this.getThemeColor('--accent') || '#8b7355',
-      accentInteractive: this.getThemeColor('--accent-interactive') || '#EB5601',
-      accentHover: this.getThemeColor('--accent-hover') || '#d14a01',
-      warning: this.getThemeColor('--warning') || '#c4842d',
-      nodeBg: this.getThemeColor('--node-bg') || '#ffffff',
-      nodeHeader: this.getThemeColor('--node-header') || '#f8f7f5',
-      nodeHeaderSelected: this.getThemeColor('--node-header-selected') || '#EB5601',
-      nodeBorder: this.getThemeColor('--node-border') || '#e6e4e1',
-      gridLine: this.getThemeColor('--grid-line') || '#e6e4e1',
+      bgPrimary: this.getThemeColor("--bg-primary") || "#faf8f5",
+      bgSecondary: this.getThemeColor("--bg-secondary") || "#f5f3f0",
+      bgHover: this.getThemeColor("--bg-hover") || "#ebe9e6",
+      textPrimary: this.getThemeColor("--text-primary") || "#1a1a1a",
+      textSecondary: this.getThemeColor("--text-secondary") || "#6b6b6b",
+      textMuted: this.getThemeColor("--text-muted") || "#999999",
+      border: this.getThemeColor("--border") || "#e6e4e1",
+      accent: this.getThemeColor("--accent") || "#8b7355",
+      accentInteractive:
+        this.getThemeColor("--accent-interactive") || "#EB5601",
+      accentHover: this.getThemeColor("--accent-hover") || "#d14a01",
+      warning: this.getThemeColor("--warning") || "#c4842d",
+      nodeBg: this.getThemeColor("--node-bg") || "#ffffff",
+      nodeHeader: this.getThemeColor("--node-header") || "#f8f7f5",
+      nodeHeaderSelected:
+        this.getThemeColor("--node-header-selected") || "#EB5601",
+      nodeBorder: this.getThemeColor("--node-border") || "#e6e4e1",
+      gridLine: this.getThemeColor("--grid-line") || "#e6e4e1",
     };
   }
 
@@ -220,12 +227,12 @@ class SchemaBrowserApp {
       this.config = window.__CONVEX_CONFIG__;
     } else {
       const params = new URLSearchParams(window.location.search);
-      const configParam = params.get('config');
+      const configParam = params.get("config");
       if (configParam) {
         try {
           this.config = JSON.parse(decodeURIComponent(configParam));
         } catch (e) {
-          console.error('Failed to parse config:', e);
+          console.error("Failed to parse config:", e);
         }
       }
     }
@@ -240,35 +247,35 @@ class SchemaBrowserApp {
       this.selectedTable = this.config.tables[0].name;
     }
 
-    if (this.viewMode === 'graph') {
+    if (this.viewMode === "graph") {
       this.initGraphView();
     }
   }
 
   private render(): void {
-    const app = document.getElementById('app');
+    const app = document.getElementById("app");
     if (!app) return;
 
-    const deploymentUrl = this.config?.deploymentUrl || 'Not connected';
+    const deploymentUrl = this.config?.deploymentUrl || "Not connected";
     const isConnected = !!this.config?.deploymentUrl;
 
     app.innerHTML = `
-      <div class="app-container ${this.viewMode === 'graph' ? 'graph-mode' : 'list-mode'}">
+      <div class="app-container ${this.viewMode === "graph" ? "graph-mode" : "list-mode"}">
         <div class="header">
           <h1>
-            <span class="status-dot ${isConnected ? '' : 'error'}"></span>
+            <span class="status-dot ${isConnected ? "" : "error"}"></span>
             Schema Browser
           </h1>
           <div class="header-info">
             <span class="deployment-url">${deploymentUrl}</span>
           </div>
           <div class="view-toggle">
-            <button class="view-btn ${this.viewMode === 'list' ? 'active' : ''}" data-view="list" title="List View">
+            <button class="view-btn ${this.viewMode === "list" ? "active" : ""}" data-view="list" title="List View">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M2 3h12v2H2V3zm0 4h12v2H2V7zm0 4h12v2H2v-2z"/>
               </svg>
             </button>
-            <button class="view-btn ${this.viewMode === 'graph' ? 'active' : ''}" data-view="graph" title="Graph View">
+            <button class="view-btn ${this.viewMode === "graph" ? "active" : ""}" data-view="graph" title="Graph View">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <circle cx="4" cy="4" r="2"/>
                 <circle cx="12" cy="4" r="2"/>
@@ -291,13 +298,13 @@ class SchemaBrowserApp {
           </div>
         </div>
 
-        ${this.viewMode === 'graph' ? this.renderGraphView() : this.renderListView()}
+        ${this.viewMode === "graph" ? this.renderGraphView() : this.renderListView()}
       </div>
     `;
 
     this.setupEventListeners();
 
-    if (this.viewMode === 'list') {
+    if (this.viewMode === "list") {
       this.renderTableList();
       if (this.selectedTable) {
         this.selectTable(this.selectedTable);
@@ -309,7 +316,7 @@ class SchemaBrowserApp {
   }
 
   private renderListView(): string {
-    const collapsedClass = this.sidebarCollapsed ? 'collapsed' : '';
+    const collapsedClass = this.sidebarCollapsed ? "collapsed" : "";
     return `
       <div class="main list-view">
         <div class="sidebar-container ${collapsedClass}" id="sidebarContainer">
@@ -317,7 +324,7 @@ class SchemaBrowserApp {
             <div class="sidebar-header">
               <span>TABLES</span>
               <span id="tableCount">${this.config?.tables?.length || 0}</span>
-              <button class="sidebar-collapse-btn" id="sidebarToggle" title="${this.sidebarCollapsed ? 'Expand' : 'Collapse'}">
+              <button class="sidebar-collapse-btn" id="sidebarToggle" title="${this.sidebarCollapsed ? "Expand" : "Collapse"}">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M8 2L4 6L8 10"/>
                 </svg>
@@ -344,15 +351,25 @@ class SchemaBrowserApp {
     if (!this.selectedTable) {
       return `
         <div class="empty-state" style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-          <div class="empty-icon">📋</div>
+          <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M3 9h18M9 3v18"/>
+            </svg>
+          </div>
           <h2>Select a Table</h2>
           <p>Choose a table from the sidebar to view its schema and documents.</p>
         </div>
       `;
     }
 
-    const tableInfo = this.config?.tables?.find((t) => t.name === this.selectedTable);
-    const documents = this.config?.allDocuments?.[this.selectedTable] || tableInfo?.documents || [];
+    const tableInfo = this.config?.tables?.find(
+      (t) => t.name === this.selectedTable,
+    );
+    const documents =
+      this.config?.allDocuments?.[this.selectedTable] ||
+      tableInfo?.documents ||
+      [];
     const fields = tableInfo?.inferredFields || [];
     const docCount = tableInfo?.documentCount || 0;
 
@@ -361,7 +378,7 @@ class SchemaBrowserApp {
         <div class="table-header-title">${this.selectedTable}</div>
         <div class="table-header-meta">
           <span>${this.formatCount(docCount)} documents</span>
-          ${tableInfo?.hasIndexes ? '<span class="badge">Has indexes</span>' : ''}
+          ${tableInfo?.hasIndexes ? '<span class="badge">Has indexes</span>' : ""}
           <span class="badge">${fields.length} fields</span>
         </div>
       </div>
@@ -374,7 +391,7 @@ class SchemaBrowserApp {
           <div class="schema-fields-list">
             ${this.renderSchemaFieldsList(fields)}
           </div>
-          ${tableInfo?.hasIndexes ? this.renderIndexesSection(tableInfo) : ''}
+          ${tableInfo?.hasIndexes ? this.renderIndexesSection(tableInfo) : ""}
         </div>
         <div class="documents-main">
           <div class="documents-toolbar">
@@ -397,7 +414,7 @@ class SchemaBrowserApp {
       return '<div style="padding: 16px; color: var(--text-secondary);">No schema data available</div>';
     }
 
-    const systemFields = ['_id', '_creationTime'];
+    const systemFields = ["_id", "_creationTime"];
     const sortedFields = [...fields].sort((a, b) => {
       const aIsSystem = systemFields.includes(a.name);
       const bIsSystem = systemFields.includes(b.name);
@@ -406,30 +423,36 @@ class SchemaBrowserApp {
       return a.name.localeCompare(b.name);
     });
 
-    return sortedFields.map(f => {
-      const isSystem = systemFields.includes(f.name);
-      return `
+    return sortedFields
+      .map((f) => {
+        const isSystem = systemFields.includes(f.name);
+        return `
         <div class="schema-field-item">
-          <span class="schema-field-name ${isSystem ? 'system-field' : ''}">
+          <span class="schema-field-name ${isSystem ? "system-field" : ""}">
             ${f.name}
-            ${f.optional ? '<span class="schema-field-optional">?</span>' : ''}
+            ${f.optional ? '<span class="schema-field-optional">?</span>' : ""}
           </span>
           <span class="schema-field-type">${f.type}</span>
         </div>
       `;
-    }).join('');
+      })
+      .join("");
   }
 
   private renderIndexesSection(tableInfo: TableInfo): string {
     if (!tableInfo.indexes || tableInfo.indexes.length === 0) {
-      return '';
+      return "";
     }
     return `
       <div class="schema-indexes">
         <div class="schema-indexes-title">Indexes</div>
-        ${tableInfo.indexes.map(idx => `
+        ${tableInfo.indexes
+          .map(
+            (idx) => `
           <div class="schema-index-item">${idx}</div>
-        `).join('')}
+        `,
+          )
+          .join("")}
       </div>
     `;
   }
@@ -442,7 +465,12 @@ class SchemaBrowserApp {
     if (paginatedDocs.length === 0) {
       return `
         <div class="documents-empty">
-          <div class="documents-empty-icon">📄</div>
+          <div class="documents-empty-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+            </svg>
+          </div>
           <h3>No Documents</h3>
           <p>This table doesn't have any documents yet.</p>
         </div>
@@ -451,8 +479,8 @@ class SchemaBrowserApp {
 
     const keys = [...new Set(paginatedDocs.flatMap((d) => Object.keys(d)))];
     keys.sort((a, b) => {
-      const aIsSystem = a.startsWith('_');
-      const bIsSystem = b.startsWith('_');
+      const aIsSystem = a.startsWith("_");
+      const bIsSystem = b.startsWith("_");
       if (aIsSystem && !bIsSystem) return -1;
       if (!aIsSystem && bIsSystem) return 1;
       return a.localeCompare(b);
@@ -461,20 +489,31 @@ class SchemaBrowserApp {
     return `
       <table>
         <thead>
-          <tr>${keys.map((k) => `<th>${k}</th>`).join('')}</tr>
+          <tr>${keys.map((k) => `<th>${k}</th>`).join("")}</tr>
         </thead>
         <tbody>
-          ${paginatedDocs.map((doc) => `
+          ${paginatedDocs
+            .map(
+              (doc) => `
             <tr>
-              ${keys.map((k) => {
-                const value = doc[k];
-                const isId = k === '_id';
-                const isNull = value === null || value === undefined;
-                const classes = [isId ? 'id-cell' : '', isNull ? 'null-value' : ''].filter(Boolean).join(' ');
-                return `<td class="${classes}">${this.formatValue(value)}</td>`;
-              }).join('')}
+              ${keys
+                .map((k) => {
+                  const value = doc[k];
+                  const isId = k === "_id";
+                  const isNull = value === null || value === undefined;
+                  const classes = [
+                    isId ? "id-cell" : "",
+                    isNull ? "null-value" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ");
+                  return `<td class="${classes}">${this.formatValue(value)}</td>`;
+                })
+                .join("")}
             </tr>
-          `).join('')}
+          `,
+            )
+            .join("")}
         </tbody>
       </table>
     `;
@@ -488,21 +527,21 @@ class SchemaBrowserApp {
     return `
       <div class="pagination-bar">
         <div class="pagination-info">
-          ${docs.length > 0 ? `Showing ${start}-${end} of ${docs.length}` : 'No documents'}
+          ${docs.length > 0 ? `Showing ${start}-${end} of ${docs.length}` : "No documents"}
         </div>
         <div class="pagination-controls">
-          <button id="prevPage" ${this.currentPage <= 1 ? 'disabled' : ''}>‹</button>
+          <button id="prevPage" ${this.currentPage <= 1 ? "disabled" : ""}>‹</button>
           <span class="page-indicator">Page ${this.currentPage} of ${totalPages}</span>
-          <button id="nextPage" ${this.currentPage >= totalPages ? 'disabled' : ''}>›</button>
+          <button id="nextPage" ${this.currentPage >= totalPages ? "disabled" : ""}>›</button>
         </div>
       </div>
     `;
   }
 
   private renderGraphView(): string {
-    const sidebarCollapsed = this.sidebarCollapsed ? 'collapsed' : '';
-    const codePanelHidden = !this.showCodePanel ? 'hidden' : '';
-    const deploymentUrl = this.config?.deploymentUrl || 'Not connected';
+    const sidebarCollapsed = this.sidebarCollapsed ? "collapsed" : "";
+    const codePanelHidden = !this.showCodePanel ? "hidden" : "";
+    const deploymentUrl = this.config?.deploymentUrl || "Not connected";
 
     return `
       <div class="main graph-view">
@@ -532,13 +571,13 @@ class SchemaBrowserApp {
             <div class="code-panel" id="codePanel" style="width: ${this.codePanelWidth}px">
               <div class="code-header">
                 <span>Schema</span>
-                <span class="code-filename">${this.selectedTable || 'schema'}.json</span>
+                <span class="code-filename">${this.selectedTable || "schema"}.json</span>
               </div>
               <div class="code-content" id="codeContent">
                 <pre><code id="codeBlock">${this.generateSchemaCode()}</code></pre>
               </div>
             </div>
-            <button class="sidebar-toggle sidebar-toggle-right" id="sidebarToggle" title="${this.sidebarCollapsed ? 'Show panel' : 'Hide panel'}">
+            <button class="sidebar-toggle sidebar-toggle-right" id="sidebarToggle" title="${this.sidebarCollapsed ? "Show panel" : "Hide panel"}">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M5 2L10 7L5 12"/>
               </svg>
@@ -552,28 +591,28 @@ class SchemaBrowserApp {
   }
 
   private renderEnhancedSidebar(): string {
-    const deploymentUrl = this.config?.deploymentUrl || 'Not connected';
+    const deploymentUrl = this.config?.deploymentUrl || "Not connected";
     const isConnected = !!this.config?.deploymentUrl;
     const tables = this.getSortedTables();
     const filteredTables = this.getFilteredTablesForSidebar(tables);
-    const collapsedClass = this.graphSidebarCollapsed ? 'collapsed' : '';
+    const collapsedClass = this.graphSidebarCollapsed ? "collapsed" : "";
 
     return `
       <div class="enhanced-sidebar ${collapsedClass}" id="enhancedSidebar">
-        <button class="graph-sidebar-toggle" id="graphSidebarToggle" title="${this.graphSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}">
+        <button class="graph-sidebar-toggle" id="graphSidebarToggle" title="${this.graphSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="${this.graphSidebarCollapsed ? 'M5 2L10 7L5 12' : 'M9 2L4 7L9 12'}"/>
+            <path d="${this.graphSidebarCollapsed ? "M5 2L10 7L5 12" : "M9 2L4 7L9 12"}"/>
           </svg>
         </button>
         <div class="sidebar-deployment">
           <div class="deployment-status">
-            <span class="status-indicator ${isConnected ? 'connected' : 'error'}"></span>
+            <span class="status-indicator ${isConnected ? "connected" : "error"}"></span>
             <span class="deployment-label">Convex</span>
           </div>
           <div class="deployment-url-small">${this.truncateUrl(deploymentUrl)}</div>
         </div>
 
-        <div class="sidebar-section ${this.sidebarSections.tables.collapsed ? 'collapsed' : ''}" data-section="tables">
+        <div class="sidebar-section ${this.sidebarSections.tables.collapsed ? "collapsed" : ""}" data-section="tables">
           <div class="section-header" id="sectionHeaderTables">
             <svg class="section-chevron" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
               <path d="M4 2L8 6L4 10"/>
@@ -591,12 +630,12 @@ class SchemaBrowserApp {
               </button>
             </div>
             <ul class="sidebar-table-list" id="graphTableList">
-              ${filteredTables.map(t => this.renderSidebarTableItem(t)).join('')}
+              ${filteredTables.map((t) => this.renderSidebarTableItem(t)).join("")}
             </ul>
           </div>
         </div>
 
-        <div class="sidebar-section ${this.sidebarSections.convex.collapsed ? 'collapsed' : ''}" data-section="convex">
+        <div class="sidebar-section ${this.sidebarSections.convex.collapsed ? "collapsed" : ""}" data-section="convex">
           <div class="section-header" id="sectionHeaderConvex">
             <svg class="section-chevron" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
               <path d="M4 2L8 6L4 10"/>
@@ -626,12 +665,12 @@ class SchemaBrowserApp {
 
   private renderSidebarTableItem(table: TableInfo): string {
     const isSelected = table.name === this.selectedTable;
-    const node = this.graphNodes.find(n => n.id === table.name);
+    const node = this.graphNodes.find((n) => n.id === table.name);
     const isVisible = node?.visible !== false;
     const fieldCount = table.inferredFields?.length || 0;
 
     return `
-      <li class="sidebar-table-item ${isSelected ? 'active' : ''} ${!isVisible ? 'filtered-out' : ''}" data-table="${table.name}">
+      <li class="sidebar-table-item ${isSelected ? "active" : ""} ${!isVisible ? "filtered-out" : ""}" data-table="${table.name}">
         <div class="table-item-main">
           <svg class="table-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
             <rect x="1" y="1" width="12" height="12" rx="2"/>
@@ -654,18 +693,19 @@ class SchemaBrowserApp {
       let comparison = 0;
 
       switch (this.tableSortBy) {
-        case 'name':
+        case "name":
           comparison = a.name.localeCompare(b.name);
           break;
-        case 'count':
+        case "count":
           comparison = a.documentCount - b.documentCount;
           break;
-        case 'fields':
-          comparison = (a.inferredFields?.length || 0) - (b.inferredFields?.length || 0);
+        case "fields":
+          comparison =
+            (a.inferredFields?.length || 0) - (b.inferredFields?.length || 0);
           break;
       }
 
-      return this.tableSortOrder === 'asc' ? comparison : -comparison;
+      return this.tableSortOrder === "asc" ? comparison : -comparison;
     });
 
     return tables;
@@ -674,8 +714,8 @@ class SchemaBrowserApp {
   private getFilteredTablesForSidebar(tables: TableInfo[]): TableInfo[] {
     if (!this.searchQuery) return tables;
 
-    return tables.filter(t =>
-      t.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+    return tables.filter((t) =>
+      t.name.toLowerCase().includes(this.searchQuery.toLowerCase()),
     );
   }
 
@@ -686,33 +726,40 @@ class SchemaBrowserApp {
     if (match) {
       const domain = match[1];
       if (domain.length > 35) {
-        return domain.slice(0, 32) + '...';
+        return domain.slice(0, 32) + "...";
       }
       return domain;
     }
-    return url.slice(0, 32) + '...';
+    return url.slice(0, 32) + "...";
   }
 
-  private toggleSidebarSection(sectionId: 'tables' | 'convex'): void {
-    this.sidebarSections[sectionId].collapsed = !this.sidebarSections[sectionId].collapsed;
+  private toggleSidebarSection(sectionId: "tables" | "convex"): void {
+    this.sidebarSections[sectionId].collapsed =
+      !this.sidebarSections[sectionId].collapsed;
     const section = document.querySelector(`[data-section="${sectionId}"]`);
     if (section) {
-      section.classList.toggle('collapsed', this.sidebarSections[sectionId].collapsed);
+      section.classList.toggle(
+        "collapsed",
+        this.sidebarSections[sectionId].collapsed,
+      );
     }
   }
 
   private cycleSortOrder(): void {
-    const sortOptions: Array<{ by: 'name' | 'count' | 'fields'; order: 'asc' | 'desc' }> = [
-      { by: 'name', order: 'asc' },
-      { by: 'name', order: 'desc' },
-      { by: 'count', order: 'desc' },
-      { by: 'count', order: 'asc' },
-      { by: 'fields', order: 'desc' },
-      { by: 'fields', order: 'asc' },
+    const sortOptions: Array<{
+      by: "name" | "count" | "fields";
+      order: "asc" | "desc";
+    }> = [
+      { by: "name", order: "asc" },
+      { by: "name", order: "desc" },
+      { by: "count", order: "desc" },
+      { by: "count", order: "asc" },
+      { by: "fields", order: "desc" },
+      { by: "fields", order: "asc" },
     ];
 
     const currentIndex = sortOptions.findIndex(
-      o => o.by === this.tableSortBy && o.order === this.tableSortOrder
+      (o) => o.by === this.tableSortBy && o.order === this.tableSortOrder,
     );
     const nextIndex = (currentIndex + 1) % sortOptions.length;
     this.tableSortBy = sortOptions[nextIndex].by;
@@ -723,23 +770,25 @@ class SchemaBrowserApp {
   }
 
   private updateSidebarTableList(): void {
-    const tableList = document.getElementById('graphTableList');
+    const tableList = document.getElementById("graphTableList");
     if (tableList) {
       const tables = this.getSortedTables();
       const filtered = this.getFilteredTablesForSidebar(tables);
-      tableList.innerHTML = filtered.map(t => this.renderSidebarTableItem(t)).join('');
+      tableList.innerHTML = filtered
+        .map((t) => this.renderSidebarTableItem(t))
+        .join("");
       this.setupSidebarTableEvents();
     }
   }
 
   private setupSidebarTableEvents(): void {
-    document.querySelectorAll('.sidebar-table-item').forEach(item => {
-      item.addEventListener('click', () => {
+    document.querySelectorAll(".sidebar-table-item").forEach((item) => {
+      item.addEventListener("click", () => {
         const tableName = (item as HTMLElement).dataset.table;
         if (tableName) {
           this.selectTable(tableName);
           // Center on the node
-          const node = this.graphNodes.find(n => n.id === tableName);
+          const node = this.graphNodes.find((n) => n.id === tableName);
           if (node) {
             this.centerOnNode(node);
           }
@@ -765,7 +814,13 @@ class SchemaBrowserApp {
 
   // ===== Tooltip Methods =====
 
-  private showTooltip(x: number, y: number, title: string, content: string, type: TooltipState['type']): void {
+  private showTooltip(
+    x: number,
+    y: number,
+    title: string,
+    content: string,
+    type: TooltipState["type"],
+  ): void {
     if (this.tooltipTimeout) {
       clearTimeout(this.tooltipTimeout);
     }
@@ -782,17 +837,17 @@ class SchemaBrowserApp {
       this.tooltipTimeout = null;
     }
     this.tooltip = null;
-    document.getElementById('tooltip')?.remove();
+    document.getElementById("tooltip")?.remove();
   }
 
   private renderTooltip(): void {
     if (!this.tooltip) return;
 
     // Remove existing tooltip
-    document.getElementById('tooltip')?.remove();
+    document.getElementById("tooltip")?.remove();
 
-    const tooltipEl = document.createElement('div');
-    tooltipEl.id = 'tooltip';
+    const tooltipEl = document.createElement("div");
+    tooltipEl.id = "tooltip";
     tooltipEl.className = `tooltip tooltip-${this.tooltip.type}`;
     tooltipEl.innerHTML = `
       <div class="tooltip-title">${this.tooltip.title}</div>
@@ -820,17 +875,21 @@ class SchemaBrowserApp {
     tooltipEl.style.top = `${top}px`;
   }
 
-  private getFieldTooltipContent(field: SchemaField, tableName: string): { title: string; content: string } {
+  private getFieldTooltipContent(
+    field: SchemaField,
+    tableName: string,
+  ): { title: string; content: string } {
     // System field tooltips
     const systemTooltips: Record<string, { title: string; content: string }> = {
-      '_id': {
-        title: 'Document ID',
-        content: `Unique identifier auto-generated by Convex.<br><code>Id&lt;"${tableName}"&gt;</code>`
+      _id: {
+        title: "Document ID",
+        content: `Unique identifier auto-generated by Convex.<br><code>Id&lt;"${tableName}"&gt;</code>`,
       },
-      '_creationTime': {
-        title: 'Creation Timestamp',
-        content: 'Unix timestamp (ms) when this document was created.<br>Auto-set by Convex on insert.'
-      }
+      _creationTime: {
+        title: "Creation Timestamp",
+        content:
+          "Unix timestamp (ms) when this document was created.<br>Auto-set by Convex on insert.",
+      },
     };
 
     if (systemTooltips[field.name]) {
@@ -838,23 +897,26 @@ class SchemaBrowserApp {
     }
 
     // Reference field tooltip
-    if (field.type.includes('Id<')) {
+    if (field.type.includes("Id<")) {
       const match = field.type.match(/Id<["'](\w+)["']>/);
-      const targetTable = match ? match[1] : 'unknown';
+      const targetTable = match ? match[1] : "unknown";
       return {
-        title: 'Reference Field',
-        content: `Links to the <strong>${targetTable}</strong> table.<br>Type: <code>${field.type}</code>`
+        title: "Reference Field",
+        content: `Links to the <strong>${targetTable}</strong> table.<br>Type: <code>${field.type}</code>`,
       };
     }
 
     // Regular field tooltip
     return {
       title: field.name,
-      content: `Type: <code>${field.type}</code>${field.optional ? '<br><em>Optional field</em>' : ''}`
+      content: `Type: <code>${field.type}</code>${field.optional ? "<br><em>Optional field</em>" : ""}`,
     };
   }
 
-  private getFieldAtPosition(node: GraphNode, canvasY: number): SchemaField | null {
+  private getFieldAtPosition(
+    node: GraphNode,
+    canvasY: number,
+  ): SchemaField | null {
     const fields = this.getSortedFields(node.table.inferredFields || []);
     const headerHeight = 44;
     const fieldRowHeight = 24;
@@ -866,7 +928,10 @@ class SchemaBrowserApp {
     const fieldIndex = Math.floor(relativeY / fieldRowHeight);
     const maxVisibleFields = 12;
 
-    if (fieldIndex >= 0 && fieldIndex < Math.min(fields.length, maxVisibleFields)) {
+    if (
+      fieldIndex >= 0 &&
+      fieldIndex < Math.min(fields.length, maxVisibleFields)
+    ) {
       return fields[fieldIndex];
     }
 
@@ -880,7 +945,7 @@ class SchemaBrowserApp {
     return `
       <div class="toolbar">
         <div class="toolbar-group">
-          <button class="toolbar-btn ${this.showCodePanel ? 'active' : ''}" id="viewCodeBtn" title="Toggle Code Panel (C)">
+          <button class="toolbar-btn ${this.showCodePanel ? "active" : ""}" id="viewCodeBtn" title="Toggle Code Panel (C)">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M5 4L1 8L5 12M11 4L15 8L11 12"/>
             </svg>
@@ -919,12 +984,12 @@ class SchemaBrowserApp {
         <div class="toolbar-separator"></div>
 
         <div class="toolbar-group">
-          <button class="toolbar-btn icon-only" id="undoBtn" title="Undo (Cmd+Z)" ${canUndo ? '' : 'disabled'}>
+          <button class="toolbar-btn icon-only" id="undoBtn" title="Undo (Cmd+Z)" ${canUndo ? "" : "disabled"}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M4 6H11C12.6569 6 14 7.34315 14 9V9C14 10.6569 12.6569 12 11 12H8M4 6L7 3M4 6L7 9"/>
             </svg>
           </button>
-          <button class="toolbar-btn icon-only" id="redoBtn" title="Redo (Cmd+Shift+Z)" ${canRedo ? '' : 'disabled'}>
+          <button class="toolbar-btn icon-only" id="redoBtn" title="Redo (Cmd+Shift+Z)" ${canRedo ? "" : "disabled"}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M12 6H5C3.34315 6 2 7.34315 2 9V9C2 10.6569 3.34315 12 5 12H8M12 6L9 3M12 6L9 9"/>
             </svg>
@@ -999,7 +1064,7 @@ class SchemaBrowserApp {
   }
 
   private renderExportMenu(): string {
-    if (!this.showExportMenu) return '';
+    if (!this.showExportMenu) return "";
 
     return `
       <div class="dropdown-menu export-menu" id="exportMenu">
@@ -1030,7 +1095,7 @@ class SchemaBrowserApp {
   }
 
   private renderFilterDropdown(): string {
-    if (!this.showFilterDropdown) return '';
+    if (!this.showFilterDropdown) return "";
 
     return `
       <div class="dropdown-menu filter-menu" id="filterMenu">
@@ -1050,18 +1115,18 @@ class SchemaBrowserApp {
           <div class="filter-group">
             <label for="filterFieldType">Field Type</label>
             <select id="filterFieldType">
-              <option value="" ${this.filterState.fieldType === '' ? 'selected' : ''}>All types</option>
-              <option value="string" ${this.filterState.fieldType === 'string' ? 'selected' : ''}>string</option>
-              <option value="number" ${this.filterState.fieldType === 'number' ? 'selected' : ''}>number</option>
-              <option value="boolean" ${this.filterState.fieldType === 'boolean' ? 'selected' : ''}>boolean</option>
-              <option value="Id" ${this.filterState.fieldType === 'Id' ? 'selected' : ''}>Id (reference)</option>
-              <option value="object" ${this.filterState.fieldType === 'object' ? 'selected' : ''}>object</option>
-              <option value="array" ${this.filterState.fieldType === 'array' ? 'selected' : ''}>array</option>
+              <option value="" ${this.filterState.fieldType === "" ? "selected" : ""}>All types</option>
+              <option value="string" ${this.filterState.fieldType === "string" ? "selected" : ""}>string</option>
+              <option value="number" ${this.filterState.fieldType === "number" ? "selected" : ""}>number</option>
+              <option value="boolean" ${this.filterState.fieldType === "boolean" ? "selected" : ""}>boolean</option>
+              <option value="Id" ${this.filterState.fieldType === "Id" ? "selected" : ""}>Id (reference)</option>
+              <option value="object" ${this.filterState.fieldType === "object" ? "selected" : ""}>object</option>
+              <option value="array" ${this.filterState.fieldType === "array" ? "selected" : ""}>array</option>
             </select>
           </div>
           <div class="filter-group checkbox">
             <label>
-              <input type="checkbox" id="filterShowEmpty" ${this.filterState.showEmpty ? 'checked' : ''}>
+              <input type="checkbox" id="filterShowEmpty" ${this.filterState.showEmpty ? "checked" : ""}>
               Show empty tables
             </label>
           </div>
@@ -1084,14 +1149,14 @@ class SchemaBrowserApp {
       const fields: Record<string, string> = {};
       if (table.inferredFields) {
         for (const field of table.inferredFields) {
-          fields[field.name] = field.type + (field.optional ? '?' : '');
+          fields[field.name] = field.type + (field.optional ? "?" : "");
         }
       }
 
       schema[table.name] = {
         fields,
         documentCount: table.documentCount,
-        sample: allDocs[table.name]?.[0] || null
+        sample: allDocs[table.name]?.[0] || null,
       };
     }
 
@@ -1100,13 +1165,13 @@ class SchemaBrowserApp {
 
   private syntaxHighlight(json: string): string {
     return json
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
       .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?)/g, (match) => {
-        let cls = 'json-string';
+        let cls = "json-string";
         if (/:$/.test(match)) {
-          cls = 'json-key';
+          cls = "json-key";
         }
         return `<span class="${cls}">${match}</span>`;
       })
@@ -1116,7 +1181,7 @@ class SchemaBrowserApp {
   }
 
   private initGraphView(): void {
-    this.canvas = document.getElementById('graphCanvas') as HTMLCanvasElement;
+    this.canvas = document.getElementById("graphCanvas") as HTMLCanvasElement;
     if (!this.canvas) return;
 
     // Get device pixel ratio for retina display support
@@ -1130,11 +1195,11 @@ class SchemaBrowserApp {
       this.canvas.width = width * this.dpr;
       this.canvas.height = height * this.dpr;
       // Set display size via CSS
-      this.canvas.style.width = width + 'px';
-      this.canvas.style.height = height + 'px';
+      this.canvas.style.width = width + "px";
+      this.canvas.style.height = height + "px";
     }
 
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext("2d");
     if (!this.ctx) return;
 
     // Scale context for retina
@@ -1148,15 +1213,15 @@ class SchemaBrowserApp {
     this.savePositionState();
 
     // Handle resize
-    window.addEventListener('resize', () => {
+    window.addEventListener("resize", () => {
       if (this.canvas && this.canvas.parentElement && this.ctx) {
         const width = this.canvas.parentElement.clientWidth;
         const height = this.canvas.parentElement.clientHeight;
         this.dpr = window.devicePixelRatio || 1;
         this.canvas.width = width * this.dpr;
         this.canvas.height = height * this.dpr;
-        this.canvas.style.width = width + 'px';
-        this.canvas.style.height = height + 'px';
+        this.canvas.style.width = width + "px";
+        this.canvas.style.height = height + "px";
         this.ctx.scale(this.dpr, this.dpr);
         this.drawGraph();
       }
@@ -1187,7 +1252,7 @@ class SchemaBrowserApp {
         y: 100 + row * (nodeHeight + verticalSpacing),
         width: nodeWidth,
         height: nodeHeight,
-        table
+        table,
       });
     });
 
@@ -1199,14 +1264,14 @@ class SchemaBrowserApp {
         const idMatch = field.type.match(/Id<["'](\w+)["']>/);
         if (idMatch) {
           const targetTable = idMatch[1];
-          const targetNode = this.graphNodes.find(n => n.id === targetTable);
+          const targetNode = this.graphNodes.find((n) => n.id === targetTable);
           if (targetNode && targetNode.id !== node.id) {
             this.graphEdges.push({
               from: node.id,
               to: targetNode.id,
               fromField: field.name,
-              toField: '_id',
-              inferred: false
+              toField: "_id",
+              inferred: false,
             });
             continue;
           }
@@ -1218,24 +1283,31 @@ class SchemaBrowserApp {
           if (otherNode.id === node.id) continue;
 
           const tableLower = otherNode.id.toLowerCase();
-          const singularTable = tableLower.endsWith('s') ? tableLower.slice(0, -1) : tableLower;
+          const singularTable = tableLower.endsWith("s")
+            ? tableLower.slice(0, -1)
+            : tableLower;
 
           // Match patterns like "userId" -> "users", "postId" -> "posts"
-          if (fieldLower === tableLower + 'id' ||
-              fieldLower === singularTable + 'id' ||
-              fieldLower === singularTable + '_id' ||
-              fieldLower === tableLower + '_id') {
+          if (
+            fieldLower === tableLower + "id" ||
+            fieldLower === singularTable + "id" ||
+            fieldLower === singularTable + "_id" ||
+            fieldLower === tableLower + "_id"
+          ) {
             // Check if we already have this edge
-            const exists = this.graphEdges.some(e =>
-              e.from === node.id && e.to === otherNode.id && e.fromField === field.name
+            const exists = this.graphEdges.some(
+              (e) =>
+                e.from === node.id &&
+                e.to === otherNode.id &&
+                e.fromField === field.name,
             );
             if (!exists) {
               this.graphEdges.push({
                 from: node.id,
                 to: otherNode.id,
                 fromField: field.name,
-                toField: '_id',
-                inferred: true
+                toField: "_id",
+                inferred: true,
               });
             }
           }
@@ -1245,10 +1317,10 @@ class SchemaBrowserApp {
 
     // Center the graph using logical (CSS) dimensions
     if (this.canvas && this.graphNodes.length > 0) {
-      const minX = Math.min(...this.graphNodes.map(n => n.x));
-      const maxX = Math.max(...this.graphNodes.map(n => n.x + n.width));
-      const minY = Math.min(...this.graphNodes.map(n => n.y));
-      const maxY = Math.max(...this.graphNodes.map(n => n.y + n.height));
+      const minX = Math.min(...this.graphNodes.map((n) => n.x));
+      const maxX = Math.max(...this.graphNodes.map((n) => n.x + n.width));
+      const minY = Math.min(...this.graphNodes.map((n) => n.y));
+      const maxY = Math.max(...this.graphNodes.map((n) => n.y + n.height));
 
       const graphWidth = maxX - minX;
       const graphHeight = maxY - minY;
@@ -1268,16 +1340,20 @@ class SchemaBrowserApp {
     let lastX = 0;
     let lastY = 0;
 
-    this.canvas.addEventListener('mousedown', (e) => {
+    this.canvas.addEventListener("mousedown", (e) => {
       const rect = this.canvas!.getBoundingClientRect();
       const x = (e.clientX - rect.left - this.panX) / this.zoom;
       const y = (e.clientY - rect.top - this.panY) / this.zoom;
 
       // Check if clicking on a node
-      this.selectedNode = this.graphNodes.find(node =>
-        x >= node.x && x <= node.x + node.width &&
-        y >= node.y && y <= node.y + node.height
-      ) || null;
+      this.selectedNode =
+        this.graphNodes.find(
+          (node) =>
+            x >= node.x &&
+            x <= node.x + node.width &&
+            y >= node.y &&
+            y <= node.y + node.height,
+        ) || null;
 
       if (this.selectedNode) {
         this.selectTable(this.selectedNode.id);
@@ -1291,21 +1367,25 @@ class SchemaBrowserApp {
       this.dragStartY = e.clientY;
     });
 
-    this.canvas.addEventListener('mousemove', (e) => {
+    this.canvas.addEventListener("mousemove", (e) => {
       const rect = this.canvas!.getBoundingClientRect();
       const x = (e.clientX - rect.left - this.panX) / this.zoom;
       const y = (e.clientY - rect.top - this.panY) / this.zoom;
 
       // Check hover - only consider visible nodes
-      const hovered = this.graphNodes.find(node =>
-        node.visible !== false &&
-        x >= node.x && x <= node.x + node.width &&
-        y >= node.y && y <= node.y + node.height
-      ) || null;
+      const hovered =
+        this.graphNodes.find(
+          (node) =>
+            node.visible !== false &&
+            x >= node.x &&
+            x <= node.x + node.width &&
+            y >= node.y &&
+            y <= node.y + node.height,
+        ) || null;
 
       if (hovered !== this.hoveredNode) {
         this.hoveredNode = hovered;
-        this.canvas!.style.cursor = hovered ? 'pointer' : 'grab';
+        this.canvas!.style.cursor = hovered ? "pointer" : "grab";
         this.hideTooltip();
         this.drawGraph();
       }
@@ -1314,8 +1394,17 @@ class SchemaBrowserApp {
       if (hovered && !this.isDragging) {
         const field = this.getFieldAtPosition(hovered, y);
         if (field) {
-          const tooltipContent = this.getFieldTooltipContent(field, hovered.table.name);
-          this.showTooltip(e.clientX, e.clientY, tooltipContent.title, tooltipContent.content, 'field');
+          const tooltipContent = this.getFieldTooltipContent(
+            field,
+            hovered.table.name,
+          );
+          this.showTooltip(
+            e.clientX,
+            e.clientY,
+            tooltipContent.title,
+            tooltipContent.content,
+            "field",
+          );
         } else {
           this.hideTooltip();
         }
@@ -1342,9 +1431,13 @@ class SchemaBrowserApp {
       }
     });
 
-    this.canvas.addEventListener('mouseup', (e) => {
-      if (this.isDragging && (this.selectedNode ||
-          Math.abs(e.clientX - this.dragStartX) > 5 || Math.abs(e.clientY - this.dragStartY) > 5)) {
+    this.canvas.addEventListener("mouseup", (e) => {
+      if (
+        this.isDragging &&
+        (this.selectedNode ||
+          Math.abs(e.clientX - this.dragStartX) > 5 ||
+          Math.abs(e.clientY - this.dragStartY) > 5)
+      ) {
         // Save position if we actually dragged something
         this.savePositionState();
       }
@@ -1352,7 +1445,7 @@ class SchemaBrowserApp {
       this.selectedNode = null;
     });
 
-    this.canvas.addEventListener('mouseleave', () => {
+    this.canvas.addEventListener("mouseleave", () => {
       this.isDragging = false;
       this.selectedNode = null;
       this.hoveredNode = null;
@@ -1360,7 +1453,7 @@ class SchemaBrowserApp {
       this.drawGraph();
     });
 
-    this.canvas.addEventListener('wheel', (e) => {
+    this.canvas.addEventListener("wheel", (e) => {
       e.preventDefault();
       const rect = this.canvas!.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
@@ -1378,23 +1471,23 @@ class SchemaBrowserApp {
     });
 
     // Graph control buttons (floating zoom panel)
-    document.getElementById('zoomIn')?.addEventListener('click', () => {
+    document.getElementById("zoomIn")?.addEventListener("click", () => {
       this.zoom = Math.min(2, this.zoom * 1.2);
       this.updateZoomDisplay();
       this.drawGraph();
     });
 
-    document.getElementById('zoomOut')?.addEventListener('click', () => {
+    document.getElementById("zoomOut")?.addEventListener("click", () => {
       this.zoom = Math.max(0.25, this.zoom / 1.2);
       this.updateZoomDisplay();
       this.drawGraph();
     });
 
-    document.getElementById('fitView')?.addEventListener('click', () => {
+    document.getElementById("fitView")?.addEventListener("click", () => {
       this.fitToView();
     });
 
-    document.getElementById('resetView')?.addEventListener('click', () => {
+    document.getElementById("resetView")?.addEventListener("click", () => {
       this.zoom = 1;
       this.calculateGraphLayout();
       this.updateZoomDisplay();
@@ -1427,9 +1520,14 @@ class SchemaBrowserApp {
 
     // Draw edges first (behind nodes) - only for visible nodes
     for (const edge of this.graphEdges) {
-      const fromNode = this.graphNodes.find(n => n.id === edge.from);
-      const toNode = this.graphNodes.find(n => n.id === edge.to);
-      if (fromNode && toNode && fromNode.visible !== false && toNode.visible !== false) {
+      const fromNode = this.graphNodes.find((n) => n.id === edge.from);
+      const toNode = this.graphNodes.find((n) => n.id === edge.to);
+      if (
+        fromNode &&
+        toNode &&
+        fromNode.visible !== false &&
+        toNode.visible !== false
+      ) {
         this.drawEdge(ctx, fromNode, toNode, edge);
       }
     }
@@ -1455,14 +1553,22 @@ class SchemaBrowserApp {
     ctx.strokeStyle = colors.gridLine;
     ctx.lineWidth = 0.5;
 
-    for (let x = Math.floor(startX / gridSize) * gridSize; x < endX; x += gridSize) {
+    for (
+      let x = Math.floor(startX / gridSize) * gridSize;
+      x < endX;
+      x += gridSize
+    ) {
       ctx.beginPath();
       ctx.moveTo(x, startY);
       ctx.lineTo(x, endY);
       ctx.stroke();
     }
 
-    for (let y = Math.floor(startY / gridSize) * gridSize; y < endY; y += gridSize) {
+    for (
+      let y = Math.floor(startY / gridSize) * gridSize;
+      y < endY;
+      y += gridSize
+    ) {
       ctx.beginPath();
       ctx.moveTo(startX, y);
       ctx.lineTo(endX, y);
@@ -1472,7 +1578,7 @@ class SchemaBrowserApp {
 
   private drawNode(ctx: CanvasRenderingContext2D, node: GraphNode): void {
     const colors = this.getThemeColors();
-    const isDark = this.currentTheme === 'dark';
+    const isDark = this.currentTheme === "dark";
     const isHovered = this.hoveredNode === node;
     const isSelected = this.selectedTable === node.id;
     const x = node.x;
@@ -1491,7 +1597,11 @@ class SchemaBrowserApp {
     const fieldRowHeight = 24;
     const padding = 12;
     const moreIndicatorHeight = hasMoreFields ? 28 : 0;
-    const dynamicHeight = headerHeight + (visibleFields.length * fieldRowHeight) + padding + moreIndicatorHeight;
+    const dynamicHeight =
+      headerHeight +
+      visibleFields.length * fieldRowHeight +
+      padding +
+      moreIndicatorHeight;
 
     // Update node height for hit detection
     node.height = dynamicHeight;
@@ -1499,7 +1609,10 @@ class SchemaBrowserApp {
     // Shadow
     const shadowAlpha = isDark ? 0.4 : 0.08;
     const hoverShadowAlpha = isDark ? 0.5 : 0.15;
-    ctx.shadowColor = isHovered || isSelected ? `rgba(235, 86, 1, ${hoverShadowAlpha})` : `rgba(0, 0, 0, ${shadowAlpha})`;
+    ctx.shadowColor =
+      isHovered || isSelected
+        ? `rgba(235, 86, 1, ${hoverShadowAlpha})`
+        : `rgba(0, 0, 0, ${shadowAlpha})`;
     ctx.shadowBlur = isHovered ? 16 : 8;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = isHovered ? 6 : 3;
@@ -1511,8 +1624,12 @@ class SchemaBrowserApp {
     ctx.fill();
 
     // Border
-    ctx.shadowColor = 'transparent';
-    ctx.strokeStyle = isSelected ? colors.accentInteractive : (isHovered ? colors.accent : colors.nodeBorder);
+    ctx.shadowColor = "transparent";
+    ctx.strokeStyle = isSelected
+      ? colors.accentInteractive
+      : isHovered
+        ? colors.accent
+        : colors.nodeBorder;
     ctx.lineWidth = isSelected ? 2 : 1;
     ctx.stroke();
 
@@ -1523,7 +1640,10 @@ class SchemaBrowserApp {
       headerGradient.addColorStop(1, colors.accentHover);
     } else {
       headerGradient.addColorStop(0, colors.nodeHeader);
-      headerGradient.addColorStop(1, isDark ? colors.bgSecondary : colors.bgHover);
+      headerGradient.addColorStop(
+        1,
+        isDark ? colors.bgSecondary : colors.bgHover,
+      );
     }
     ctx.fillStyle = headerGradient;
     ctx.beginPath();
@@ -1531,7 +1651,7 @@ class SchemaBrowserApp {
     ctx.fill();
 
     // Header border
-    ctx.strokeStyle = isSelected ? 'rgba(255,255,255,0.1)' : colors.border;
+    ctx.strokeStyle = isSelected ? "rgba(255,255,255,0.1)" : colors.border;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(x, y + headerHeight);
@@ -1539,45 +1659,65 @@ class SchemaBrowserApp {
     ctx.stroke();
 
     // Table name
-    ctx.fillStyle = isSelected ? '#ffffff' : colors.textPrimary;
-    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-    ctx.textBaseline = 'middle';
+    ctx.fillStyle = isSelected ? "#ffffff" : colors.textPrimary;
+    ctx.font =
+      'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.textBaseline = "middle";
 
     const tableName = node.table.name;
     const maxNameWidth = w - 100; // Leave room for field count
     let displayName = tableName;
     if (ctx.measureText(tableName).width > maxNameWidth) {
-      while (ctx.measureText(displayName + '...').width > maxNameWidth && displayName.length > 0) {
+      while (
+        ctx.measureText(displayName + "...").width > maxNameWidth &&
+        displayName.length > 0
+      ) {
         displayName = displayName.slice(0, -1);
       }
-      displayName += '...';
+      displayName += "...";
     }
     ctx.fillText(displayName, x + 14, y + headerHeight / 2);
 
     // Field count badge
     const fieldCountText = `${fields.length} fields`;
-    ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.font = "11px -apple-system, BlinkMacSystemFont, sans-serif";
     const countWidth = ctx.measureText(fieldCountText).width + 14;
-    ctx.fillStyle = isSelected ? 'rgba(255,255,255,0.25)' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)');
+    ctx.fillStyle = isSelected
+      ? "rgba(255,255,255,0.25)"
+      : isDark
+        ? "rgba(255,255,255,0.1)"
+        : "rgba(0,0,0,0.06)";
     ctx.beginPath();
-    ctx.roundRect(x + w - countWidth - 10, y + (headerHeight - 20) / 2, countWidth, 20, 10);
+    ctx.roundRect(
+      x + w - countWidth - 10,
+      y + (headerHeight - 20) / 2,
+      countWidth,
+      20,
+      10,
+    );
     ctx.fill();
-    ctx.fillStyle = isSelected ? 'rgba(255,255,255,0.9)' : colors.textSecondary;
-    ctx.textAlign = 'center';
-    ctx.fillText(fieldCountText, x + w - countWidth / 2 - 10, y + headerHeight / 2);
-    ctx.textAlign = 'left';
+    ctx.fillStyle = isSelected ? "rgba(255,255,255,0.9)" : colors.textSecondary;
+    ctx.textAlign = "center";
+    ctx.fillText(
+      fieldCountText,
+      x + w - countWidth / 2 - 10,
+      y + headerHeight / 2,
+    );
+    ctx.textAlign = "left";
 
     // Draw fields
     let fieldY = y + headerHeight + 8;
 
     for (const field of visibleFields) {
-      const isSystemField = field.name.startsWith('_');
-      const isPrimaryKey = field.name === '_id';
-      const isReference = field.type.includes('Id<');
+      const isSystemField = field.name.startsWith("_");
+      const isPrimaryKey = field.name === "_id";
+      const isReference = field.type.includes("Id<");
 
       // Field row background on hover
       if (isHovered) {
-        ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)';
+        ctx.fillStyle = isDark
+          ? "rgba(255, 255, 255, 0.03)"
+          : "rgba(0, 0, 0, 0.02)";
         ctx.fillRect(x + 4, fieldY - 6, w - 8, fieldRowHeight);
       }
 
@@ -1603,26 +1743,29 @@ class SchemaBrowserApp {
       if (field.optional) {
         const nameWidth = ctx.measureText(field.name).width;
         ctx.fillStyle = colors.warning;
-        ctx.font = '10px -apple-system, sans-serif';
-        ctx.fillText('?', nameX + nameWidth + 2, fieldY + 3);
+        ctx.font = "10px -apple-system, sans-serif";
+        ctx.fillText("?", nameX + nameWidth + 2, fieldY + 3);
       }
 
       // Field type (right-aligned)
       ctx.font = '11px "SF Mono", Monaco, "Cascadia Code", monospace';
       ctx.fillStyle = isSystemField ? colors.textMuted : colors.textSecondary;
-      ctx.textAlign = 'right';
+      ctx.textAlign = "right";
 
       let typeText = field.type;
       // Truncate long types
       const maxTypeWidth = 80;
       if (ctx.measureText(typeText).width > maxTypeWidth) {
-        while (ctx.measureText(typeText + '...').width > maxTypeWidth && typeText.length > 0) {
+        while (
+          ctx.measureText(typeText + "...").width > maxTypeWidth &&
+          typeText.length > 0
+        ) {
           typeText = typeText.slice(0, -1);
         }
-        typeText += '...';
+        typeText += "...";
       }
       ctx.fillText(typeText, x + w - 12, fieldY + 4);
-      ctx.textAlign = 'left';
+      ctx.textAlign = "left";
 
       fieldY += fieldRowHeight;
     }
@@ -1636,15 +1779,19 @@ class SchemaBrowserApp {
       ctx.fill();
 
       ctx.fillStyle = colors.textSecondary;
-      ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`+ ${moreCount} more field${moreCount > 1 ? 's' : ''}`, x + w / 2, fieldY + 14);
-      ctx.textAlign = 'left';
+      ctx.font = "11px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(
+        `+ ${moreCount} more field${moreCount > 1 ? "s" : ""}`,
+        x + w / 2,
+        fieldY + 14,
+      );
+      ctx.textAlign = "left";
     }
   }
 
   private getSortedFields(fields: SchemaField[]): SchemaField[] {
-    const systemFields = ['_id', '_creationTime'];
+    const systemFields = ["_id", "_creationTime"];
     return [...fields].sort((a, b) => {
       const aIsSystem = systemFields.includes(a.name);
       const bIsSystem = systemFields.includes(b.name);
@@ -1657,7 +1804,13 @@ class SchemaBrowserApp {
     });
   }
 
-  private drawKeyIcon(ctx: CanvasRenderingContext2D, x: number, y: number, isSelected: boolean, colors: ReturnType<typeof this.getThemeColors>): void {
+  private drawKeyIcon(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    isSelected: boolean,
+    colors: ReturnType<typeof this.getThemeColors>,
+  ): void {
     ctx.save();
     ctx.fillStyle = isSelected ? colors.accentInteractive : colors.warning;
 
@@ -1677,9 +1830,15 @@ class SchemaBrowserApp {
     ctx.restore();
   }
 
-  private drawEdge(ctx: CanvasRenderingContext2D, from: GraphNode, to: GraphNode, edge: GraphEdge): void {
+  private drawEdge(
+    ctx: CanvasRenderingContext2D,
+    from: GraphNode,
+    to: GraphNode,
+    edge: GraphEdge,
+  ): void {
     // Check if this edge is connected to the hovered node
-    const isHighlighted = this.hoveredNode &&
+    const isHighlighted =
+      this.hoveredNode &&
       (this.hoveredNode.id === edge.from || this.hoveredNode.id === edge.to);
 
     // Calculate smart attachment points based on relative positions
@@ -1688,20 +1847,20 @@ class SchemaBrowserApp {
     // Calculate bezier control points
     const distance = Math.sqrt(
       Math.pow(attachment.toX - attachment.fromX, 2) +
-      Math.pow(attachment.toY - attachment.fromY, 2)
+        Math.pow(attachment.toY - attachment.fromY, 2),
     );
     const curvature = Math.min(distance * 0.4, 100);
 
     let cp1x, cp1y, cp2x, cp2y;
 
     // Determine curve direction based on attachment side
-    if (attachment.fromSide === 'right') {
+    if (attachment.fromSide === "right") {
       cp1x = attachment.fromX + curvature;
       cp1y = attachment.fromY;
-    } else if (attachment.fromSide === 'left') {
+    } else if (attachment.fromSide === "left") {
       cp1x = attachment.fromX - curvature;
       cp1y = attachment.fromY;
-    } else if (attachment.fromSide === 'bottom') {
+    } else if (attachment.fromSide === "bottom") {
       cp1x = attachment.fromX;
       cp1y = attachment.fromY + curvature;
     } else {
@@ -1709,13 +1868,13 @@ class SchemaBrowserApp {
       cp1y = attachment.fromY - curvature;
     }
 
-    if (attachment.toSide === 'left') {
+    if (attachment.toSide === "left") {
       cp2x = attachment.toX - curvature;
       cp2y = attachment.toY;
-    } else if (attachment.toSide === 'right') {
+    } else if (attachment.toSide === "right") {
       cp2x = attachment.toX + curvature;
       cp2y = attachment.toY;
-    } else if (attachment.toSide === 'top') {
+    } else if (attachment.toSide === "top") {
       cp2x = attachment.toX;
       cp2y = attachment.toY - curvature;
     } else {
@@ -1726,14 +1885,14 @@ class SchemaBrowserApp {
     // Draw shadow for highlighted edges
     if (isHighlighted) {
       ctx.save();
-      ctx.shadowColor = 'rgba(235, 86, 1, 0.3)';
+      ctx.shadowColor = "rgba(235, 86, 1, 0.3)";
       ctx.shadowBlur = 8;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
     }
 
     // Draw the curve
-    ctx.strokeStyle = isHighlighted ? '#EB5601' : '#8b7355';
+    ctx.strokeStyle = isHighlighted ? "#EB5601" : "#8b7355";
     ctx.lineWidth = isHighlighted ? 2.5 : 1.5;
 
     // Use dashed line for inferred relationships
@@ -1755,40 +1914,69 @@ class SchemaBrowserApp {
     }
 
     // Draw arrow head
-    this.drawArrowHead(ctx, cp2x, cp2y, attachment.toX, attachment.toY, isHighlighted);
+    this.drawArrowHead(
+      ctx,
+      cp2x,
+      cp2y,
+      attachment.toX,
+      attachment.toY,
+      isHighlighted,
+    );
 
     // Draw edge label with background
     const midT = 0.5;
-    const midX = this.bezierPoint(attachment.fromX, cp1x, cp2x, attachment.toX, midT);
-    const midY = this.bezierPoint(attachment.fromY, cp1y, cp2y, attachment.toY, midT) - 12;
+    const midX = this.bezierPoint(
+      attachment.fromX,
+      cp1x,
+      cp2x,
+      attachment.toX,
+      midT,
+    );
+    const midY =
+      this.bezierPoint(attachment.fromY, cp1y, cp2y, attachment.toY, midT) - 12;
 
     // Label background
-    ctx.font = '10px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.font = "10px -apple-system, BlinkMacSystemFont, sans-serif";
     const labelText = edge.fromField;
     const labelWidth = ctx.measureText(labelText).width + 10;
     const labelHeight = 16;
 
-    ctx.fillStyle = isHighlighted ? 'rgba(235, 86, 1, 0.1)' : 'rgba(255, 255, 255, 0.95)';
+    ctx.fillStyle = isHighlighted
+      ? "rgba(235, 86, 1, 0.1)"
+      : "rgba(255, 255, 255, 0.95)";
     ctx.beginPath();
-    ctx.roundRect(midX - labelWidth / 2, midY - labelHeight / 2, labelWidth, labelHeight, 4);
+    ctx.roundRect(
+      midX - labelWidth / 2,
+      midY - labelHeight / 2,
+      labelWidth,
+      labelHeight,
+      4,
+    );
     ctx.fill();
 
-    ctx.strokeStyle = isHighlighted ? 'rgba(235, 86, 1, 0.3)' : '#e6e4e1';
+    ctx.strokeStyle = isHighlighted ? "rgba(235, 86, 1, 0.3)" : "#e6e4e1";
     ctx.lineWidth = 1;
     ctx.stroke();
 
     // Label text
-    ctx.fillStyle = isHighlighted ? '#EB5601' : '#6b6b6b';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.fillStyle = isHighlighted ? "#EB5601" : "#6b6b6b";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     ctx.fillText(labelText, midX, midY);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
   }
 
-  private calculateAttachmentPoints(from: GraphNode, to: GraphNode): {
-    fromX: number; fromY: number; fromSide: 'left' | 'right' | 'top' | 'bottom';
-    toX: number; toY: number; toSide: 'left' | 'right' | 'top' | 'bottom';
+  private calculateAttachmentPoints(
+    from: GraphNode,
+    to: GraphNode,
+  ): {
+    fromX: number;
+    fromY: number;
+    fromSide: "left" | "right" | "top" | "bottom";
+    toX: number;
+    toY: number;
+    toSide: "left" | "right" | "top" | "bottom";
   } {
     const fromCenterX = from.x + from.width / 2;
     const fromCenterY = from.y + from.height / 2;
@@ -1798,8 +1986,8 @@ class SchemaBrowserApp {
     const dx = toCenterX - fromCenterX;
     const dy = toCenterY - fromCenterY;
 
-    let fromSide: 'left' | 'right' | 'top' | 'bottom';
-    let toSide: 'left' | 'right' | 'top' | 'bottom';
+    let fromSide: "left" | "right" | "top" | "bottom";
+    let toSide: "left" | "right" | "top" | "bottom";
     let fromX: number, fromY: number, toX: number, toY: number;
 
     // Determine best sides based on relative positions
@@ -1807,16 +1995,16 @@ class SchemaBrowserApp {
       // Horizontal connection
       if (dx > 0) {
         // To is to the right
-        fromSide = 'right';
-        toSide = 'left';
+        fromSide = "right";
+        toSide = "left";
         fromX = from.x + from.width;
         fromY = fromCenterY;
         toX = to.x;
         toY = toCenterY;
       } else {
         // To is to the left
-        fromSide = 'left';
-        toSide = 'right';
+        fromSide = "left";
+        toSide = "right";
         fromX = from.x;
         fromY = fromCenterY;
         toX = to.x + to.width;
@@ -1826,16 +2014,16 @@ class SchemaBrowserApp {
       // Vertical connection
       if (dy > 0) {
         // To is below
-        fromSide = 'bottom';
-        toSide = 'top';
+        fromSide = "bottom";
+        toSide = "top";
         fromX = fromCenterX;
         fromY = from.y + from.height;
         toX = toCenterX;
         toY = to.y;
       } else {
         // To is above
-        fromSide = 'top';
-        toSide = 'bottom';
+        fromSide = "top";
+        toSide = "bottom";
         fromX = fromCenterX;
         fromY = from.y;
         toX = toCenterX;
@@ -1846,51 +2034,71 @@ class SchemaBrowserApp {
     return { fromX, fromY, fromSide, toX, toY, toSide };
   }
 
-  private drawArrowHead(ctx: CanvasRenderingContext2D, cpX: number, cpY: number, toX: number, toY: number, isHighlighted: boolean): void {
+  private drawArrowHead(
+    ctx: CanvasRenderingContext2D,
+    cpX: number,
+    cpY: number,
+    toX: number,
+    toY: number,
+    isHighlighted: boolean,
+  ): void {
     // Calculate angle from control point to end point
     const angle = Math.atan2(toY - cpY, toX - cpX);
     const arrowSize = isHighlighted ? 10 : 8;
 
-    ctx.fillStyle = isHighlighted ? '#EB5601' : '#8b7355';
+    ctx.fillStyle = isHighlighted ? "#EB5601" : "#8b7355";
     ctx.beginPath();
     ctx.moveTo(toX, toY);
     ctx.lineTo(
       toX - arrowSize * Math.cos(angle - Math.PI / 6),
-      toY - arrowSize * Math.sin(angle - Math.PI / 6)
+      toY - arrowSize * Math.sin(angle - Math.PI / 6),
     );
     ctx.lineTo(
       toX - arrowSize * Math.cos(angle + Math.PI / 6),
-      toY - arrowSize * Math.sin(angle + Math.PI / 6)
+      toY - arrowSize * Math.sin(angle + Math.PI / 6),
     );
     ctx.closePath();
     ctx.fill();
   }
 
-  private bezierPoint(p0: number, p1: number, p2: number, p3: number, t: number): number {
+  private bezierPoint(
+    p0: number,
+    p1: number,
+    p2: number,
+    p3: number,
+    t: number,
+  ): number {
     const mt = 1 - t;
-    return mt * mt * mt * p0 + 3 * mt * mt * t * p1 + 3 * mt * t * t * p2 + t * t * t * p3;
+    return (
+      mt * mt * mt * p0 +
+      3 * mt * mt * t * p1 +
+      3 * mt * t * t * p2 +
+      t * t * t * p3
+    );
   }
 
   private updateCodePanel(): void {
-    const codeBlock = document.getElementById('codeBlock');
-    const codeFilename = document.querySelector('.code-filename');
+    const codeBlock = document.getElementById("codeBlock");
+    const codeFilename = document.querySelector(".code-filename");
 
     if (codeBlock && this.selectedTable) {
-      const table = this.config?.tables?.find(t => t.name === this.selectedTable);
+      const table = this.config?.tables?.find(
+        (t) => t.name === this.selectedTable,
+      );
       const docs = this.config?.allDocuments?.[this.selectedTable] || [];
 
       if (table) {
         const schema: any = {
           table: this.selectedTable,
           documentCount: table.documentCount,
-          fields: {}
+          fields: {},
         };
 
         if (table.inferredFields) {
           for (const field of table.inferredFields) {
             schema.fields[field.name] = {
               type: field.type,
-              required: !field.optional
+              required: !field.optional,
             };
           }
         }
@@ -1899,7 +2107,9 @@ class SchemaBrowserApp {
           schema.sample = docs[0];
         }
 
-        codeBlock.innerHTML = this.syntaxHighlight(JSON.stringify(schema, null, 2));
+        codeBlock.innerHTML = this.syntaxHighlight(
+          JSON.stringify(schema, null, 2),
+        );
       }
     }
 
@@ -1913,15 +2123,18 @@ class SchemaBrowserApp {
   private savePositionState(): void {
     // Don't save if positions haven't changed
     const state: PositionState = {
-      nodes: this.graphNodes.map(n => ({ id: n.id, x: n.x, y: n.y })),
+      nodes: this.graphNodes.map((n) => ({ id: n.id, x: n.x, y: n.y })),
       panX: this.panX,
       panY: this.panY,
-      zoom: this.zoom
+      zoom: this.zoom,
     };
 
     // Remove any redo history
     if (this.historyIndex < this.positionHistory.length - 1) {
-      this.positionHistory = this.positionHistory.slice(0, this.historyIndex + 1);
+      this.positionHistory = this.positionHistory.slice(
+        0,
+        this.historyIndex + 1,
+      );
     }
 
     // Add new state
@@ -1955,7 +2168,7 @@ class SchemaBrowserApp {
 
   private restorePositionState(state: PositionState): void {
     for (const nodePos of state.nodes) {
-      const node = this.graphNodes.find(n => n.id === nodePos.id);
+      const node = this.graphNodes.find((n) => n.id === nodePos.id);
       if (node) {
         node.x = nodePos.x;
         node.y = nodePos.y;
@@ -1969,25 +2182,26 @@ class SchemaBrowserApp {
   }
 
   private updateUndoRedoButtons(): void {
-    const undoBtn = document.getElementById('undoBtn') as HTMLButtonElement;
-    const redoBtn = document.getElementById('redoBtn') as HTMLButtonElement;
+    const undoBtn = document.getElementById("undoBtn") as HTMLButtonElement;
+    const redoBtn = document.getElementById("redoBtn") as HTMLButtonElement;
 
     if (undoBtn) undoBtn.disabled = this.historyIndex <= 0;
-    if (redoBtn) redoBtn.disabled = this.historyIndex >= this.positionHistory.length - 1;
+    if (redoBtn)
+      redoBtn.disabled = this.historyIndex >= this.positionHistory.length - 1;
   }
 
   private fitToView(): void {
     if (this.graphNodes.length === 0) return;
 
     // Calculate bounding box of visible nodes
-    const visibleNodes = this.graphNodes.filter(n => n.visible !== false);
+    const visibleNodes = this.graphNodes.filter((n) => n.visible !== false);
     if (visibleNodes.length === 0) return;
 
     const padding = 60;
-    const minX = Math.min(...visibleNodes.map(n => n.x)) - padding;
-    const maxX = Math.max(...visibleNodes.map(n => n.x + n.width)) + padding;
-    const minY = Math.min(...visibleNodes.map(n => n.y)) - padding;
-    const maxY = Math.max(...visibleNodes.map(n => n.y + n.height)) + padding;
+    const minX = Math.min(...visibleNodes.map((n) => n.x)) - padding;
+    const maxX = Math.max(...visibleNodes.map((n) => n.x + n.width)) + padding;
+    const minY = Math.min(...visibleNodes.map((n) => n.y)) - padding;
+    const maxY = Math.max(...visibleNodes.map((n) => n.y + n.height)) + padding;
 
     const graphWidth = maxX - minX;
     const graphHeight = maxY - minY;
@@ -2018,8 +2232,8 @@ class SchemaBrowserApp {
   }
 
   private updateZoomDisplay(): void {
-    const zoomLevel = document.getElementById('zoomLevel');
-    const zoomDisplay = document.getElementById('zoomDisplay');
+    const zoomLevel = document.getElementById("zoomLevel");
+    const zoomDisplay = document.getElementById("zoomDisplay");
     const percentage = `${Math.round(this.zoom * 100)}%`;
 
     if (zoomLevel) zoomLevel.textContent = percentage;
@@ -2028,14 +2242,14 @@ class SchemaBrowserApp {
 
   private toggleCodePanel(): void {
     this.showCodePanel = !this.showCodePanel;
-    const container = document.getElementById('sidebarContainer');
-    const btn = document.getElementById('viewCodeBtn');
+    const container = document.getElementById("sidebarContainer");
+    const btn = document.getElementById("viewCodeBtn");
 
     if (container) {
-      container.classList.toggle('hidden', !this.showCodePanel);
+      container.classList.toggle("hidden", !this.showCodePanel);
     }
     if (btn) {
-      btn.classList.toggle('active', this.showCodePanel);
+      btn.classList.toggle("active", this.showCodePanel);
     }
 
     // Resize canvas after panel toggle
@@ -2056,37 +2270,37 @@ class SchemaBrowserApp {
 
   private renderDropdowns(): void {
     // Remove existing dropdowns
-    document.getElementById('exportMenu')?.remove();
-    document.getElementById('filterMenu')?.remove();
+    document.getElementById("exportMenu")?.remove();
+    document.getElementById("filterMenu")?.remove();
 
     // Add new dropdowns
-    const app = document.querySelector('.graph-view');
+    const app = document.querySelector(".graph-view");
     if (app) {
       if (this.showExportMenu) {
-        app.insertAdjacentHTML('beforeend', this.renderExportMenu());
+        app.insertAdjacentHTML("beforeend", this.renderExportMenu());
         this.setupExportMenuEvents();
       }
       if (this.showFilterDropdown) {
-        app.insertAdjacentHTML('beforeend', this.renderFilterDropdown());
+        app.insertAdjacentHTML("beforeend", this.renderFilterDropdown());
         this.setupFilterMenuEvents();
       }
     }
   }
 
   private setupExportMenuEvents(): void {
-    document.getElementById('exportJson')?.addEventListener('click', () => {
-      this.exportSchema('json');
+    document.getElementById("exportJson")?.addEventListener("click", () => {
+      this.exportSchema("json");
       this.showExportMenu = false;
       this.renderDropdowns();
     });
 
-    document.getElementById('exportTs')?.addEventListener('click', () => {
-      this.exportSchema('typescript');
+    document.getElementById("exportTs")?.addEventListener("click", () => {
+      this.exportSchema("typescript");
       this.showExportMenu = false;
       this.renderDropdowns();
     });
 
-    document.getElementById('exportPng')?.addEventListener('click', () => {
+    document.getElementById("exportPng")?.addEventListener("click", () => {
       this.exportAsPng();
       this.showExportMenu = false;
       this.renderDropdowns();
@@ -2094,86 +2308,102 @@ class SchemaBrowserApp {
 
     // Close on outside click
     setTimeout(() => {
-      document.addEventListener('click', this.handleOutsideClick.bind(this), { once: true });
+      document.addEventListener("click", this.handleOutsideClick.bind(this), {
+        once: true,
+      });
     }, 0);
   }
 
   private setupFilterMenuEvents(): void {
-    document.getElementById('filterClose')?.addEventListener('click', () => {
+    document.getElementById("filterClose")?.addEventListener("click", () => {
       this.showFilterDropdown = false;
       this.renderDropdowns();
     });
 
-    document.getElementById('filterApply')?.addEventListener('click', () => {
+    document.getElementById("filterApply")?.addEventListener("click", () => {
       this.applyFilters();
     });
 
-    document.getElementById('filterClear')?.addEventListener('click', () => {
+    document.getElementById("filterClear")?.addEventListener("click", () => {
       this.clearFilters();
     });
   }
 
   private handleOutsideClick(e: MouseEvent): void {
-    const exportMenu = document.getElementById('exportMenu');
-    const exportBtn = document.getElementById('exportBtn');
-    const filterMenu = document.getElementById('filterMenu');
-    const filterBtn = document.getElementById('filterBtn');
+    const exportMenu = document.getElementById("exportMenu");
+    const exportBtn = document.getElementById("exportBtn");
+    const filterMenu = document.getElementById("filterMenu");
+    const filterBtn = document.getElementById("filterBtn");
 
-    if (exportMenu && !exportMenu.contains(e.target as Node) && !exportBtn?.contains(e.target as Node)) {
+    if (
+      exportMenu &&
+      !exportMenu.contains(e.target as Node) &&
+      !exportBtn?.contains(e.target as Node)
+    ) {
       this.showExportMenu = false;
       this.renderDropdowns();
     }
 
-    if (filterMenu && !filterMenu.contains(e.target as Node) && !filterBtn?.contains(e.target as Node)) {
+    if (
+      filterMenu &&
+      !filterMenu.contains(e.target as Node) &&
+      !filterBtn?.contains(e.target as Node)
+    ) {
       this.showFilterDropdown = false;
       this.renderDropdowns();
     }
   }
 
-  private exportSchema(format: 'json' | 'typescript'): void {
+  private exportSchema(format: "json" | "typescript"): void {
     const tables = this.config?.tables || [];
     let content: string;
     let filename: string;
     let mimeType: string;
 
-    if (format === 'json') {
+    if (format === "json") {
       const schema: Record<string, any> = {};
       for (const table of tables) {
         schema[table.name] = {
           documentCount: table.documentCount,
-          fields: (table.inferredFields || []).reduce((acc, f) => {
-            acc[f.name] = { type: f.type, required: !f.optional };
-            return acc;
-          }, {} as Record<string, any>)
+          fields: (table.inferredFields || []).reduce(
+            (acc, f) => {
+              acc[f.name] = { type: f.type, required: !f.optional };
+              return acc;
+            },
+            {} as Record<string, any>,
+          ),
         };
       }
       content = JSON.stringify(schema, null, 2);
-      filename = 'convex-schema.json';
-      mimeType = 'application/json';
+      filename = "convex-schema.json";
+      mimeType = "application/json";
     } else {
       // TypeScript Convex schema format
       const lines = [
         'import { defineSchema, defineTable } from "convex/server";',
         'import { v } from "convex/values";',
-        '',
-        'export default defineSchema({',
+        "",
+        "export default defineSchema({",
       ];
 
       for (const table of tables) {
         const fields = (table.inferredFields || [])
-          .filter(f => !f.name.startsWith('_'))
-          .map(f => `    ${f.name}: ${this.toConvexValidator(f.type)}${f.optional ? '.optional()' : ''},`)
-          .join('\n');
+          .filter((f) => !f.name.startsWith("_"))
+          .map(
+            (f) =>
+              `    ${f.name}: ${this.toConvexValidator(f.type)}${f.optional ? ".optional()" : ""},`,
+          )
+          .join("\n");
 
         lines.push(`  ${table.name}: defineTable({`);
         if (fields) lines.push(fields);
-        lines.push('  }),');
+        lines.push("  }),");
       }
 
-      lines.push('});');
-      content = lines.join('\n');
-      filename = 'schema.ts';
-      mimeType = 'text/typescript';
+      lines.push("});");
+      content = lines.join("\n");
+      filename = "schema.ts";
+      mimeType = "text/typescript";
     }
 
     this.downloadFile(content, filename, mimeType);
@@ -2181,29 +2411,33 @@ class SchemaBrowserApp {
 
   private toConvexValidator(type: string): string {
     // Convert inferred types to Convex validators
-    if (type.startsWith('Id<')) return `v.id(${type.slice(3, -1)})`;
-    if (type === 'string') return 'v.string()';
-    if (type === 'number') return 'v.number()';
-    if (type === 'boolean') return 'v.boolean()';
-    if (type === 'null') return 'v.null()';
-    if (type.startsWith('array')) return 'v.array(v.any())';
-    if (type === 'object') return 'v.object({})';
-    return 'v.any()';
+    if (type.startsWith("Id<")) return `v.id(${type.slice(3, -1)})`;
+    if (type === "string") return "v.string()";
+    if (type === "number") return "v.number()";
+    if (type === "boolean") return "v.boolean()";
+    if (type === "null") return "v.null()";
+    if (type.startsWith("array")) return "v.array(v.any())";
+    if (type === "object") return "v.object({})";
+    return "v.any()";
   }
 
   private exportAsPng(): void {
     if (!this.canvas) return;
 
-    const link = document.createElement('a');
-    link.download = 'convex-schema-graph.png';
-    link.href = this.canvas.toDataURL('image/png');
+    const link = document.createElement("a");
+    link.download = "convex-schema-graph.png";
+    link.href = this.canvas.toDataURL("image/png");
     link.click();
   }
 
-  private downloadFile(content: string, filename: string, mimeType: string): void {
+  private downloadFile(
+    content: string,
+    filename: string,
+    mimeType: string,
+  ): void {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = filename;
     link.click();
@@ -2211,10 +2445,18 @@ class SchemaBrowserApp {
   }
 
   private applyFilters(): void {
-    const tableName = (document.getElementById('filterTableName') as HTMLInputElement)?.value || '';
-    const fieldName = (document.getElementById('filterFieldName') as HTMLInputElement)?.value || '';
-    const fieldType = (document.getElementById('filterFieldType') as HTMLSelectElement)?.value || '';
-    const showEmpty = (document.getElementById('filterShowEmpty') as HTMLInputElement)?.checked ?? true;
+    const tableName =
+      (document.getElementById("filterTableName") as HTMLInputElement)?.value ||
+      "";
+    const fieldName =
+      (document.getElementById("filterFieldName") as HTMLInputElement)?.value ||
+      "";
+    const fieldType =
+      (document.getElementById("filterFieldType") as HTMLSelectElement)
+        ?.value || "";
+    const showEmpty =
+      (document.getElementById("filterShowEmpty") as HTMLInputElement)
+        ?.checked ?? true;
 
     this.filterState = { tableName, fieldName, fieldType, showEmpty };
 
@@ -2223,7 +2465,10 @@ class SchemaBrowserApp {
       let visible = true;
 
       // Table name filter
-      if (tableName && !node.table.name.toLowerCase().includes(tableName.toLowerCase())) {
+      if (
+        tableName &&
+        !node.table.name.toLowerCase().includes(tableName.toLowerCase())
+      ) {
         visible = false;
       }
 
@@ -2235,9 +2480,13 @@ class SchemaBrowserApp {
       // Field filters
       if (visible && (fieldName || fieldType)) {
         const fields = node.table.inferredFields || [];
-        const hasMatch = fields.some(f => {
-          const nameMatch = !fieldName || f.name.toLowerCase().includes(fieldName.toLowerCase());
-          const typeMatch = !fieldType || f.type.toLowerCase().includes(fieldType.toLowerCase());
+        const hasMatch = fields.some((f) => {
+          const nameMatch =
+            !fieldName ||
+            f.name.toLowerCase().includes(fieldName.toLowerCase());
+          const typeMatch =
+            !fieldType ||
+            f.type.toLowerCase().includes(fieldType.toLowerCase());
           return nameMatch && typeMatch;
         });
         if (!hasMatch) visible = false;
@@ -2252,17 +2501,30 @@ class SchemaBrowserApp {
   }
 
   private clearFilters(): void {
-    this.filterState = { tableName: '', fieldName: '', fieldType: '', showEmpty: true };
+    this.filterState = {
+      tableName: "",
+      fieldName: "",
+      fieldType: "",
+      showEmpty: true,
+    };
 
     // Reset filter inputs
-    const tableNameInput = document.getElementById('filterTableName') as HTMLInputElement;
-    const fieldNameInput = document.getElementById('filterFieldName') as HTMLInputElement;
-    const fieldTypeSelect = document.getElementById('filterFieldType') as HTMLSelectElement;
-    const showEmptyCheckbox = document.getElementById('filterShowEmpty') as HTMLInputElement;
+    const tableNameInput = document.getElementById(
+      "filterTableName",
+    ) as HTMLInputElement;
+    const fieldNameInput = document.getElementById(
+      "filterFieldName",
+    ) as HTMLInputElement;
+    const fieldTypeSelect = document.getElementById(
+      "filterFieldType",
+    ) as HTMLSelectElement;
+    const showEmptyCheckbox = document.getElementById(
+      "filterShowEmpty",
+    ) as HTMLInputElement;
 
-    if (tableNameInput) tableNameInput.value = '';
-    if (fieldNameInput) fieldNameInput.value = '';
-    if (fieldTypeSelect) fieldTypeSelect.value = '';
+    if (tableNameInput) tableNameInput.value = "";
+    if (fieldNameInput) fieldNameInput.value = "";
+    if (fieldTypeSelect) fieldTypeSelect.value = "";
     if (showEmptyCheckbox) showEmptyCheckbox.checked = true;
 
     // Show all nodes
@@ -2275,8 +2537,8 @@ class SchemaBrowserApp {
 
   private setupEventListeners(): void {
     // View toggle
-    document.querySelectorAll('.view-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    document.querySelectorAll(".view-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
         const view = (e.currentTarget as HTMLElement).dataset.view as ViewMode;
         if (view && view !== this.viewMode) {
           this.viewMode = view;
@@ -2285,91 +2547,122 @@ class SchemaBrowserApp {
       });
     });
 
-    document.getElementById('refreshBtn')?.addEventListener('click', () => this.refresh());
-    document.getElementById('themeToggle')?.addEventListener('click', () => this.toggleTheme());
+    document
+      .getElementById("refreshBtn")
+      ?.addEventListener("click", () => this.refresh());
+    document
+      .getElementById("themeToggle")
+      ?.addEventListener("click", () => this.toggleTheme());
 
     // Toolbar buttons (graph view)
-    if (this.viewMode === 'graph') {
-      document.getElementById('viewCodeBtn')?.addEventListener('click', () => this.toggleCodePanel());
-      document.getElementById('exportBtn')?.addEventListener('click', (e) => {
+    if (this.viewMode === "graph") {
+      document
+        .getElementById("viewCodeBtn")
+        ?.addEventListener("click", () => this.toggleCodePanel());
+      document.getElementById("exportBtn")?.addEventListener("click", (e) => {
         e.stopPropagation();
         this.toggleExportMenu();
       });
-      document.getElementById('autoArrangeBtn')?.addEventListener('click', () => this.autoArrange());
-      document.getElementById('undoBtn')?.addEventListener('click', () => this.undo());
-      document.getElementById('redoBtn')?.addEventListener('click', () => this.redo());
-      document.getElementById('filterBtn')?.addEventListener('click', (e) => {
+      document
+        .getElementById("autoArrangeBtn")
+        ?.addEventListener("click", () => this.autoArrange());
+      document
+        .getElementById("undoBtn")
+        ?.addEventListener("click", () => this.undo());
+      document
+        .getElementById("redoBtn")
+        ?.addEventListener("click", () => this.redo());
+      document.getElementById("filterBtn")?.addEventListener("click", (e) => {
         e.stopPropagation();
         this.toggleFilterDropdown();
       });
 
       // Toolbar zoom controls
-      document.getElementById('zoomInToolbar')?.addEventListener('click', () => {
-        this.zoom = Math.min(2, this.zoom * 1.2);
-        this.updateZoomDisplay();
-        this.drawGraph();
-      });
-      document.getElementById('zoomOutToolbar')?.addEventListener('click', () => {
-        this.zoom = Math.max(0.25, this.zoom / 1.2);
-        this.updateZoomDisplay();
-        this.drawGraph();
-      });
-      document.getElementById('fitViewBtn')?.addEventListener('click', () => this.fitToView());
+      document
+        .getElementById("zoomInToolbar")
+        ?.addEventListener("click", () => {
+          this.zoom = Math.min(2, this.zoom * 1.2);
+          this.updateZoomDisplay();
+          this.drawGraph();
+        });
+      document
+        .getElementById("zoomOutToolbar")
+        ?.addEventListener("click", () => {
+          this.zoom = Math.max(0.25, this.zoom / 1.2);
+          this.updateZoomDisplay();
+          this.drawGraph();
+        });
+      document
+        .getElementById("fitViewBtn")
+        ?.addEventListener("click", () => this.fitToView());
 
       // Enhanced sidebar events
-      document.getElementById('sectionHeaderTables')?.addEventListener('click', () => {
-        this.toggleSidebarSection('tables');
-      });
-      document.getElementById('sectionHeaderConvex')?.addEventListener('click', () => {
-        this.toggleSidebarSection('convex');
-      });
-      document.getElementById('sortBtn')?.addEventListener('click', () => {
+      document
+        .getElementById("sectionHeaderTables")
+        ?.addEventListener("click", () => {
+          this.toggleSidebarSection("tables");
+        });
+      document
+        .getElementById("sectionHeaderConvex")
+        ?.addEventListener("click", () => {
+          this.toggleSidebarSection("convex");
+        });
+      document.getElementById("sortBtn")?.addEventListener("click", () => {
         this.cycleSortOrder();
       });
 
-      const graphSearchInput = document.getElementById('graphSidebarSearch') as HTMLInputElement;
-      graphSearchInput?.addEventListener('input', (e) => {
+      const graphSearchInput = document.getElementById(
+        "graphSidebarSearch",
+      ) as HTMLInputElement;
+      graphSearchInput?.addEventListener("input", (e) => {
         this.searchQuery = (e.target as HTMLInputElement).value.toLowerCase();
         this.updateSidebarTableList();
       });
 
       // Graph sidebar toggle (left sidebar)
-      document.getElementById('graphSidebarToggle')?.addEventListener('click', () => {
-        this.graphSidebarCollapsed = !this.graphSidebarCollapsed;
-        const sidebar = document.getElementById('enhancedSidebar');
-        const toggle = document.getElementById('graphSidebarToggle');
-        if (sidebar) {
-          sidebar.classList.toggle('collapsed', this.graphSidebarCollapsed);
-        }
-        if (toggle) {
-          toggle.title = this.graphSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
-          // Update the arrow direction
-          const svg = toggle.querySelector('svg path');
-          if (svg) {
-            svg.setAttribute('d', this.graphSidebarCollapsed ? 'M5 2L10 7L5 12' : 'M9 2L4 7L9 12');
+      document
+        .getElementById("graphSidebarToggle")
+        ?.addEventListener("click", () => {
+          this.graphSidebarCollapsed = !this.graphSidebarCollapsed;
+          const sidebar = document.getElementById("enhancedSidebar");
+          const toggle = document.getElementById("graphSidebarToggle");
+          if (sidebar) {
+            sidebar.classList.toggle("collapsed", this.graphSidebarCollapsed);
           }
-        }
-        // Redraw graph (canvas size changed)
-        setTimeout(() => this.resizeCanvas(), 50);
-      });
+          if (toggle) {
+            toggle.title = this.graphSidebarCollapsed
+              ? "Expand sidebar"
+              : "Collapse sidebar";
+            // Update the arrow direction
+            const svg = toggle.querySelector("svg path");
+            if (svg) {
+              svg.setAttribute(
+                "d",
+                this.graphSidebarCollapsed ? "M5 2L10 7L5 12" : "M9 2L4 7L9 12",
+              );
+            }
+          }
+          // Redraw graph (canvas size changed)
+          setTimeout(() => this.resizeCanvas(), 50);
+        });
 
       // Setup sidebar table click events
       this.setupSidebarTableEvents();
     }
 
     // Sidebar toggle
-    document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    document.getElementById("sidebarToggle")?.addEventListener("click", () => {
       this.sidebarCollapsed = !this.sidebarCollapsed;
-      const container = document.getElementById('sidebarContainer');
-      const toggle = document.getElementById('sidebarToggle');
+      const container = document.getElementById("sidebarContainer");
+      const toggle = document.getElementById("sidebarToggle");
       if (container) {
-        container.classList.toggle('collapsed', this.sidebarCollapsed);
+        container.classList.toggle("collapsed", this.sidebarCollapsed);
       }
       if (toggle) {
-        toggle.title = this.sidebarCollapsed ? 'Show panel' : 'Hide panel';
+        toggle.title = this.sidebarCollapsed ? "Show panel" : "Hide panel";
       }
       // Redraw graph if in graph mode (canvas size changed)
-      if (this.viewMode === 'graph') {
+      if (this.viewMode === "graph") {
         setTimeout(() => this.resizeCanvas(), 50);
       }
     });
@@ -2377,12 +2670,18 @@ class SchemaBrowserApp {
     // Sidebar resize
     this.setupSidebarResize();
 
-    if (this.viewMode === 'list') {
-      document.getElementById('prevPage')?.addEventListener('click', () => this.changePage(-1));
-      document.getElementById('nextPage')?.addEventListener('click', () => this.changePage(1));
+    if (this.viewMode === "list") {
+      document
+        .getElementById("prevPage")
+        ?.addEventListener("click", () => this.changePage(-1));
+      document
+        .getElementById("nextPage")
+        ?.addEventListener("click", () => this.changePage(1));
 
-      const searchInput = document.getElementById('searchInput') as HTMLInputElement;
-      searchInput?.addEventListener('input', (e) => {
+      const searchInput = document.getElementById(
+        "searchInput",
+      ) as HTMLInputElement;
+      searchInput?.addEventListener("input", (e) => {
         this.searchQuery = (e.target as HTMLInputElement).value.toLowerCase();
         this.renderTableList();
       });
@@ -2390,7 +2689,7 @@ class SchemaBrowserApp {
   }
 
   private setupSidebarResize(): void {
-    const resizeHandle = document.getElementById('resizeHandle');
+    const resizeHandle = document.getElementById("resizeHandle");
     if (!resizeHandle) return;
 
     let startX = 0;
@@ -2402,41 +2701,42 @@ class SchemaBrowserApp {
       const delta = e.clientX - startX;
       const newWidth = Math.max(180, Math.min(600, startWidth + delta));
 
-      if (this.viewMode === 'list') {
+      if (this.viewMode === "list") {
         this.sidebarWidth = newWidth;
-        const sidebar = document.querySelector('.sidebar') as HTMLElement;
-        if (sidebar) sidebar.style.width = newWidth + 'px';
+        const sidebar = document.querySelector(".sidebar") as HTMLElement;
+        if (sidebar) sidebar.style.width = newWidth + "px";
       } else {
         this.codePanelWidth = newWidth;
-        const codePanel = document.getElementById('codePanel');
-        if (codePanel) codePanel.style.width = newWidth + 'px';
+        const codePanel = document.getElementById("codePanel");
+        if (codePanel) codePanel.style.width = newWidth + "px";
       }
     };
 
     const onMouseUp = () => {
       this.isResizingSidebar = false;
-      resizeHandle.classList.remove('dragging');
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
+      resizeHandle.classList.remove("dragging");
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
 
       // Redraw graph if in graph mode (canvas size changed)
-      if (this.viewMode === 'graph') {
+      if (this.viewMode === "graph") {
         this.resizeCanvas();
       }
     };
 
-    resizeHandle.addEventListener('mousedown', (e) => {
+    resizeHandle.addEventListener("mousedown", (e) => {
       e.preventDefault();
       this.isResizingSidebar = true;
       startX = e.clientX;
-      startWidth = this.viewMode === 'list' ? this.sidebarWidth : this.codePanelWidth;
-      resizeHandle.classList.add('dragging');
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
+      startWidth =
+        this.viewMode === "list" ? this.sidebarWidth : this.codePanelWidth;
+      resizeHandle.classList.add("dragging");
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
     });
   }
 
@@ -2448,54 +2748,57 @@ class SchemaBrowserApp {
     this.dpr = window.devicePixelRatio || 1;
     this.canvas.width = width * this.dpr;
     this.canvas.height = height * this.dpr;
-    this.canvas.style.width = width + 'px';
-    this.canvas.style.height = height + 'px';
+    this.canvas.style.width = width + "px";
+    this.canvas.style.height = height + "px";
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.scale(this.dpr, this.dpr);
     this.drawGraph();
   }
 
   private setupKeyboardShortcuts(): void {
-    document.addEventListener('keydown', (e) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        if (e.key === 'Escape') {
+    document.addEventListener("keydown", (e) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        if (e.key === "Escape") {
           (e.target as HTMLElement).blur();
         }
         return;
       }
 
       switch (e.key) {
-        case 'r':
+        case "r":
           this.refresh();
           break;
-        case 'g':
-          this.viewMode = this.viewMode === 'graph' ? 'list' : 'graph';
+        case "g":
+          this.viewMode = this.viewMode === "graph" ? "list" : "graph";
           this.render();
           break;
-        case 'b':
+        case "b":
           // Toggle sidebar
-          document.getElementById('sidebarToggle')?.click();
+          document.getElementById("sidebarToggle")?.click();
           break;
-        case 'c':
+        case "c":
           // Toggle code panel (graph view only)
-          if (this.viewMode === 'graph') {
+          if (this.viewMode === "graph") {
             this.toggleCodePanel();
           }
           break;
-        case 'a':
+        case "a":
           // Auto arrange (graph view only)
-          if (this.viewMode === 'graph') {
+          if (this.viewMode === "graph") {
             this.autoArrange();
           }
           break;
-        case 'f':
+        case "f":
           // Fit to view (graph view only)
-          if (this.viewMode === 'graph') {
+          if (this.viewMode === "graph") {
             this.fitToView();
           }
           break;
-        case 'z':
-          if ((e.metaKey || e.ctrlKey) && this.viewMode === 'graph') {
+        case "z":
+          if ((e.metaKey || e.ctrlKey) && this.viewMode === "graph") {
             e.preventDefault();
             if (e.shiftKey) {
               this.redo();
@@ -2504,38 +2807,38 @@ class SchemaBrowserApp {
             }
           }
           break;
-        case '+':
-        case '=':
-          if (this.viewMode === 'graph') {
+        case "+":
+        case "=":
+          if (this.viewMode === "graph") {
             this.zoom = Math.min(2, this.zoom * 1.2);
             this.updateZoomDisplay();
             this.drawGraph();
           }
           break;
-        case '-':
-          if (this.viewMode === 'graph') {
+        case "-":
+          if (this.viewMode === "graph") {
             this.zoom = Math.max(0.25, this.zoom / 1.2);
             this.updateZoomDisplay();
             this.drawGraph();
           }
           break;
-        case 'ArrowLeft':
-          if (this.viewMode === 'list') this.changePage(-1);
+        case "ArrowLeft":
+          if (this.viewMode === "list") this.changePage(-1);
           break;
-        case 'ArrowRight':
-          if (this.viewMode === 'list') this.changePage(1);
+        case "ArrowRight":
+          if (this.viewMode === "list") this.changePage(1);
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
-          if (this.viewMode === 'list') this.navigateTable(-1);
+          if (this.viewMode === "list") this.navigateTable(-1);
           break;
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
-          if (this.viewMode === 'list') this.navigateTable(1);
+          if (this.viewMode === "list") this.navigateTable(1);
           break;
-        case '/':
+        case "/":
           e.preventDefault();
-          document.getElementById('searchInput')?.focus();
+          document.getElementById("searchInput")?.focus();
           break;
       }
     });
@@ -2543,16 +2846,18 @@ class SchemaBrowserApp {
 
   // List view methods
   private renderTableList(): void {
-    const tableList = document.getElementById('tableList');
+    const tableList = document.getElementById("tableList");
     if (!tableList) return;
 
     const tables = this.config?.tables || [];
-    const filtered = tables.filter((t) => t.name.toLowerCase().includes(this.searchQuery));
+    const filtered = tables.filter((t) =>
+      t.name.toLowerCase().includes(this.searchQuery),
+    );
 
     if (filtered.length === 0) {
       tableList.innerHTML = `
         <li class="empty-state" style="padding: 30px 20px;">
-          <p>${tables.length === 0 ? 'No tables found' : 'No matching tables'}</p>
+          <p>${tables.length === 0 ? "No tables found" : "No matching tables"}</p>
         </li>
       `;
       return;
@@ -2561,19 +2866,22 @@ class SchemaBrowserApp {
     tableList.innerHTML = filtered
       .map(
         (t) => `
-      <li class="table-item ${t.name === this.selectedTable ? 'active' : ''}" data-table="${t.name}">
+      <li class="table-item ${t.name === this.selectedTable ? "active" : ""}" data-table="${t.name}">
         <span class="table-name">
-          <span class="table-icon">☰</span>
+          <svg class="table-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="1" y="1" width="12" height="12" rx="2"/>
+            <path d="M1 5H13M5 5V13"/>
+          </svg>
           ${t.name}
         </span>
         <span class="table-count">${this.formatCount(t.documentCount)}</span>
       </li>
-    `
+    `,
       )
-      .join('');
+      .join("");
 
-    tableList.querySelectorAll('.table-item').forEach((item) => {
-      item.addEventListener('click', () => {
+    tableList.querySelectorAll(".table-item").forEach((item) => {
+      item.addEventListener("click", () => {
         const tableName = (item as HTMLElement).dataset.table;
         if (tableName) this.selectTable(tableName);
       });
@@ -2581,9 +2889,9 @@ class SchemaBrowserApp {
   }
 
   private formatCount(count: number | undefined): string {
-    if (!count) return '0';
-    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
-    if (count >= 1000) return (count / 1000).toFixed(1) + 'k';
+    if (!count) return "0";
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + "M";
+    if (count >= 1000) return (count / 1000).toFixed(1) + "k";
     return count.toString();
   }
 
@@ -2604,10 +2912,10 @@ class SchemaBrowserApp {
     this.selectedTable = tableName;
     this.currentPage = 1;
 
-    if (this.viewMode === 'list') {
+    if (this.viewMode === "list") {
       this.renderTableList();
       // Re-render the list view content with the new table
-      const listViewContent = document.getElementById('listViewContent');
+      const listViewContent = document.getElementById("listViewContent");
       if (listViewContent) {
         listViewContent.innerHTML = this.renderListViewContent();
         this.setupListViewEventListeners();
@@ -2620,18 +2928,18 @@ class SchemaBrowserApp {
 
   private setupListViewEventListeners(): void {
     // Pagination buttons
-    const prevBtn = document.getElementById('prevPage');
-    const nextBtn = document.getElementById('nextPage');
+    const prevBtn = document.getElementById("prevPage");
+    const nextBtn = document.getElementById("nextPage");
     if (prevBtn) {
-      prevBtn.addEventListener('click', () => this.changePage(-1));
+      prevBtn.addEventListener("click", () => this.changePage(-1));
     }
     if (nextBtn) {
-      nextBtn.addEventListener('click', () => this.changePage(1));
+      nextBtn.addEventListener("click", () => this.changePage(1));
     }
   }
 
   private renderSchema(tableName: string, tableInfo?: TableInfo): void {
-    const panel = document.getElementById('schemaPanel');
+    const panel = document.getElementById("schemaPanel");
     if (!panel) return;
 
     const fields = tableInfo?.inferredFields || [];
@@ -2641,7 +2949,7 @@ class SchemaBrowserApp {
       <div class="schema-title">${tableName}</div>
       <div class="schema-subtitle">
         ${this.formatCount(docCount)} documents
-        ${tableInfo?.hasIndexes ? ' • Has indexes' : ''}
+        ${tableInfo?.hasIndexes ? " • Has indexes" : ""}
       </div>
 
       <div class="schema-grid">
@@ -2663,7 +2971,7 @@ class SchemaBrowserApp {
       return '<p style="color: var(--text-secondary); padding: 12px;">No schema data available</p>';
     }
 
-    const systemFields = ['_id', '_creationTime'];
+    const systemFields = ["_id", "_creationTime"];
     const sortedFields = [...fields].sort((a, b) => {
       const aIsSystem = systemFields.includes(a.name);
       const bIsSystem = systemFields.includes(b.name);
@@ -2675,21 +2983,21 @@ class SchemaBrowserApp {
     return sortedFields
       .map(
         (f) => `
-      <div class="field-row ${systemFields.includes(f.name) ? 'field-system' : ''}">
+      <div class="field-row ${systemFields.includes(f.name) ? "field-system" : ""}">
         <span>
           <span class="field-name">${f.name}</span>
-          ${f.optional ? '<span class="field-optional">?</span>' : ''}
+          ${f.optional ? '<span class="field-optional">?</span>' : ""}
         </span>
         <span class="field-type">${f.type}</span>
       </div>
-    `
+    `,
       )
-      .join('');
+      .join("");
   }
 
   private renderDocuments(docs: Document[]): void {
-    const thead = document.getElementById('docTableHead');
-    const tbody = document.getElementById('docTableBody');
+    const thead = document.getElementById("docTableHead");
+    const tbody = document.getElementById("docTableBody");
     if (!thead || !tbody) return;
 
     const start = (this.currentPage - 1) * this.pageSize;
@@ -2698,21 +3006,22 @@ class SchemaBrowserApp {
     const totalPages = Math.ceil(docs.length / this.pageSize);
 
     if (paginatedDocs.length === 0) {
-      thead.innerHTML = '';
-      tbody.innerHTML = '<tr><td colspan="100" class="empty-state">No documents found</td></tr>';
+      thead.innerHTML = "";
+      tbody.innerHTML =
+        '<tr><td colspan="100" class="empty-state">No documents found</td></tr>';
       return;
     }
 
     const keys = [...new Set(paginatedDocs.flatMap((d) => Object.keys(d)))];
     keys.sort((a, b) => {
-      const aIsSystem = a.startsWith('_');
-      const bIsSystem = b.startsWith('_');
+      const aIsSystem = a.startsWith("_");
+      const bIsSystem = b.startsWith("_");
       if (aIsSystem && !bIsSystem) return -1;
       if (!aIsSystem && bIsSystem) return 1;
       return a.localeCompare(b);
     });
 
-    thead.innerHTML = `<tr>${keys.map((k) => `<th>${k}</th>`).join('')}</tr>`;
+    thead.innerHTML = `<tr>${keys.map((k) => `<th>${k}</th>`).join("")}</tr>`;
     tbody.innerHTML = paginatedDocs
       .map(
         (doc) => `
@@ -2720,40 +3029,50 @@ class SchemaBrowserApp {
         ${keys
           .map((k) => {
             const value = doc[k];
-            const isId = k === '_id';
+            const isId = k === "_id";
             const isNull = value === null || value === undefined;
-            const classes = [isId ? 'id-cell' : '', isNull ? 'null-value' : ''].filter(Boolean).join(' ');
+            const classes = [isId ? "id-cell" : "", isNull ? "null-value" : ""]
+              .filter(Boolean)
+              .join(" ");
             return `<td class="${classes}">${this.formatValue(value)}</td>`;
           })
-          .join('')}
+          .join("")}
       </tr>
-    `
+    `,
       )
-      .join('');
+      .join("");
 
-    const pageInfo = document.getElementById('pageInfo');
+    const pageInfo = document.getElementById("pageInfo");
     if (pageInfo) {
       pageInfo.textContent = `Page ${this.currentPage} of ${totalPages || 1}`;
     }
-    (document.getElementById('prevPage') as HTMLButtonElement).disabled = this.currentPage <= 1;
-    (document.getElementById('nextPage') as HTMLButtonElement).disabled = this.currentPage >= totalPages;
+    (document.getElementById("prevPage") as HTMLButtonElement).disabled =
+      this.currentPage <= 1;
+    (document.getElementById("nextPage") as HTMLButtonElement).disabled =
+      this.currentPage >= totalPages;
   }
 
   private formatValue(value: unknown): string {
-    if (value === null || value === undefined) return '<span class="null-value">null</span>';
-    if (typeof value === 'object') {
+    if (value === null || value === undefined)
+      return '<span class="null-value">null</span>';
+    if (typeof value === "object") {
       const str = JSON.stringify(value);
-      return str.length > 50 ? str.slice(0, 50) + '...' : str;
+      return str.length > 50 ? str.slice(0, 50) + "..." : str;
     }
-    if (typeof value === 'string' && value.length > 50) {
-      return value.slice(0, 50) + '...';
+    if (typeof value === "string" && value.length > 50) {
+      return value.slice(0, 50) + "...";
     }
     return String(value);
   }
 
   private changePage(delta: number): void {
-    const tableInfo = this.config?.tables?.find((t) => t.name === this.selectedTable);
-    const docs = this.config?.allDocuments?.[this.selectedTable || ''] || tableInfo?.documents || [];
+    const tableInfo = this.config?.tables?.find(
+      (t) => t.name === this.selectedTable,
+    );
+    const docs =
+      this.config?.allDocuments?.[this.selectedTable || ""] ||
+      tableInfo?.documents ||
+      [];
     const totalPages = Math.ceil(docs.length / this.pageSize);
 
     const newPage = this.currentPage + delta;
@@ -2762,13 +3081,13 @@ class SchemaBrowserApp {
     this.currentPage = newPage;
 
     // Update just the documents table and pagination
-    const tableWrapper = document.getElementById('documentsTableWrapper');
+    const tableWrapper = document.getElementById("documentsTableWrapper");
     if (tableWrapper) {
       tableWrapper.innerHTML = this.renderDocumentsTable(docs);
     }
 
     // Update pagination bar
-    const paginationBar = document.querySelector('.pagination-bar');
+    const paginationBar = document.querySelector(".pagination-bar");
     if (paginationBar) {
       paginationBar.outerHTML = this.renderPaginationBar(docs);
       this.setupListViewEventListeners();
@@ -2776,12 +3095,12 @@ class SchemaBrowserApp {
   }
 
   private refresh(): void {
-    if (this.viewMode === 'graph') {
+    if (this.viewMode === "graph") {
       this.calculateGraphLayout();
       this.drawGraph();
     } else if (this.selectedTable) {
       // Re-render the list view content
-      const listViewContent = document.getElementById('listViewContent');
+      const listViewContent = document.getElementById("listViewContent");
       if (listViewContent) {
         listViewContent.innerHTML = this.renderListViewContent();
         this.setupListViewEventListeners();

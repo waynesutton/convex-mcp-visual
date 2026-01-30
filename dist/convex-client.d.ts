@@ -2,7 +2,14 @@
  * Convex Client Wrapper
  *
  * Handles authentication and communication with Convex Cloud.
- * Uses Convex system APIs to fetch schema information.
+ * Uses Convex system APIs to fetch schema and document information.
+ *
+ * System queries used:
+ * - /api/shapes2 for inferred schema
+ * - _system/frontend/getSchemas for declared schema
+ * - _system/cli/tables for table list
+ * - _system/cli/tableSize:default for document counts
+ * - _system/cli/tableData for paginated document retrieval
  */
 export interface TableInfo {
     name: string;
@@ -31,31 +38,52 @@ export interface ConnectionTestResult {
     tables?: string[];
     error?: string;
 }
+export interface PaginatedResult<T> {
+    documents: T[];
+    continueCursor?: string;
+    isDone: boolean;
+}
 export declare class ConvexClient {
     private deploymentUrl;
     private adminKey;
     constructor();
     private initialize;
+    /**
+     * Check if admin key is available for system queries
+     */
+    hasAdminAccess(): boolean;
     isConnected(): boolean;
     getDeploymentUrl(): string | null;
     private fetchConvex;
     testConnection(): Promise<ConnectionTestResult>;
     listTables(): Promise<TableInfo[]>;
+    /**
+     * Get document count for a table using system query
+     */
+    getTableCount(tableName: string): Promise<number>;
     getTableSchema(tableName: string): Promise<TableSchema>;
     private parseShapeToFields;
     private shapeToTypeString;
     private parseDocumentTypeToFields;
     private docTypeToString;
+    /**
+     * Query documents from a table using system query
+     * Requires admin access for document retrieval
+     */
     queryDocuments(tableName: string, options?: {
         limit?: number;
         cursor?: string;
-        orderBy?: string;
-        order?: 'asc' | 'desc';
-    }): Promise<{
-        documents: Document[];
-        nextCursor?: string;
-    }>;
+        order?: "asc" | "desc";
+    }): Promise<PaginatedResult<Document>>;
+    /**
+     * Get sample documents from all tables
+     * Fetches up to DEFAULT_DOC_SAMPLE_LIMIT documents per table
+     */
     getAllDocuments(): Promise<Record<string, Document[]>>;
-    runQuery(queryString: string): Promise<unknown>;
+    /**
+     * Run a custom query function by path
+     * Requires admin access
+     */
+    runQuery(queryPath: string, args?: Record<string, unknown>): Promise<unknown>;
 }
 //# sourceMappingURL=convex-client.d.ts.map

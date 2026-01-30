@@ -8,7 +8,7 @@
 interface MetricConfig {
   name: string;
   table: string;
-  aggregation: 'count' | 'sum' | 'avg' | 'min' | 'max';
+  aggregation: "count" | "sum" | "avg" | "min" | "max";
   field?: string;
   filter?: string;
   value?: number;
@@ -16,7 +16,7 @@ interface MetricConfig {
 }
 
 interface ChartConfig {
-  type: 'line' | 'bar' | 'pie' | 'table';
+  type: "line" | "bar" | "pie" | "table";
   title: string;
   table: string;
   xField?: string;
@@ -55,7 +55,7 @@ class RealtimeDashboardApp {
   private config: AppConfig | null = null;
   private refreshTimer: number | null = null;
   private isConnected = true;
-  private currentTheme: 'light' | 'dark' = 'light';
+  private currentTheme: "light" | "dark" = "light";
 
   constructor() {
     this.init();
@@ -70,12 +70,12 @@ class RealtimeDashboardApp {
       this.config = window.__CONVEX_CONFIG__;
     } else {
       const params = new URLSearchParams(window.location.search);
-      const configParam = params.get('config');
+      const configParam = params.get("config");
       if (configParam) {
         try {
           this.config = JSON.parse(decodeURIComponent(configParam));
         } catch (e) {
-          console.error('Failed to parse config:', e);
+          console.error("Failed to parse config:", e);
         }
       }
     }
@@ -87,51 +87,64 @@ class RealtimeDashboardApp {
 
   private initTheme(): void {
     // Check localStorage for saved theme preference
-    const savedTheme = localStorage.getItem('convex-dashboard-theme') as 'light' | 'dark' | null;
+    const savedTheme = localStorage.getItem("convex-dashboard-theme") as
+      | "light"
+      | "dark"
+      | null;
     if (savedTheme) {
       this.currentTheme = savedTheme;
     } else {
       // Check system preference
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        this.currentTheme = 'light'; // Keep light as default even if system prefers dark
+      if (
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
+        this.currentTheme = "light"; // Keep light as default even if system prefers dark
       }
     }
     this.applyTheme();
   }
 
   private applyTheme(): void {
-    document.documentElement.setAttribute('data-theme', this.currentTheme);
-    localStorage.setItem('convex-dashboard-theme', this.currentTheme);
+    document.documentElement.setAttribute("data-theme", this.currentTheme);
+    localStorage.setItem("convex-dashboard-theme", this.currentTheme);
   }
 
   private toggleTheme(): void {
-    this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+    this.currentTheme = this.currentTheme === "light" ? "dark" : "light";
     this.applyTheme();
 
     // Update toggle button icon
-    const themeIcon = document.getElementById('themeIcon');
+    const themeIcon = document.getElementById("themeIcon");
     if (themeIcon) {
-      themeIcon.textContent = this.currentTheme === 'light' ? '◐' : '◑';
+      themeIcon.innerHTML =
+        this.currentTheme === "light"
+          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+          : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
     }
   }
 
   private render(): void {
-    const app = document.getElementById('app');
+    const app = document.getElementById("app");
     if (!app) return;
 
-    const deploymentUrl = this.config?.deploymentUrl || 'Not connected';
+    const deploymentUrl = this.config?.deploymentUrl || "Not connected";
 
     app.innerHTML = `
       <div class="header">
         <h1>
-          <span class="status-dot ${this.isConnected ? '' : 'disconnected'}" id="statusDot"></span>
+          <span class="status-dot ${this.isConnected ? "" : "disconnected"}" id="statusDot"></span>
           Realtime Dashboard
         </h1>
         <div class="header-right">
           <span class="deployment-url">${deploymentUrl}</span>
           <span class="last-update" id="lastUpdate"></span>
           <button class="theme-toggle-btn" id="themeToggle" title="Toggle dark mode">
-            <span id="themeIcon">${this.currentTheme === 'light' ? '◐' : '◑'}</span>
+            <span id="themeIcon">${
+              this.currentTheme === "light"
+                ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+                : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+            }</span>
           </button>
         </div>
       </div>
@@ -141,9 +154,9 @@ class RealtimeDashboardApp {
     `;
 
     // Set up theme toggle handler
-    const themeToggle = document.getElementById('themeToggle');
+    const themeToggle = document.getElementById("themeToggle");
     if (themeToggle) {
-      themeToggle.addEventListener('click', () => this.toggleTheme());
+      themeToggle.addEventListener("click", () => this.toggleTheme());
     }
 
     this.renderMetrics();
@@ -152,7 +165,7 @@ class RealtimeDashboardApp {
   }
 
   private renderMetrics(): void {
-    const grid = document.getElementById('metricsGrid');
+    const grid = document.getElementById("metricsGrid");
     if (!grid) return;
 
     const metrics = this.config?.metrics || [];
@@ -181,35 +194,35 @@ class RealtimeDashboardApp {
         </div>
         <div class="metric-value">${this.formatNumber(m.value || 0)}</div>
         <div class="metric-change neutral">
-          ${m.documentCount !== undefined ? `${m.documentCount} documents` : ''}
+          ${m.documentCount !== undefined ? `${m.documentCount} documents` : ""}
         </div>
-        <div class="metric-source">${m.table} / ${m.aggregation}${m.field ? `(${m.field})` : ''}</div>
+        <div class="metric-source">${m.table} / ${m.aggregation}${m.field ? `(${m.field})` : ""}</div>
       </div>
-    `
+    `,
       )
-      .join('');
+      .join("");
   }
 
   private getMetricIcon(aggregation: string): string {
     const icons: Record<string, string> = {
-      count: '#',
-      sum: 'Σ',
-      avg: 'x̄',
-      min: '↓',
-      max: '↑',
+      count: "#",
+      sum: "Σ",
+      avg: "x̄",
+      min: "↓",
+      max: "↑",
     };
-    return icons[aggregation] || '#';
+    return icons[aggregation] || "#";
   }
 
   private formatNumber(num: number): string {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
+    if (num >= 1000) return (num / 1000).toFixed(1) + "k";
     if (Number.isInteger(num)) return num.toLocaleString();
     return num.toFixed(2);
   }
 
   private renderCharts(): void {
-    const grid = document.getElementById('chartsGrid');
+    const grid = document.getElementById("chartsGrid");
     if (!grid) return;
 
     const charts = this.config?.charts || [];
@@ -244,14 +257,14 @@ class RealtimeDashboardApp {
         </div>
       `;
         })
-        .join('') + activityChart;
+        .join("") + activityChart;
   }
 
   private renderTablesOverview(): string {
     const tables = this.config?.tables || [];
 
     if (tables.length === 0) {
-      return '';
+      return "";
     }
 
     const maxCount = Math.max(...tables.map((t) => t.documentCount), 1);
@@ -269,9 +282,9 @@ class RealtimeDashboardApp {
               <div class="bar" style="height: ${(t.documentCount / maxCount) * 100}%" data-value="${t.documentCount}">
                 <span class="bar-label">${t.name}</span>
               </div>
-            `
+            `,
               )
-              .join('')}
+              .join("")}
           </div>
         </div>
       </div>
@@ -280,13 +293,13 @@ class RealtimeDashboardApp {
 
   private renderChartContent(chart: ChartConfig, data: Document[]): string {
     switch (chart.type) {
-      case 'bar':
+      case "bar":
         return this.renderBarChart(data, chart);
-      case 'line':
+      case "line":
         return this.renderLineChart(data, chart);
-      case 'pie':
+      case "pie":
         return this.renderPieChart(data, chart);
-      case 'table':
+      case "table":
         return this.renderDataTable(data);
       default:
         return `<div class="empty-state">Unknown chart type: ${chart.type}</div>`;
@@ -304,7 +317,7 @@ class RealtimeDashboardApp {
     if (chart.groupBy) {
       const groups = new Map<string, number>();
       for (const doc of data) {
-        const key = String(doc[chart.groupBy] || 'Unknown');
+        const key = String(doc[chart.groupBy] || "Unknown");
         groups.set(key, (groups.get(key) || 0) + 1);
       }
       values = Array.from(groups.entries())
@@ -333,9 +346,9 @@ class RealtimeDashboardApp {
           <div class="bar" style="height: ${(v.value / max) * 100}%" data-value="${v.value}">
             <span class="bar-label">${v.label.slice(0, 8)}</span>
           </div>
-        `
+        `,
           )
-          .join('')}
+          .join("")}
       </div>
     `;
   }
@@ -357,7 +370,7 @@ class RealtimeDashboardApp {
     // Group data
     const groups = new Map<string, number>();
     for (const doc of data) {
-      const key = String(doc[chart.groupBy] || 'Unknown');
+      const key = String(doc[chart.groupBy] || "Unknown");
       groups.set(key, (groups.get(key) || 0) + 1);
     }
 
@@ -371,7 +384,7 @@ class RealtimeDashboardApp {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    const colors = ['#e94560', '#0f3460', '#16213e', '#1a1a2e', '#4caf50'];
+    const colors = ["#e94560", "#0f3460", "#16213e", "#1a1a2e", "#4caf50"];
 
     return `
       <div class="pie-legend">
@@ -383,9 +396,9 @@ class RealtimeDashboardApp {
             <span class="pie-label">${item.label}</span>
             <span class="pie-value">${item.percent}%</span>
           </div>
-        `
+        `,
           )
-          .join('')}
+          .join("")}
       </div>
     `;
   }
@@ -404,7 +417,7 @@ class RealtimeDashboardApp {
         <table>
           <thead>
             <tr>
-              ${keys.map((k) => `<th>${k}</th>`).join('')}
+              ${keys.map((k) => `<th>${k}</th>`).join("")}
             </tr>
           </thead>
           <tbody>
@@ -412,25 +425,27 @@ class RealtimeDashboardApp {
               .map(
                 (doc) => `
               <tr>
-                ${keys.map((k) => `<td>${this.formatValue(doc[k])}</td>`).join('')}
+                ${keys.map((k) => `<td>${this.formatValue(doc[k])}</td>`).join("")}
               </tr>
-            `
+            `,
               )
-              .join('')}
+              .join("")}
           </tbody>
         </table>
       </div>
     `;
   }
 
-  private renderActivityTable(allDocuments: Record<string, Document[]>): string {
+  private renderActivityTable(
+    allDocuments: Record<string, Document[]>,
+  ): string {
     // Get recent documents across all tables
     const allDocs = Object.entries(allDocuments)
       .flatMap(([table, docs]) =>
         docs.map((d) => ({
           table,
           ...d,
-        }))
+        })),
       )
       .sort((a, b) => {
         const aTime = (a._creationTime as number) || 0;
@@ -474,13 +489,13 @@ class RealtimeDashboardApp {
                   <tr>
                     <td>${doc.table}</td>
                     <td style="font-family: var(--font-mono); color: var(--accent);">
-                      ${String(doc._id || '').slice(0, 12)}...
+                      ${String(doc._id || "").slice(0, 12)}...
                     </td>
                     <td>${this.formatTimeAgo(doc._creationTime)}</td>
                   </tr>
-                `
+                `,
                   )
-                  .join('')}
+                  .join("")}
               </tbody>
             </table>
           </div>
@@ -490,19 +505,20 @@ class RealtimeDashboardApp {
   }
 
   private formatValue(value: unknown): string {
-    if (value === null || value === undefined) return '<span style="color: var(--text-secondary)">null</span>';
-    if (typeof value === 'object') {
+    if (value === null || value === undefined)
+      return '<span style="color: var(--text-secondary)">null</span>';
+    if (typeof value === "object") {
       const str = JSON.stringify(value);
-      return str.length > 30 ? str.slice(0, 30) + '...' : str;
+      return str.length > 30 ? str.slice(0, 30) + "..." : str;
     }
-    if (typeof value === 'string' && value.length > 30) {
-      return value.slice(0, 30) + '...';
+    if (typeof value === "string" && value.length > 30) {
+      return value.slice(0, 30) + "...";
     }
     return String(value);
   }
 
   private formatTimeAgo(timestamp: number): string {
-    if (!timestamp) return 'Unknown';
+    if (!timestamp) return "Unknown";
 
     const now = Date.now();
     const diff = now - timestamp;
@@ -511,16 +527,16 @@ class RealtimeDashboardApp {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return 'Just now';
+    if (minutes < 1) return "Just now";
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     return `${days}d ago`;
   }
 
   private updateTimestamp(): void {
-    const el = document.getElementById('lastUpdate');
+    const el = document.getElementById("lastUpdate");
     if (el) {
-      el.textContent = 'Updated: ' + new Date().toLocaleTimeString();
+      el.textContent = "Updated: " + new Date().toLocaleTimeString();
     }
   }
 
@@ -550,6 +566,6 @@ class RealtimeDashboardApp {
 const app = new RealtimeDashboardApp();
 
 // Cleanup on page unload
-window.addEventListener('beforeunload', () => {
+window.addEventListener("beforeunload", () => {
   app.destroy();
 });

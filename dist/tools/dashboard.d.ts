@@ -4,8 +4,8 @@
  * MCP tool that creates real-time dashboard visualizations
  * for Convex data - both in terminal AND in browser.
  */
-import type { Tool } from '@modelcontextprotocol/sdk/types.js';
-import type { ConvexClient } from '../convex-client.js';
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import type { ConvexClient } from "../convex-client.js";
 export declare const dashboardTool: Tool;
 interface ToolResponse {
     content: Array<{
