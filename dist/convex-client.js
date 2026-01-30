@@ -445,13 +445,16 @@ export class ConvexClient {
         }
         const limit = Math.min(options.limit || 50, 100);
         try {
+            // Convex system query format for tableData
             const response = await this.fetchConvex("/api/query", {
                 path: "_system/cli/tableData",
                 args: {
-                    tableName,
-                    cursor: options.cursor || null,
+                    table: tableName,
                     order: options.order || "asc",
-                    take: limit,
+                    paginationOpts: {
+                        cursor: options.cursor || null,
+                        numItems: limit,
+                    },
                 },
                 format: "json",
             });
@@ -460,14 +463,14 @@ export class ConvexClient {
             if (!result) {
                 return { documents: [], isDone: true };
             }
+            const documents = (result.page || []);
             return {
-                documents: (result.page || []),
+                documents,
                 continueCursor: result.continueCursor || undefined,
                 isDone: result.isDone ?? true,
             };
         }
-        catch (error) {
-            console.error(`Failed to query documents from ${tableName}:`, error);
+        catch {
             return { documents: [], isDone: true };
         }
     }

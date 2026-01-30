@@ -5,6 +5,9 @@
  * Supports two views: List View (table-based) and Graph View (visual diagram).
  */
 
+// Make this file a module for proper global augmentation
+export {};
+
 interface TableInfo {
   name: string;
   documentCount: number;
@@ -91,11 +94,10 @@ interface SidebarSections {
   convex: { collapsed: boolean };
 }
 
-declare global {
-  interface Window {
-    __CONVEX_CONFIG__?: AppConfig;
-  }
-}
+// Type for window config injection
+type WindowWithConfig = Window & {
+  __CONVEX_CONFIG__?: AppConfig;
+};
 
 type ViewMode = "list" | "graph";
 
@@ -185,6 +187,20 @@ class SchemaBrowserApp {
     document.documentElement.setAttribute("data-theme", this.currentTheme);
   }
 
+  private showShortcutsModal(): void {
+    const modal = document.getElementById("shortcutsModal");
+    if (modal) {
+      modal.style.display = "flex";
+    }
+  }
+
+  private hideShortcutsModal(): void {
+    const modal = document.getElementById("shortcutsModal");
+    if (modal) {
+      modal.style.display = "none";
+    }
+  }
+
   private toggleTheme(): void {
     this.currentTheme = this.currentTheme === "light" ? "dark" : "light";
     localStorage.setItem("convex-schema-theme", this.currentTheme);
@@ -225,8 +241,9 @@ class SchemaBrowserApp {
   }
 
   private init(): void {
-    if (window.__CONVEX_CONFIG__) {
-      this.config = window.__CONVEX_CONFIG__;
+    const win = window as WindowWithConfig;
+    if (win.__CONVEX_CONFIG__) {
+      this.config = win.__CONVEX_CONFIG__;
     } else {
       const params = new URLSearchParams(window.location.search);
       const configParam = params.get("config");
@@ -265,19 +282,19 @@ class SchemaBrowserApp {
       <div class="app-container ${this.viewMode === "graph" ? "graph-mode" : "list-mode"}">
         <div class="header">
           <h1>
-            <span class="status-dot ${isConnected ? "" : "error"}"></span>
+            <span class="status-dot ${isConnected ? "" : "error"}" title="${isConnected ? "Connected to Convex" : "Not connected"}"></span>
             Schema Browser
           </h1>
           <div class="header-info">
-            <span class="deployment-url">${deploymentUrl}</span>
+            <span class="deployment-url" title="Your Convex deployment URL">${deploymentUrl}</span>
           </div>
           <div class="view-toggle">
-            <button class="view-btn ${this.viewMode === "list" ? "active" : ""}" data-view="list" title="List View">
+            <button class="view-btn ${this.viewMode === "list" ? "active" : ""}" data-view="list" title="List View - Browse tables and documents in a table format (G to toggle)">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M2 3h12v2H2V3zm0 4h12v2H2V7zm0 4h12v2H2v-2z"/>
               </svg>
             </button>
-            <button class="view-btn ${this.viewMode === "graph" ? "active" : ""}" data-view="graph" title="Graph View">
+            <button class="view-btn ${this.viewMode === "graph" ? "active" : ""}" data-view="graph" title="Graph View - Visualize table relationships as a diagram (G to toggle)">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <circle cx="4" cy="4" r="2"/>
                 <circle cx="12" cy="4" r="2"/>
@@ -287,7 +304,13 @@ class SchemaBrowserApp {
             </button>
           </div>
           <div class="header-actions">
-            <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+            <button class="btn" id="shortcutsBtn" title="Keyboard shortcuts">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="6" width="20" height="12" rx="2"/>
+                <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/>
+              </svg>
+            </button>
+            <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">
               <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
               </svg>
@@ -296,11 +319,43 @@ class SchemaBrowserApp {
                 <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
               </svg>
             </button>
-            <button class="btn" id="refreshBtn" title="Refresh">↻</button>
+            <button class="btn" id="refreshBtn" title="Refresh data (R)">↻</button>
           </div>
         </div>
 
         ${this.viewMode === "graph" ? this.renderGraphView() : this.renderListView()}
+        
+        <!-- Keyboard shortcuts modal -->
+        <div class="shortcuts-modal" id="shortcutsModal" style="display: none;">
+          <div class="shortcuts-modal-content">
+            <div class="shortcuts-modal-header">
+              <h3>Keyboard Shortcuts</h3>
+              <button class="shortcuts-close" id="shortcutsClose">&times;</button>
+            </div>
+            <div class="shortcuts-modal-body">
+              <div class="shortcuts-section">
+                <h4>Navigation</h4>
+                <div class="shortcut-item"><kbd>G</kbd> Toggle Graph/List view</div>
+                <div class="shortcut-item"><kbd>R</kbd> Refresh data</div>
+                <div class="shortcut-item"><kbd>/</kbd> Focus search</div>
+                <div class="shortcut-item"><kbd>↑</kbd><kbd>↓</kbd> Navigate tables</div>
+              </div>
+              <div class="shortcuts-section">
+                <h4>Graph View</h4>
+                <div class="shortcut-item"><kbd>C</kbd> Toggle code panel</div>
+                <div class="shortcut-item"><kbd>A</kbd> Auto-arrange nodes</div>
+                <div class="shortcut-item"><kbd>F</kbd> Fit to view</div>
+                <div class="shortcut-item"><kbd>+</kbd><kbd>-</kbd> Zoom in/out</div>
+                <div class="shortcut-item"><kbd>Cmd/Ctrl</kbd>+<kbd>Z</kbd> Undo</div>
+              </div>
+              <div class="shortcuts-section">
+                <h4>List View</h4>
+                <div class="shortcut-item"><kbd>←</kbd><kbd>→</kbd> Previous/Next page</div>
+                <div class="shortcut-item"><kbd>B</kbd> Toggle sidebar</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     `;
 
@@ -384,16 +439,16 @@ class SchemaBrowserApp {
       <div class="table-header">
         <div class="table-header-title">${this.selectedTable}</div>
         <div class="table-header-meta">
-          <span>${this.formatCount(docCount)} documents total</span>
-          ${tableInfo?.hasIndexes ? '<span class="badge">Indexed</span>' : ""}
-          <span class="badge">${fields.length} fields</span>
+          <span title="Total documents stored in this table">${this.formatCount(docCount)} documents total</span>
+          ${tableInfo?.hasIndexes ? '<span class="badge" title="This table has database indexes for faster queries">Indexed</span>' : ""}
+          <span class="badge" title="Number of fields in this table schema">${fields.length} fields</span>
         </div>
       </div>
       <div class="content-split">
         <div class="schema-sidebar">
           <div class="schema-sidebar-header">
             <span>Schema</span>
-            <span class="field-count-badge" title="${schemaSource === "declared" ? "From schema.ts" : "Inferred from data"}">${schemaSource}</span>
+            <span class="field-count-badge" title="${schemaSource === "declared" ? "Schema defined in convex/schema.ts" : "Schema inferred from existing documents"}">${schemaSource}</span>
           </div>
           <div class="schema-fields-list">
             ${this.renderSchemaFieldsList(fields)}
@@ -404,9 +459,9 @@ class SchemaBrowserApp {
           <div class="documents-toolbar">
             <div class="documents-toolbar-title">
               Documents
-              <span class="doc-count">${documents.length > 0 ? `(${this.formatCount(documents.length)} loaded of ${this.formatCount(docCount)})` : "(none loaded)"}</span>
+              <span class="doc-count" title="Sample documents loaded from the database">${documents.length > 0 ? `(${this.formatCount(documents.length)} loaded of ${this.formatCount(docCount)})` : "(none loaded)"}</span>
             </div>
-            ${!hasAdminAccess ? '<span class="badge" style="background: var(--warning-bg); color: var(--warning-text);">Deploy key required for documents</span>' : ""}
+            ${!hasAdminAccess ? '<span class="badge" style="background: var(--warning-bg); color: var(--warning-text);" title="A deploy key is required to fetch document data from Convex">Deploy key required for documents</span>' : ""}
           </div>
           <div class="documents-table-wrapper" id="documentsTableWrapper">
             ${this.renderDocumentsTable(documents, hasAdminAccess)}
@@ -434,17 +489,37 @@ class SchemaBrowserApp {
     return sortedFields
       .map((f) => {
         const isSystem = systemFields.includes(f.name);
+        const tooltip = this.getFieldTooltipText(f, isSystem);
         return `
-        <div class="schema-field-item">
+        <div class="schema-field-item" title="${tooltip}">
           <span class="schema-field-name ${isSystem ? "system-field" : ""}">
             ${f.name}
-            ${f.optional ? '<span class="schema-field-optional">?</span>' : ""}
+            ${f.optional ? '<span class="schema-field-optional" title="This field is optional">?</span>' : ""}
           </span>
-          <span class="schema-field-type">${f.type}</span>
+          <span class="schema-field-type" title="Field type: ${f.type}">${f.type}</span>
         </div>
       `;
       })
       .join("");
+  }
+
+  private getFieldTooltipText(field: SchemaField, isSystem: boolean): string {
+    if (field.name === "_id") {
+      return "Document ID: Unique identifier auto-generated by Convex";
+    }
+    if (field.name === "_creationTime") {
+      return "Creation timestamp: Unix time (ms) when this document was created";
+    }
+    if (field.type.includes("Id<")) {
+      const match = field.type.match(/Id<["'](\w+)["']>/);
+      const targetTable = match ? match[1] : "another table";
+      return `Reference to ${targetTable} table`;
+    }
+    let tip = `${field.name}: ${field.type}`;
+    if (field.optional) {
+      tip += " (optional)";
+    }
+    return tip;
   }
 
   private renderIndexesSection(tableInfo: TableInfo): string {
@@ -453,11 +528,11 @@ class SchemaBrowserApp {
     }
     return `
       <div class="schema-indexes">
-        <div class="schema-indexes-title">Indexes</div>
+        <div class="schema-indexes-title" title="Database indexes speed up queries on these fields">Indexes</div>
         ${tableInfo.indexes
           .map(
             (idx) => `
-          <div class="schema-index-item">${idx}</div>
+          <div class="schema-index-item" title="Index: ${idx} - Use withIndex('${idx}', ...) in queries for faster lookups">${idx}</div>
         `,
           )
           .join("")}
@@ -1866,8 +1941,8 @@ class SchemaBrowserApp {
     edge: GraphEdge,
   ): void {
     // Check if this edge is connected to the hovered node
-    const isHighlighted =
-      this.hoveredNode &&
+    const isHighlighted: boolean =
+      this.hoveredNode !== null &&
       (this.hoveredNode.id === edge.from || this.hoveredNode.id === edge.to);
 
     // Calculate smart attachment points based on relative positions
@@ -2583,6 +2658,21 @@ class SchemaBrowserApp {
       .getElementById("themeToggle")
       ?.addEventListener("click", () => this.toggleTheme());
 
+    // Shortcuts modal
+    document
+      .getElementById("shortcutsBtn")
+      ?.addEventListener("click", () => this.showShortcutsModal());
+    document
+      .getElementById("shortcutsClose")
+      ?.addEventListener("click", () => this.hideShortcutsModal());
+    document
+      .getElementById("shortcutsModal")
+      ?.addEventListener("click", (e) => {
+        if ((e.target as HTMLElement).id === "shortcutsModal") {
+          this.hideShortcutsModal();
+        }
+      });
+
     // Toolbar buttons (graph view)
     if (this.viewMode === "graph") {
       document
@@ -2895,7 +2985,9 @@ class SchemaBrowserApp {
     tableList.innerHTML = filtered
       .map(
         (t) => `
-      <li class="table-item ${t.name === this.selectedTable ? "active" : ""}" data-table="${t.name}">
+      <li class="table-item ${t.name === this.selectedTable ? "active" : ""}" 
+          data-table="${t.name}"
+          title="Click to view ${t.name} schema and documents${t.hasIndexes ? " (indexed)" : ""}">
         <span class="table-name">
           <svg class="table-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
             <rect x="1" y="1" width="12" height="12" rx="2"/>
@@ -2903,7 +2995,7 @@ class SchemaBrowserApp {
           </svg>
           ${t.name}
         </span>
-        <span class="table-count">${this.formatCount(t.documentCount)}</span>
+        <span class="table-count" title="${t.documentCount.toLocaleString()} documents">${this.formatCount(t.documentCount)}</span>
       </li>
     `,
       )

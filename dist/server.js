@@ -13,11 +13,20 @@ import { dashboardTool, handleDashboard } from "./tools/dashboard.js";
 import { getSchemaResourceContent } from "./resources/schema-browser.js";
 import { getDashboardResourceContent } from "./resources/dashboard.js";
 import { ConvexClient } from "./convex-client.js";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+// Read version from package.json dynamically
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJsonPath = join(__dirname, "..", "package.json");
+const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+const VERSION = packageJson.version;
 export async function createServer() {
     const convexClient = new ConvexClient();
     const server = new Server({
         name: "convex-mcp-visual",
-        version: "1.0.8",
+        version: VERSION,
     }, {
         capabilities: {
             tools: {},

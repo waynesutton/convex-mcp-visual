@@ -7,16 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.14] - 2026-01-30
+
+### Added
+
+- Comprehensive tooltips throughout Schema Browser and Dashboard UIs
+- Keyboard shortcuts help modal (click keyboard icon or hover buttons for hints)
+- Tooltips on table items showing document counts and index status
+- Tooltips on schema fields explaining field types and references
+- Tooltips on declared/inferred badges explaining schema source
+- Tooltips on index names with query usage hints
+- Tooltips on dashboard metrics explaining aggregation types
+- Tooltips on chart bars showing exact document counts
+- Connection status tooltips on status indicators
+
 ### Changed
 
-- List view now uses declared schema fields (from schema.ts) when available, falling back to inferred
-- List view shows schema source indicator (declared vs inferred)
-- Document count now shows "loaded of total" instead of misleading "total"
-- Added deploy key required message when documents cannot be fetched
+- Enhanced header buttons with keyboard shortcut hints in tooltips
+- Improved field type tooltips with context-aware descriptions
 
 ### Fixed
 
-- List view was only showing inferred fields even when declared schema existed
+- TypeScript type safety with WindowWithConfig pattern for global config
+- Boolean type for edge highlight detection in graph view
+
+## [1.0.13] - 2026-01-30
+
+### Fixed
+
+- Document fetching now works correctly with Convex system API
+- Fixed `_system/cli/tableData` query parameters (table, paginationOpts format)
+- Documents now load and display in the list view
+
+### Changed
+
+- Version is now read dynamically from package.json (no more hardcoded versions)
+- List view now uses declared schema fields when available, falling back to inferred
+- List view shows schema source indicator (declared vs inferred)
+- Document count shows "loaded of total" for clarity
+- Added deploy key required message when documents cannot be fetched
 
 ## [1.0.9] - 2026-01-29
 

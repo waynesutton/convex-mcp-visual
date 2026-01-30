@@ -5,6 +5,9 @@
  * Receives data from the MCP server via injected config.
  */
 
+// Make this file a module for proper global augmentation
+export {};
+
 interface MetricConfig {
   name: string;
   table: string;
@@ -44,12 +47,10 @@ interface AppConfig {
   tables?: TableInfo[];
 }
 
-// Extend window for config injection
-declare global {
-  interface Window {
-    __CONVEX_CONFIG__?: AppConfig;
-  }
-}
+// Type for window config injection
+type WindowWithConfig = Window & {
+  __CONVEX_CONFIG__?: AppConfig;
+};
 
 class RealtimeDashboardApp {
   private config: AppConfig | null = null;
@@ -66,8 +67,9 @@ class RealtimeDashboardApp {
     this.initTheme();
 
     // Get config from window (injected by server) or URL params
-    if (window.__CONVEX_CONFIG__) {
-      this.config = window.__CONVEX_CONFIG__;
+    const win = window as WindowWithConfig;
+    if (win.__CONVEX_CONFIG__) {
+      this.config = win.__CONVEX_CONFIG__;
     } else {
       const params = new URLSearchParams(window.location.search);
       const configParam = params.get("config");
@@ -133,13 +135,13 @@ class RealtimeDashboardApp {
     app.innerHTML = `
       <div class="header">
         <h1>
-          <span class="status-dot ${this.isConnected ? "" : "disconnected"}" id="statusDot"></span>
+          <span class="status-dot ${this.isConnected ? "" : "disconnected"}" id="statusDot" title="${this.isConnected ? "Connected to Convex" : "Not connected - check deploy key"}"></span>
           Realtime Dashboard
         </h1>
         <div class="header-right">
-          <span class="deployment-url">${deploymentUrl}</span>
-          <span class="last-update" id="lastUpdate"></span>
-          <button class="theme-toggle-btn" id="themeToggle" title="Toggle dark mode">
+          <span class="deployment-url" title="Your Convex deployment URL">${deploymentUrl}</span>
+          <span class="last-update" id="lastUpdate" title="Time since last data refresh"></span>
+          <button class="theme-toggle-btn" id="themeToggle" title="Toggle dark/light mode">
             <span id="themeIcon">${
               this.currentTheme === "light"
                 ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
@@ -187,16 +189,16 @@ class RealtimeDashboardApp {
     grid.innerHTML = metrics
       .map(
         (m) => `
-      <div class="metric-card">
+      <div class="metric-card" title="${this.getMetricTooltip(m)}">
         <div class="metric-header">
           <span class="metric-label">${m.name}</span>
-          <span class="metric-icon">${this.getMetricIcon(m.aggregation)}</span>
+          <span class="metric-icon" title="${this.getAggregationTooltip(m.aggregation)}">${this.getMetricIcon(m.aggregation)}</span>
         </div>
-        <div class="metric-value">${this.formatNumber(m.value || 0)}</div>
+        <div class="metric-value" title="Exact value: ${(m.value || 0).toLocaleString()}">${this.formatNumber(m.value || 0)}</div>
         <div class="metric-change neutral">
-          ${m.documentCount !== undefined ? `${m.documentCount} documents` : ""}
+          ${m.documentCount !== undefined ? `${m.documentCount.toLocaleString()} documents` : ""}
         </div>
-        <div class="metric-source">${m.table} / ${m.aggregation}${m.field ? `(${m.field})` : ""}</div>
+        <div class="metric-source" title="Data source: ${m.table} table">${m.table} / ${m.aggregation}${m.field ? `(${m.field})` : ""}</div>
       </div>
     `,
       )
@@ -212,6 +214,22 @@ class RealtimeDashboardApp {
       max: "↑",
     };
     return icons[aggregation] || "#";
+  }
+
+  private getMetricTooltip(metric: MetricConfig): string {
+    const aggDesc = this.getAggregationTooltip(metric.aggregation);
+    return `${metric.name}: ${aggDesc} from ${metric.table}${metric.field ? ` on field "${metric.field}"` : ""}`;
+  }
+
+  private getAggregationTooltip(aggregation: string): string {
+    const descriptions: Record<string, string> = {
+      count: "Count - Total number of documents",
+      sum: "Sum - Total of all values",
+      avg: "Average - Mean of all values",
+      min: "Minimum - Smallest value",
+      max: "Maximum - Largest value",
+    };
+    return descriptions[aggregation] || aggregation;
   }
 
   private formatNumber(num: number): string {
@@ -272,14 +290,14 @@ class RealtimeDashboardApp {
     return `
       <div class="chart-card">
         <div class="chart-header">
-          <span class="chart-title">Tables Overview</span>
+          <span class="chart-title" title="Document count per table in your Convex database">Tables Overview</span>
         </div>
         <div class="chart-container">
           <div class="bar-chart">
             ${tables
               .map(
                 (t) => `
-              <div class="bar" style="height: ${(t.documentCount / maxCount) * 100}%" data-value="${t.documentCount}">
+              <div class="bar" style="height: ${(t.documentCount / maxCount) * 100}%" data-value="${t.documentCount}" title="${t.name}: ${t.documentCount.toLocaleString()} documents">
                 <span class="bar-label">${t.name}</span>
               </div>
             `,

@@ -25,8 +25,8 @@ Overview of the codebase structure.
 Each app contains:
 
 - `index.html` - Entry HTML file
-- `src/app.ts` - Main application logic
-- `src/styles.css` - Component styles
+- `src/app.ts` - Main application logic (TypeScript with WindowWithConfig type)
+- `src/styles.css` - Component styles (including shortcuts modal)
 
 ## Documentation (`docs/`)
 

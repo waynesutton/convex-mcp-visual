@@ -9,14 +9,19 @@
 import { createServer } from "./server.js";
 import { parseArgs } from "util";
 import { writeFileSync, existsSync, readFileSync } from "fs";
-import { join } from "path";
+import { join, dirname } from "path";
 import { homedir } from "os";
 import { createInterface } from "readline";
+import { fileURLToPath } from "url";
 
 const CONFIG_FILE = join(homedir(), ".convex-mcp-visual.json");
 
-// Package version from package.json
-const VERSION = "1.0.10";
+// Read version from package.json dynamically
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJsonPath = join(__dirname, "..", "package.json");
+const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+const VERSION = packageJson.version as string;
 
 async function main() {
   const { values } = parseArgs({

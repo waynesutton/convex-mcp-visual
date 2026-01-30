@@ -32,6 +32,22 @@ Current development tasks and progress.
 - [x] Fixed document count display (loaded of total)
 - [x] Added deploy key required message for documents
 
+## Completed (v1.0.13)
+
+- [x] Fixed document fetching with correct Convex API parameters
+- [x] Version is now read dynamically from package.json
+
+## Completed (v1.0.14)
+
+- [x] Added comprehensive tooltips throughout UI
+- [x] Added keyboard shortcuts help modal
+- [x] Tooltips on table items, schema fields, badges, indexes
+- [x] Tooltips on dashboard metrics and chart bars
+- [x] Connection status tooltips
+- [x] Verified universal compatibility with any Convex app
+- [x] Fixed TypeScript type safety (WindowWithConfig pattern)
+- [x] Fixed boolean type for isHighlighted edge detection
+
 ## Backlog
 
 - [ ] Add schema export as PNG/SVG
