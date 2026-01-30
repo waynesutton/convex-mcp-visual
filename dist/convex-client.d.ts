@@ -2,7 +2,7 @@
  * Convex Client Wrapper
  *
  * Handles authentication and communication with Convex Cloud.
- * Reads credentials from ~/.convex/ or CONVEX_DEPLOY_KEY.
+ * Uses Convex system APIs to fetch schema information.
  */
 export interface TableInfo {
     name: string;
@@ -32,15 +32,20 @@ export interface ConnectionTestResult {
     error?: string;
 }
 export declare class ConvexClient {
-    private client;
     private deploymentUrl;
+    private adminKey;
     constructor();
     private initialize;
     isConnected(): boolean;
     getDeploymentUrl(): string | null;
+    private fetchConvex;
     testConnection(): Promise<ConnectionTestResult>;
     listTables(): Promise<TableInfo[]>;
     getTableSchema(tableName: string): Promise<TableSchema>;
+    private parseShapeToFields;
+    private shapeToTypeString;
+    private parseDocumentTypeToFields;
+    private docTypeToString;
     queryDocuments(tableName: string, options?: {
         limit?: number;
         cursor?: string;

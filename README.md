@@ -238,36 +238,45 @@ Check your client's MCP server status panel.
 
 ## Setup
 
-### 1. Convex Authentication
+### 1. Get Your Deploy Key (Required)
 
-You need valid Convex credentials. The server checks these locations in order:
+You need a **deploy key** from the Convex dashboard. This is different from `npx convex login`.
 
-| Priority | Source | How to Set |
-|----------|--------|------------|
-| 1 | `CONVEX_DEPLOY_KEY` env var | `export CONVEX_DEPLOY_KEY=prod:xxx` |
-| 2 | `CONVEX_URL` env var | `export CONVEX_URL=https://xxx.convex.cloud` |
-| 3 | `~/.convex/config.json` | Run `npx convex login` |
+**Step-by-step:**
 
-**Recommended for local development:**
+1. Go to [dashboard.convex.dev](https://dashboard.convex.dev)
+2. Select your project
+3. Click **Settings** (gear icon)
+4. Click **Deploy Keys** in the sidebar
+5. Click **Generate Deploy Key**
+6. Choose "Development" or "Production"
+7. Copy the key (format: `prod:happy-animal-123|convex_deploy_abc123...`)
 
-```bash
-# Login to Convex (creates ~/.convex/config.json)
-npx convex login
+### 2. Add MCP Server with Deploy Key
 
-# Navigate to your Convex project directory
-cd your-convex-project
-
-# Deploy your project (optional, updates local config)
-npx convex dev
-```
-
-**For CI/CD or servers:**
+**For Claude Code:**
 
 ```bash
-export CONVEX_DEPLOY_KEY=prod:your-deploy-key-here
+claude mcp add convex-visual -e CONVEX_DEPLOY_KEY=prod:your-deployment|your-key-here -- npx convex-mcp-visual --stdio
 ```
 
-### 2. Verify Installation
+**For Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "convex-visual": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"],
+      "env": {
+        "CONVEX_DEPLOY_KEY": "prod:your-deployment|your-key-here"
+      }
+    }
+  }
+}
+```
+
+### 3. Verify Installation
 
 ```bash
 # Check MCP server is registered
@@ -621,12 +630,24 @@ claude mcp add convex-visual -- node /full/path/to/dist/index.js --stdio
 
 ### "No Convex deployment configured"
 
-```bash
-# Login to Convex
-npx convex login
+You need to set `CONVEX_DEPLOY_KEY`. See [Setup](#setup) for how to get a deploy key.
 
-# Or set environment variable
-export CONVEX_URL=https://your-deployment.convex.cloud
+```bash
+# Re-add MCP server with your deploy key
+claude mcp remove convex-visual
+claude mcp add convex-visual -e CONVEX_DEPLOY_KEY=prod:your-deployment|your-key -- npx convex-mcp-visual --stdio
+```
+
+### "403 Forbidden" or "Connection failed"
+
+This means authentication failed. Common causes:
+1. **Missing or invalid deploy key** - Get a new one from [Convex Dashboard](https://dashboard.convex.dev) → Settings → Deploy Keys
+2. **Wrong format** - Deploy key should be `prod:deployment-name|convex_deploy_xxx...`
+3. **Expired key** - Generate a new deploy key
+
+```bash
+# Test your connection
+CONVEX_DEPLOY_KEY=your-key-here npx convex-mcp-visual --test
 ```
 
 ### Browser doesn't open
@@ -637,11 +658,11 @@ export CONVEX_URL=https://your-deployment.convex.cloud
 
 ### Authentication errors
 
-```bash
-# Clear credentials and re-login
-npx convex logout
-npx convex login
-```
+Get a new deploy key from the Convex Dashboard:
+1. Go to [dashboard.convex.dev](https://dashboard.convex.dev)
+2. Select your project → Settings → Deploy Keys
+3. Generate a new key
+4. Update your MCP server configuration
 
 ### Windows users
 

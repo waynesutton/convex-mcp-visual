@@ -2,10 +2,9 @@
  * Convex Client Wrapper
  *
  * Handles authentication and communication with Convex Cloud.
- * Reads credentials from ~/.convex/ or CONVEX_DEPLOY_KEY.
+ * Uses Convex system APIs to fetch schema information.
  */
 
-import { ConvexHttpClient } from 'convex/browser';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
@@ -43,8 +42,8 @@ export interface ConnectionTestResult {
 }
 
 export class ConvexClient {
-  private client: ConvexHttpClient | null = null;
   private deploymentUrl: string | null = null;
+  private adminKey: string | null = null;
 
   constructor() {
     this.initialize();
@@ -55,43 +54,104 @@ export class ConvexClient {
     const deployKey = process.env.CONVEX_DEPLOY_KEY;
     const explicitUrl = process.env.CONVEX_URL;
 
+    if (deployKey) {
+      // Deploy key format: "prod:deploymentName|adminKey"
+      // Example: "prod:happy-animal-123|convex_admin_abc123xyz"
+      if (deployKey.includes('|')) {
+        const pipeIndex = deployKey.indexOf('|');
+        const prefix = deployKey.substring(0, pipeIndex);
+        this.adminKey = deployKey.substring(pipeIndex + 1);
+
+        // Extract deployment name from prefix (e.g., "prod:happy-animal-123")
+        if (prefix.includes(':')) {
+          const colonIndex = prefix.indexOf(':');
+          const deploymentName = prefix.substring(colonIndex + 1);
+          if (!explicitUrl && deploymentName) {
+            this.deploymentUrl = `https://${deploymentName}.convex.cloud`;
+          }
+        }
+      } else {
+        // Just an admin key without prefix
+        this.adminKey = deployKey;
+      }
+    }
+
     if (explicitUrl) {
       this.deploymentUrl = explicitUrl;
-    } else {
-      // Try to read from local Convex config
-      const convexConfigPath = join(homedir(), '.convex', 'config.json');
-      if (existsSync(convexConfigPath)) {
+    }
+
+    // Try to read from local project .env.local
+    if (!this.deploymentUrl) {
+      const envLocalPath = join(process.cwd(), '.env.local');
+      if (existsSync(envLocalPath)) {
         try {
-          const config = JSON.parse(readFileSync(convexConfigPath, 'utf-8'));
-          if (config.deploymentUrl) {
-            this.deploymentUrl = config.deploymentUrl;
+          const envContent = readFileSync(envLocalPath, 'utf-8');
+          const urlMatch = envContent.match(/CONVEX_URL=(.+)/);
+          if (urlMatch) {
+            this.deploymentUrl = urlMatch[1].trim().replace(/["']/g, '');
           }
         } catch {
-          // Ignore config read errors
+          // Ignore errors
         }
       }
     }
 
-    if (this.deploymentUrl) {
-      this.client = new ConvexHttpClient(this.deploymentUrl);
-
-      // Set auth token if deploy key is provided
-      if (deployKey) {
-        this.client.setAuth(deployKey);
+    // Try to read from project's .convex deployment state
+    if (!this.deploymentUrl || !this.adminKey) {
+      const convexJsonPath = join(process.cwd(), '.convex', 'deployment.json');
+      if (existsSync(convexJsonPath)) {
+        try {
+          const config = JSON.parse(readFileSync(convexJsonPath, 'utf-8'));
+          if (config.url && !this.deploymentUrl) {
+            this.deploymentUrl = config.url;
+          }
+          if (config.adminKey && !this.adminKey) {
+            this.adminKey = config.adminKey;
+          }
+        } catch {
+          // Ignore errors
+        }
       }
     }
   }
 
   isConnected(): boolean {
-    return this.client !== null;
+    return this.deploymentUrl !== null;
   }
 
   getDeploymentUrl(): string | null {
     return this.deploymentUrl;
   }
 
+  private async fetchConvex(path: string, body?: object): Promise<any> {
+    if (!this.deploymentUrl) {
+      throw new Error('No deployment URL configured');
+    }
+
+    const url = `${this.deploymentUrl}${path}`;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (this.adminKey) {
+      headers['Authorization'] = `Convex ${this.adminKey}`;
+    }
+
+    const response = await fetch(url, {
+      method: body ? 'POST' : 'GET',
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Convex API error: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
   async testConnection(): Promise<ConnectionTestResult> {
-    if (!this.client || !this.deploymentUrl) {
+    if (!this.deploymentUrl) {
       return {
         success: false,
         error: 'No Convex deployment configured. Set CONVEX_URL or run "npx convex login".',
@@ -99,13 +159,15 @@ export class ConvexClient {
     }
 
     try {
-      // Try to list tables to verify connection
-      const tables = await this.listTables();
+      // Try to get shapes (inferred schema) - this works without admin key for some deployments
+      const shapes = await this.fetchConvex('/api/shapes2');
+      const tables = Object.keys(shapes).filter(t => !t.startsWith('_'));
+
       return {
         success: true,
         deploymentUrl: this.deploymentUrl,
         tableCount: tables.length,
-        tables: tables.map((t) => t.name),
+        tables,
       };
     } catch (error) {
       return {
@@ -117,66 +179,200 @@ export class ConvexClient {
   }
 
   async listTables(): Promise<TableInfo[]> {
-    if (!this.client) {
+    if (!this.deploymentUrl) {
       throw new Error('Convex client not initialized');
     }
 
     try {
-      // Call the schema_info:listTables function in the Convex deployment
-      const result = await this.client.query('schema_info:listTables' as any);
+      // Get inferred schemas from shapes API
+      const shapes = await this.fetchConvex('/api/shapes2');
 
-      if (Array.isArray(result)) {
-        return result.map((table: any) => ({
-          name: table.name,
-          documentCount: table.documentCount || 0,
-          indexes: table.indexes || [],
-        }));
+      const tables: TableInfo[] = [];
+      for (const [tableName, schema] of Object.entries(shapes)) {
+        // Skip system tables
+        if (tableName.startsWith('_')) continue;
+
+        tables.push({
+          name: tableName,
+          documentCount: 0, // Not available from shapes API
+          indexes: [],
+        });
       }
 
-      return [];
+      // Try to get declared schema info if we have admin access
+      if (this.adminKey) {
+        try {
+          const schemaResponse = await this.fetchConvex('/api/query', {
+            path: '_system/frontend/getSchemas',
+            args: {},
+            format: 'json',
+          });
+
+          if (schemaResponse?.value?.active) {
+            const activeSchema = JSON.parse(schemaResponse.value.active);
+            if (activeSchema.tables) {
+              for (const tableSchema of activeSchema.tables) {
+                const existing = tables.find(t => t.name === tableSchema.tableName);
+                if (existing) {
+                  existing.indexes = tableSchema.indexes?.map((i: any) => i.indexDescriptor) || [];
+                } else if (!tableSchema.tableName.startsWith('_')) {
+                  tables.push({
+                    name: tableSchema.tableName,
+                    documentCount: 0,
+                    indexes: tableSchema.indexes?.map((i: any) => i.indexDescriptor) || [],
+                  });
+                }
+              }
+            }
+          }
+        } catch {
+          // Admin query failed, continue with shapes data only
+        }
+      }
+
+      return tables.sort((a, b) => a.name.localeCompare(b.name));
     } catch (error) {
-      // If the query function doesn't exist, return empty array
       console.error('Failed to list tables:', error);
       return [];
     }
   }
 
   async getTableSchema(tableName: string): Promise<TableSchema> {
-    if (!this.client) {
+    if (!this.deploymentUrl) {
       throw new Error('Convex client not initialized');
     }
 
-    try {
-      // Call the schema_info:listTables function and find the specific table
-      const result = await this.client.query('schema_info:listTables' as any);
+    const result: TableSchema = {
+      tableName,
+      declaredFields: [],
+      inferredFields: [],
+    };
 
-      if (Array.isArray(result)) {
-        const table = result.find((t: any) => t.name === tableName);
-        if (table && table.fields) {
-          return {
-            tableName,
-            declaredFields: table.fields.map((f: any) => ({
-              name: f.name,
-              type: f.type,
-              optional: f.optional || false,
-            })),
-            inferredFields: [],
-          };
-        }
+    try {
+      // Get inferred schema from shapes API
+      const shapes = await this.fetchConvex('/api/shapes2');
+      const tableShape = shapes[tableName];
+
+      if (tableShape) {
+        result.inferredFields = this.parseShapeToFields(tableShape);
       }
 
-      return {
-        tableName,
-        declaredFields: [],
-        inferredFields: [],
-      };
+      // Try to get declared schema if we have admin access
+      if (this.adminKey) {
+        try {
+          const schemaResponse = await this.fetchConvex('/api/query', {
+            path: '_system/frontend/getSchemas',
+            args: {},
+            format: 'json',
+          });
+
+          if (schemaResponse?.value?.active) {
+            const activeSchema = JSON.parse(schemaResponse.value.active);
+            const tableSchema = activeSchema.tables?.find((t: any) => t.tableName === tableName);
+            if (tableSchema?.documentType) {
+              result.declaredFields = this.parseDocumentTypeToFields(tableSchema.documentType);
+            }
+          }
+        } catch {
+          // Admin query failed, continue with inferred schema only
+        }
+      }
     } catch (error) {
       console.error('Failed to get table schema:', error);
-      return {
-        tableName,
-        declaredFields: [],
-        inferredFields: [],
-      };
+    }
+
+    return result;
+  }
+
+  private parseShapeToFields(shape: any): SchemaField[] {
+    const fields: SchemaField[] = [];
+
+    if (shape && typeof shape === 'object') {
+      // Handle different shape formats
+      if (shape.type === 'Object' && shape.fields) {
+        for (const [name, fieldShape] of Object.entries(shape.fields as Record<string, any>)) {
+          fields.push({
+            name,
+            type: this.shapeToTypeString(fieldShape),
+            optional: fieldShape.optional || false,
+          });
+        }
+      } else if (Array.isArray(shape)) {
+        // Union of shapes
+        for (const s of shape) {
+          if (s.type === 'Object' && s.fields) {
+            for (const [name, fieldShape] of Object.entries(s.fields as Record<string, any>)) {
+              if (!fields.find(f => f.name === name)) {
+                fields.push({
+                  name,
+                  type: this.shapeToTypeString(fieldShape),
+                  optional: true, // Might not exist in all variants
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return fields;
+  }
+
+  private shapeToTypeString(shape: any): string {
+    if (!shape) return 'unknown';
+
+    if (typeof shape === 'string') return shape;
+
+    if (shape.type) {
+      switch (shape.type) {
+        case 'String': return 'string';
+        case 'Number': return 'number';
+        case 'Boolean': return 'boolean';
+        case 'Id': return `Id<"${shape.tableName || 'unknown'}">`;
+        case 'Array': return `Array<${this.shapeToTypeString(shape.value)}>`;
+        case 'Object': return 'object';
+        case 'Union': return shape.values?.map((v: any) => this.shapeToTypeString(v)).join(' | ') || 'union';
+        case 'Null': return 'null';
+        default: return shape.type.toLowerCase();
+      }
+    }
+
+    return 'unknown';
+  }
+
+  private parseDocumentTypeToFields(docType: any): SchemaField[] {
+    const fields: SchemaField[] = [];
+
+    if (docType && docType.type === 'object' && docType.value) {
+      for (const [name, fieldType] of Object.entries(docType.value as Record<string, any>)) {
+        fields.push({
+          name,
+          type: this.docTypeToString(fieldType),
+          optional: (fieldType as any)?.fieldType?.type === 'optional',
+        });
+      }
+    }
+
+    return fields;
+  }
+
+  private docTypeToString(fieldType: any): string {
+    if (!fieldType) return 'unknown';
+
+    const ft = fieldType.fieldType || fieldType;
+
+    if (ft.type === 'optional' && ft.inner) {
+      return this.docTypeToString(ft.inner) + '?';
+    }
+
+    switch (ft.type) {
+      case 'string': return 'string';
+      case 'number': return 'number';
+      case 'boolean': return 'boolean';
+      case 'id': return `Id<"${ft.tableName || 'unknown'}">`;
+      case 'array': return `Array<${this.docTypeToString(ft.value)}>`;
+      case 'object': return 'object';
+      default: return ft.type || 'unknown';
     }
   }
 
@@ -189,79 +385,36 @@ export class ConvexClient {
       order?: 'asc' | 'desc';
     } = {}
   ): Promise<{ documents: Document[]; nextCursor?: string }> {
-    if (!this.client) {
+    if (!this.deploymentUrl) {
       throw new Error('Convex client not initialized');
     }
 
-    try {
-      // Call the schema_info:getDocuments function to get sample data
-      const result = await this.client.query('schema_info:getDocuments' as any);
+    // Note: Querying documents requires running a query function
+    // This is a simplified implementation that returns empty for now
+    // A full implementation would need a deployed query function
 
-      if (result && typeof result === 'object') {
-        const tableData = (result as Record<string, any>)[tableName];
-        if (Array.isArray(tableData)) {
-          const documents = tableData.map((doc: any) => ({
-            _id: doc._id,
-            _creationTime: doc._creationTime,
-            ...doc,
-          }));
-          return {
-            documents: documents.slice(0, options.limit || 50),
-            nextCursor: undefined,
-          };
-        }
-      }
-
-      return {
-        documents: [],
-        nextCursor: undefined,
-      };
-    } catch (error) {
-      console.error('Failed to query documents:', error);
-      return {
-        documents: [],
-        nextCursor: undefined,
-      };
-    }
+    return {
+      documents: [],
+      nextCursor: undefined,
+    };
   }
 
   async getAllDocuments(): Promise<Record<string, Document[]>> {
-    if (!this.client) {
+    if (!this.deploymentUrl) {
       throw new Error('Convex client not initialized');
     }
 
-    try {
-      // Call the schema_info:getDocuments function to get all documents
-      const result = await this.client.query('schema_info:getDocuments' as any);
+    // Note: Getting all documents requires running query functions
+    // This returns empty for now
 
-      if (result && typeof result === 'object') {
-        const allDocs: Record<string, Document[]> = {};
-        for (const [tableName, docs] of Object.entries(result as Record<string, any>)) {
-          if (Array.isArray(docs)) {
-            allDocs[tableName] = docs.map((doc: any) => ({
-              _id: doc._id,
-              _creationTime: doc._creationTime,
-              ...doc,
-            }));
-          }
-        }
-        return allDocs;
-      }
-
-      return {};
-    } catch (error) {
-      console.error('Failed to get all documents:', error);
-      return {};
-    }
+    return {};
   }
 
   async runQuery(queryString: string): Promise<unknown> {
-    if (!this.client) {
+    if (!this.deploymentUrl) {
       throw new Error('Convex client not initialized');
     }
 
-    // Execute a custom query
-    // Real implementation would use Convex's query API
     throw new Error('Custom queries not yet implemented');
   }
 }
