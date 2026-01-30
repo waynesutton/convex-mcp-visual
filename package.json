@@ -1,6 +1,6 @@
 {
   "name": "convex-mcp-visual",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Visual MCP tools for exploring Convex databases - graph view, schema browser, and dashboards",
   "type": "module",
   "main": "dist/index.js",
