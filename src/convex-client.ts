@@ -253,6 +253,11 @@ export class ConvexClient {
       const shapes = await this.fetchConvex('/api/shapes2');
       const tableShape = shapes[tableName];
 
+      // Debug: log the raw shape to understand the format
+      if (process.env.DEBUG) {
+        console.error(`[DEBUG] Shape for ${tableName}:`, JSON.stringify(tableShape, null, 2));
+      }
+
       if (tableShape) {
         result.inferredFields = this.parseShapeToFields(tableShape);
       }
@@ -288,24 +293,28 @@ export class ConvexClient {
     const fields: SchemaField[] = [];
 
     if (shape && typeof shape === 'object') {
-      // Handle different shape formats
-      if (shape.type === 'Object' && shape.fields) {
-        for (const [name, fieldShape] of Object.entries(shape.fields as Record<string, any>)) {
+      // Handle Object type with fields array
+      if (shape.type === 'Object' && Array.isArray(shape.fields)) {
+        for (const field of shape.fields) {
+          // Skip internal fields
+          if (field.fieldName.startsWith('_')) continue;
+
           fields.push({
-            name,
-            type: this.shapeToTypeString(fieldShape),
-            optional: fieldShape.optional || false,
+            name: field.fieldName,
+            type: this.shapeToTypeString(field.shape),
+            optional: field.optional || false,
           });
         }
       } else if (Array.isArray(shape)) {
         // Union of shapes
         for (const s of shape) {
-          if (s.type === 'Object' && s.fields) {
-            for (const [name, fieldShape] of Object.entries(s.fields as Record<string, any>)) {
-              if (!fields.find(f => f.name === name)) {
+          if (s.type === 'Object' && Array.isArray(s.fields)) {
+            for (const field of s.fields) {
+              if (field.fieldName.startsWith('_')) continue;
+              if (!fields.find(f => f.name === field.fieldName)) {
                 fields.push({
-                  name,
-                  type: this.shapeToTypeString(fieldShape),
+                  name: field.fieldName,
+                  type: this.shapeToTypeString(field.shape),
                   optional: true, // Might not exist in all variants
                 });
               }
@@ -326,13 +335,25 @@ export class ConvexClient {
     if (shape.type) {
       switch (shape.type) {
         case 'String': return 'string';
-        case 'Number': return 'number';
+        case 'Int64':
+        case 'Float64': return 'number';
         case 'Boolean': return 'boolean';
         case 'Id': return `Id<"${shape.tableName || 'unknown'}">`;
-        case 'Array': return `Array<${this.shapeToTypeString(shape.value)}>`;
-        case 'Object': return 'object';
-        case 'Union': return shape.values?.map((v: any) => this.shapeToTypeString(v)).join(' | ') || 'union';
+        case 'Array': return `Array<${this.shapeToTypeString(shape.shape)}>`;
+        case 'Set': return `Set<${this.shapeToTypeString(shape.shape)}>`;
+        case 'Map': return `Map<string, ${this.shapeToTypeString(shape.shape)}>`;
+        case 'Object':
+          if (Array.isArray(shape.fields) && shape.fields.length > 0) {
+            return 'object';
+          }
+          return 'object';
+        case 'Union':
+          if (Array.isArray(shape.shapes)) {
+            return shape.shapes.map((v: any) => this.shapeToTypeString(v)).join(' | ');
+          }
+          return 'union';
         case 'Null': return 'null';
+        case 'Bytes': return 'bytes';
         default: return shape.type.toLowerCase();
       }
     }
