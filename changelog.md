@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.15] - 2026-01-30
+
+### Fixed
+
+- Documents table now scrolls properly in list view
+- Added min-height: 0 to flex containers for proper overflow scrolling
+- Pagination bar now visible at bottom of documents panel
+- Auto Arrange now calls Fit to View so all tables are visible after rearranging
+
 ## [1.0.14] - 2026-01-30
 
 ### Added

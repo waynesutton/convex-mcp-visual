@@ -48,6 +48,13 @@ Current development tasks and progress.
 - [x] Fixed TypeScript type safety (WindowWithConfig pattern)
 - [x] Fixed boolean type for isHighlighted edge detection
 
+## Completed (v1.0.15)
+
+- [x] Fixed documents table scrolling in list view
+- [x] Added min-height: 0 to flex containers for proper overflow
+- [x] Pagination bar now visible at bottom of documents panel
+- [x] Auto Arrange now fits to view after rearranging tables
+
 ## Backlog
 
 - [ ] Add schema export as PNG/SVG

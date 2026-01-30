@@ -1022,6 +1022,14 @@ kbd {
   overflow: hidden;
 }
 
+.list-view .content #listViewContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0; /* Required for flex child to scroll */
+  overflow: hidden;
+}
+
 .list-view .table-header {
   padding: 16px 24px;
   border-bottom: 1px solid var(--border);
@@ -1054,6 +1062,7 @@ kbd {
 .list-view .content-split {
   display: flex;
   flex: 1;
+  min-height: 0; /* Required for flex child to scroll */
   overflow: hidden;
 }
 
@@ -1174,6 +1183,7 @@ kbd {
   overflow: hidden;
   background: var(--bg-primary);
   min-width: 0;
+  min-height: 0; /* Required for flex child to scroll */
 }
 
 .list-view .documents-toolbar {
@@ -1202,6 +1212,7 @@ kbd {
 
 .list-view .documents-table-wrapper {
   flex: 1;
+  min-height: 0; /* Required for flex child to scroll */
   overflow: auto;
   padding: 0;
 }

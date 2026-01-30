@@ -2331,7 +2331,8 @@ class SchemaBrowserApp {
   private autoArrange(): void {
     // Recalculate graph layout
     this.calculateGraphLayout();
-    this.drawGraph();
+    // Fit to view after arranging so all tables are visible
+    this.fitToView();
     this.savePositionState();
   }
 
