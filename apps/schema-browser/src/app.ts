@@ -12,6 +12,7 @@ interface TableInfo {
   indexes?: string[];
   documents?: Document[];
   inferredFields?: SchemaField[];
+  declaredFields?: SchemaField[];
 }
 
 interface SchemaField {
@@ -41,6 +42,7 @@ interface AppConfig {
   tables: TableInfo[];
   selectedSchema: TableSchema | null;
   allDocuments?: Record<string, Document[]>;
+  hasAdminAccess?: boolean;
 }
 
 interface GraphNode {
@@ -370,15 +372,20 @@ class SchemaBrowserApp {
       this.config?.allDocuments?.[this.selectedTable] ||
       tableInfo?.documents ||
       [];
-    const fields = tableInfo?.inferredFields || [];
+    // Use declared fields if available, otherwise fall back to inferred
+    const declaredFields = tableInfo?.declaredFields || [];
+    const inferredFields = tableInfo?.inferredFields || [];
+    const fields = declaredFields.length > 0 ? declaredFields : inferredFields;
+    const schemaSource = declaredFields.length > 0 ? "declared" : "inferred";
     const docCount = tableInfo?.documentCount || 0;
+    const hasAdminAccess = this.config?.hasAdminAccess ?? true;
 
     return `
       <div class="table-header">
         <div class="table-header-title">${this.selectedTable}</div>
         <div class="table-header-meta">
-          <span>${this.formatCount(docCount)} documents</span>
-          ${tableInfo?.hasIndexes ? '<span class="badge">Has indexes</span>' : ""}
+          <span>${this.formatCount(docCount)} documents total</span>
+          ${tableInfo?.hasIndexes ? '<span class="badge">Indexed</span>' : ""}
           <span class="badge">${fields.length} fields</span>
         </div>
       </div>
@@ -386,7 +393,7 @@ class SchemaBrowserApp {
         <div class="schema-sidebar">
           <div class="schema-sidebar-header">
             <span>Schema</span>
-            <span class="field-count-badge">${fields.length}</span>
+            <span class="field-count-badge" title="${schemaSource === "declared" ? "From schema.ts" : "Inferred from data"}">${schemaSource}</span>
           </div>
           <div class="schema-fields-list">
             ${this.renderSchemaFieldsList(fields)}
@@ -397,11 +404,12 @@ class SchemaBrowserApp {
           <div class="documents-toolbar">
             <div class="documents-toolbar-title">
               Documents
-              <span class="doc-count">(${this.formatCount(documents.length)} total)</span>
+              <span class="doc-count">${documents.length > 0 ? `(${this.formatCount(documents.length)} loaded of ${this.formatCount(docCount)})` : "(none loaded)"}</span>
             </div>
+            ${!hasAdminAccess ? '<span class="badge" style="background: var(--warning-bg); color: var(--warning-text);">Deploy key required for documents</span>' : ""}
           </div>
           <div class="documents-table-wrapper" id="documentsTableWrapper">
-            ${this.renderDocumentsTable(documents)}
+            ${this.renderDocumentsTable(documents, hasAdminAccess)}
           </div>
           ${this.renderPaginationBar(documents)}
         </div>
@@ -457,12 +465,33 @@ class SchemaBrowserApp {
     `;
   }
 
-  private renderDocumentsTable(docs: Document[]): string {
+  private renderDocumentsTable(
+    docs: Document[],
+    hasAdminAccess: boolean = true,
+  ): string {
     const start = (this.currentPage - 1) * this.pageSize;
     const end = start + this.pageSize;
     const paginatedDocs = docs.slice(start, end);
 
     if (paginatedDocs.length === 0) {
+      // Show different message based on admin access
+      if (!hasAdminAccess) {
+        return `
+          <div class="documents-empty">
+            <div class="documents-empty-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+            </div>
+            <h3>Deploy Key Required</h3>
+            <p>Set CONVEX_DEPLOY_KEY to view documents.</p>
+            <p style="font-size: 12px; color: var(--text-tertiary); margin-top: 8px;">
+              Get your key from Settings &gt; Deploy Keys in the Convex dashboard.
+            </p>
+          </div>
+        `;
+      }
       return `
         <div class="documents-empty">
           <div class="documents-empty-icon">
@@ -472,7 +501,7 @@ class SchemaBrowserApp {
             </svg>
           </div>
           <h3>No Documents</h3>
-          <p>This table doesn't have any documents yet.</p>
+          <p>This table is empty.</p>
         </div>
       `;
     }

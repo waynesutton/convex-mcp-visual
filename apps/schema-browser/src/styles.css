@@ -4,7 +4,8 @@
   padding: 0;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -23,13 +24,15 @@ html, body {
   --border: #e6e4e1;
   --border-strong: #d4d2cf;
   --accent: #8b7355;
-  --accent-interactive: #EB5601;
+  --accent-interactive: #eb5601;
   --accent-hover: #d14a01;
   --success: #4a8c5c;
   --warning: #c4842d;
+  --warning-bg: #fef3e2;
+  --warning-text: #8a5a00;
   --error: #dc3545;
   --info: #4a7c9b;
-  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
+  --font-mono: "SF Mono", Monaco, "Cascadia Code", "Courier New", monospace;
 
   /* Code panel colors (VS Code style) */
   --code-bg: #1e1e1e;
@@ -47,7 +50,7 @@ html, body {
   /* Node colors for graph */
   --node-bg: #ffffff;
   --node-header: #f8f7f5;
-  --node-header-selected: #EB5601;
+  --node-header-selected: #eb5601;
   --node-border: #e6e4e1;
   --grid-line: #e6e4e1;
 }
@@ -69,6 +72,8 @@ html, body {
   --accent-hover: #ff8555;
   --success: #4ec9b0;
   --warning: #dcdcaa;
+  --warning-bg: #3d3520;
+  --warning-text: #dcdcaa;
   --error: #f14c4c;
   --info: #4fc1ff;
 
@@ -94,7 +99,9 @@ html, body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
@@ -570,7 +577,8 @@ table {
   font-size: 13px;
 }
 
-th, td {
+th,
+td {
   padding: 10px 14px;
   text-align: left;
   border-bottom: 1px solid var(--border);
@@ -670,7 +678,9 @@ td.truncated {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Status Indicators */
@@ -1387,7 +1397,7 @@ kbd {
 }
 
 .resize-handle::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -1815,7 +1825,9 @@ kbd {
   margin: 0;
   padding: 0;
   position: relative;
-  transition: width 0.2s ease, min-width 0.2s ease;
+  transition:
+    width 0.2s ease,
+    min-width 0.2s ease;
 }
 
 /* Graph Sidebar Toggle Button */
@@ -1956,7 +1968,9 @@ kbd {
 .section-content {
   max-height: 500px;
   overflow: hidden;
-  transition: max-height 0.3s ease, opacity 0.2s ease;
+  transition:
+    max-height 0.3s ease,
+    opacity 0.2s ease;
 }
 
 .sidebar-section.collapsed .section-content {
@@ -2321,8 +2335,12 @@ kbd {
 }
 
 @keyframes shimmer {
-  0% { background-position: -200px 0; }
-  100% { background-position: 200px 0; }
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
 }
 
 /* ===== Enhanced Empty States ===== */
@@ -2362,7 +2380,9 @@ kbd {
 /* ===== Animation Polish ===== */
 .table-card,
 .sidebar-table-item {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 /* Smooth view transitions */

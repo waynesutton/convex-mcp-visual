@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- List view now uses declared schema fields (from schema.ts) when available, falling back to inferred
+- List view shows schema source indicator (declared vs inferred)
+- Document count now shows "loaded of total" instead of misleading "total"
+- Added deploy key required message when documents cannot be fetched
+
+### Fixed
+
+- List view was only showing inferred fields even when declared schema existed
+
 ## [1.0.9] - 2026-01-29
 
 ### Added

@@ -17,10 +17,10 @@ Overview of the codebase structure.
 
 ## UI Applications (`apps/`)
 
-| Directory             | Description                                           |
-| --------------------- | ----------------------------------------------------- |
-| `schema-browser/`     | Interactive schema explorer with graph and list views |
-| `realtime-dashboard/` | Real-time metrics and charts dashboard                |
+| Directory             | Description                                               |
+| --------------------- | --------------------------------------------------------- |
+| `schema-browser/`     | Interactive schema explorer with graph view and list view |
+| `realtime-dashboard/` | Real-time metrics and charts dashboard                    |
 
 Each app contains:
 

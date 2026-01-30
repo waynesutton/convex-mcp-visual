@@ -25,6 +25,13 @@ Current development tasks and progress.
 - [x] Shortened README.md for npm publication
 - [x] Updated files.md, changelog.md, TASK.md
 
+## Completed (v1.0.10)
+
+- [x] List view now uses declared schema fields when available
+- [x] Added schema source indicator (declared vs inferred)
+- [x] Fixed document count display (loaded of total)
+- [x] Added deploy key required message for documents
+
 ## Backlog
 
 - [ ] Add schema export as PNG/SVG
