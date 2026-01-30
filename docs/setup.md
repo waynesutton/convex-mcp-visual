@@ -120,6 +120,30 @@ claude mcp add convex-prod -e CONVEX_DEPLOY_KEY=prod:key1 -- npx convex-mcp-visu
 claude mcp add convex-dev -e CONVEX_DEPLOY_KEY=dev:key2 -- npx convex-mcp-visual --stdio
 ```
 
+## Upgrading
+
+### npx users
+
+If you run via `npx convex-mcp-visual`, you get the latest version automatically.
+
+To force a fresh install:
+
+```bash
+npx convex-mcp-visual@latest --test
+```
+
+### Global install users
+
+```bash
+npm update -g convex-mcp-visual
+```
+
+### Verify your version
+
+```bash
+npx convex-mcp-visual --version
+```
+
 ## Environment Variables
 
 | Variable                  | Purpose                           | Default            |

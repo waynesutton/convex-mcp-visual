@@ -107,7 +107,21 @@ Options:
   --port <num>  Port for HTTP mode (default: 3001)
   --test        Test Convex connection
   --setup       Interactive setup wizard
+  -v, --version Show version number
   -h, --help    Show help
+```
+
+## Upgrading
+
+```bash
+# Check your current version
+npx convex-mcp-visual --version
+
+# If using npx, you get the latest version automatically
+npx convex-mcp-visual@latest --version
+
+# If installed globally, update with
+npm update -g convex-mcp-visual
 ```
 
 ## Uninstalling

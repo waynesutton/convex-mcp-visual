@@ -15,6 +15,9 @@ import { createInterface } from "readline";
 
 const CONFIG_FILE = join(homedir(), ".convex-mcp-visual.json");
 
+// Package version from package.json
+const VERSION = "1.0.10";
+
 async function main() {
   const { values } = parseArgs({
     options: {
@@ -23,14 +26,20 @@ async function main() {
       port: { type: "string", default: "3001" },
       test: { type: "boolean", default: false },
       setup: { type: "boolean", default: false },
+      version: { type: "boolean", short: "v", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
     allowPositionals: false,
   });
 
+  if (values.version) {
+    console.log(`convex-mcp-visual v${VERSION}`);
+    process.exit(0);
+  }
+
   if (values.help) {
     console.log(`
-Convex MCP Visual Server
+Convex MCP Visual Server v${VERSION}
 
 Usage:
   convex-mcp-visual [options]
@@ -41,6 +50,7 @@ Options:
   --port <num>  Port for HTTP mode (default: 3001)
   --test        Run connection test and exit
   --setup       Interactive setup wizard for deploy key
+  -v, --version Show version number
   -h, --help    Show this help message
 
 Examples:
