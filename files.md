@@ -30,13 +30,14 @@ Each app contains:
 
 ## Documentation (`docs/`)
 
-| File                 | Description                            |
-| -------------------- | -------------------------------------- |
-| `setup.md`           | Detailed setup and configuration guide |
-| `tools.md`           | Tool parameters and keyboard shortcuts |
-| `architecture.md`    | Technical architecture and design      |
-| `troubleshooting.md` | Common issues and solutions            |
-| `limitations.md`     | Known limitations and compatibility    |
+| File                 | Description                                                    |
+| -------------------- | -------------------------------------------------------------- |
+| `setup.md`           | Detailed setup and configuration guide                         |
+| `junior-guide.md`    | Junior guide for Claude web goals, stack, and read only access |
+| `tools.md`           | Tool parameters and keyboard shortcuts                         |
+| `architecture.md`    | Technical architecture and design                              |
+| `troubleshooting.md` | Common issues and solutions                                    |
+| `limitations.md`     | Known limitations and compatibility                            |
 
 ## Configuration Files
 

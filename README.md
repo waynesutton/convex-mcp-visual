@@ -1,12 +1,12 @@
-# Convex MCP Visual
+# Convex MCP Schema Visualizer
 
-Visual MCP tools for exploring Convex databases. Opens interactive browser UIs alongside terminal output.
+Schema visualizer and dashboard view tools for exploring Convex databases. Opens interactive browser UIs alongside terminal output.
 
 **Features:**
 
-- Graph View with draggable table nodes and relationship lines
-- List View with document browser and schema details
-- Dashboard with real-time metrics and charts
+- Schema visualizer graph view with draggable table nodes and relationship lines
+- List view with document browser and schema details
+- Dashboard view with real time metrics and charts
 - Dark mode support
 
 Works with Claude Code, Claude Desktop, Cursor, and any MCP client.
@@ -56,6 +56,7 @@ In Claude, try:
 ## Documentation
 
 - [Setup Guide](docs/setup.md) - Detailed configuration options
+- [Junior Guide](docs/junior-guide.md) - Intro for Claude web, stack, and read only access
 - [Tools Reference](docs/tools.md) - Parameters and keyboard shortcuts
 - [Architecture](docs/architecture.md) - How it works
 - [Troubleshooting](docs/troubleshooting.md) - Common issues and fixes

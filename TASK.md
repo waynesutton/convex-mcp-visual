@@ -17,6 +17,9 @@ Current development tasks and progress.
 - [x] Move detailed docs to `docs/` folder
 - [x] Normalize naming to convex-mcp-visual
 - [x] Create project hygiene files (files.md, changelog.md, TASK.md)
+- [x] Update README naming for schema visualizer and dashboard view
+- [x] Add junior guide doc for Claude web, stack, and read only access
+- [x] Update files index and changelog for doc and README changes
 
 ## Completed (v1.0.9)
 

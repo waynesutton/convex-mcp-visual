@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Junior guide for Claude web goals, stack, and read only access
+
+### Changed
+
+- README branding for the schema visualizer and dashboard view
+
 ## [1.0.15] - 2026-01-30
 
 ### Fixed
