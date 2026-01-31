@@ -14,11 +14,12 @@ In Claude, ask:
 
 ### Parameters
 
-| Parameter      | Type    | Default | Description                          |
-| -------------- | ------- | ------- | ------------------------------------ |
-| `table`        | string  | none    | Pre-select a specific table          |
-| `showInferred` | boolean | true    | Show inferred schemas from documents |
-| `pageSize`     | number  | 50      | Documents per page in list view      |
+| Parameter      | Type    | Default | Description                                      |
+| -------------- | ------- | ------- | ------------------------------------------------ |
+| `table`        | string  | none    | Pre-select a specific table                      |
+| `showInferred` | boolean | true    | Show inferred schemas from documents             |
+| `pageSize`     | number  | 50      | Documents per page in list view                  |
+| `viewMode`     | string  | "list"  | Initial view: "list" (table) or "graph" (visual) |
 
 ### Views
 

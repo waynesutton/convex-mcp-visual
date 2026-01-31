@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-01-31
+
+### Fixed
+
+- Schema browser now opens in list view by default (was incorrectly defaulting to graph view)
+- CLI `schema` command now shows table-based browser instead of diagram view
+
+### Added
+
+- `--graph` flag for `schema` command to explicitly open graph view
+- `viewMode` parameter for `schema_browser` MCP tool (accepts "list" or "graph")
+
 ## [1.2.0] - 2026-01-31
 
 ### Added

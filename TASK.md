@@ -2,6 +2,14 @@
 
 Current development tasks and progress.
 
+## Completed (v1.2.2)
+
+- [x] Fix schema browser defaulting to graph view instead of list view
+- [x] Add `--graph` flag to CLI `schema` command for explicit graph view
+- [x] Add `viewMode` parameter to `schema_browser` MCP tool
+- [x] Update README with `--graph` flag documentation
+- [x] Verify TypeScript type safety (tsc --noEmit passes)
+
 ## Completed (v1.2.0)
 
 - [x] Add CLI install commands: `--install`, `--install-cursor`, `--install-opencode`, `--install-claude`

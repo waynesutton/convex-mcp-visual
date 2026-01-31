@@ -42,6 +42,7 @@ interface AppConfig {
   selectedTable: string | null;
   showInferred: boolean;
   pageSize: number;
+  viewMode?: "list" | "graph";
   tables: TableInfo[];
   selectedSchema: TableSchema | null;
   allDocuments?: Record<string, Document[]>;
@@ -108,7 +109,7 @@ class SchemaBrowserApp {
   private pageSize = 50;
   private searchQuery = "";
   private queryModalOpen = false;
-  private viewMode: ViewMode = "graph";
+  private viewMode: ViewMode = "list";
 
   // Sidebar state
   private sidebarWidth = 260;
@@ -257,6 +258,12 @@ class SchemaBrowserApp {
     }
 
     this.pageSize = this.config?.pageSize || 50;
+
+    // Set view mode from config (defaults to list)
+    if (this.config?.viewMode === "graph" || this.config?.viewMode === "list") {
+      this.viewMode = this.config.viewMode;
+    }
+
     this.render();
     this.setupKeyboardShortcuts();
 

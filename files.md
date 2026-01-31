@@ -10,7 +10,7 @@ Overview of the codebase structure.
 | `server.ts`                   | MCP server setup, tool registration, and request handlers            |
 | `convex-client.ts`            | Convex API client with system queries for schema and documents       |
 | `ui-server.ts`                | Local HTTP server for browser UI (port 3456)                         |
-| `tools/schema-browser.ts`     | Schema browser tool with real data from Convex system queries        |
+| `tools/schema-browser.ts`     | Schema browser tool with list/graph view modes and real data         |
 | `tools/dashboard.ts`          | Dashboard tool with real metrics from Convex                         |
 | `tools/schema-diagram.ts`     | Schema diagram tool with Mermaid ER diagrams and ASCII output        |
 | `resources/schema-browser.ts` | Fallback HTML for schema browser                                     |

@@ -233,13 +233,14 @@ npx convex-mcp-visual --uninstall-cursor  # Cursor only
 ### Direct CLI Commands
 
 ```bash
-convex-mcp-visual schema              # Browse schema (browser + terminal)
+convex-mcp-visual schema              # Browse schema in list view (browser + terminal)
+convex-mcp-visual schema --graph      # Browse schema in graph view
 convex-mcp-visual schema --table users # Focus on specific table
 convex-mcp-visual schema --json       # JSON output only
 
 convex-mcp-visual dashboard           # View metrics dashboard
 
-convex-mcp-visual diagram             # Generate ER diagram
+convex-mcp-visual diagram             # Generate Mermaid ER diagram
 convex-mcp-visual diagram --theme dracula
 convex-mcp-visual diagram --ascii     # ASCII output for terminal
 ```

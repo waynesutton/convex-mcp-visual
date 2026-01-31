@@ -18,6 +18,7 @@ Features:
 - View declared vs inferred schemas side-by-side
 - Paginate through documents
 - Build and run read-only queries
+- Graph view for visualizing table relationships
 
 The Schema Browser renders as an interactive UI panel where you can click through tables,
 inspect field types, and explore your data visually.`,
@@ -44,6 +45,13 @@ inspect field types, and explore your data visually.`,
         description: "Number of documents per page (default: 50)",
         default: 50,
       },
+      viewMode: {
+        type: "string",
+        enum: ["list", "graph"],
+        description:
+          "Initial view mode: 'list' for table-based view, 'graph' for visual diagram (default: list)",
+        default: "list",
+      },
     },
     required: [],
   },
@@ -62,10 +70,12 @@ export async function handleSchemaBrowser(
     table,
     showInferred = true,
     pageSize = 50,
+    viewMode = "list",
   } = args as {
     table?: string;
     showInferred?: boolean;
     pageSize?: number;
+    viewMode?: "list" | "graph";
   };
 
   // Check if client is connected
@@ -130,6 +140,7 @@ Once connected, the Schema Browser will display your tables and schemas.`,
       selectedTable: table || null,
       showInferred,
       pageSize,
+      viewMode,
       tables: tableInfos,
       hasAdminAccess,
       selectedSchema: selectedTableInfo

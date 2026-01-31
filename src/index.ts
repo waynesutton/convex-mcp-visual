@@ -187,11 +187,12 @@ INSTALL EXAMPLES:
   npx convex-mcp-visual --setup               # Then configure deploy key
 
 DIRECT CLI EXAMPLES:
-  convex-mcp-visual schema                    # Browse schema in browser
+  convex-mcp-visual schema                    # Browse schema in browser (list view)
+  convex-mcp-visual schema --graph            # Browse schema in graph view
   convex-mcp-visual schema --table users      # Focus on users table
   convex-mcp-visual schema --json             # JSON output only (no browser)
   convex-mcp-visual dashboard                 # Open metrics dashboard
-  convex-mcp-visual diagram                   # Generate ER diagram
+  convex-mcp-visual diagram                   # Generate ER diagram (Mermaid)
   convex-mcp-visual diagram --theme dracula   # Use dracula theme
 
 MCP SERVER EXAMPLES:
@@ -232,6 +233,8 @@ async function handleDirectCLI(
       options.theme = args[++i];
     } else if (arg === "--ascii") {
       options.ascii = true;
+    } else if (arg === "--graph") {
+      options.graph = true;
     } else if (arg === "--deployment" && args[i + 1]) {
       const deploymentName = args[++i];
       process.env.CONVEX_URL = `https://${deploymentName}.convex.cloud`;
@@ -264,6 +267,7 @@ async function handleDirectCLI(
         table: options.table,
         showInferred: true,
         pageSize: 50,
+        viewMode: options.graph ? "graph" : "list",
       });
       if (options.json) {
         // JSON output mode - extract structured data
@@ -324,6 +328,7 @@ Browse your Convex database schema with interactive UI.
 
 OPTIONS:
   --table <name>      Pre-select a specific table
+  --graph             Open in graph view (visual diagram)
   --json              Output JSON only (no browser)
   --no-browser        Terminal output only
   --deployment <name> Connect to specific deployment
@@ -332,6 +337,7 @@ OPTIONS:
 EXAMPLES:
   convex-mcp-visual schema
   convex-mcp-visual schema --table users
+  convex-mcp-visual schema --graph
   convex-mcp-visual schema --json
 `);
       break;
