@@ -233,8 +233,8 @@ npx convex-mcp-visual --uninstall-cursor  # Cursor only
 ### Direct CLI Commands
 
 ```bash
-convex-mcp-visual schema              # Browse schema in list view (browser + terminal)
-convex-mcp-visual schema --graph      # Browse schema in graph view
+convex-mcp-visual schema              # Browse schema in graph view (default)
+convex-mcp-visual schema --list       # Browse schema in list view
 convex-mcp-visual schema --table users # Focus on specific table
 convex-mcp-visual schema --json       # JSON output only
 

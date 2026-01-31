@@ -49,8 +49,8 @@ inspect field types, and explore your data visually.`,
         type: "string",
         enum: ["list", "graph"],
         description:
-          "Initial view mode: 'list' for table-based view, 'graph' for visual diagram (default: list)",
-        default: "list",
+          "Initial view mode: 'graph' for visual diagram, 'list' for table-based view (default: graph)",
+        default: "graph",
       },
     },
     required: [],
@@ -70,7 +70,7 @@ export async function handleSchemaBrowser(
     table,
     showInferred = true,
     pageSize = 50,
-    viewMode = "list",
+    viewMode = "graph",
   } = args as {
     table?: string;
     showInferred?: boolean;

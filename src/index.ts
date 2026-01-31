@@ -187,8 +187,8 @@ INSTALL EXAMPLES:
   npx convex-mcp-visual --setup               # Then configure deploy key
 
 DIRECT CLI EXAMPLES:
-  convex-mcp-visual schema                    # Browse schema in browser (list view)
-  convex-mcp-visual schema --graph            # Browse schema in graph view
+  convex-mcp-visual schema                    # Browse schema in graph view (default)
+  convex-mcp-visual schema --list             # Browse schema in list view
   convex-mcp-visual schema --table users      # Focus on users table
   convex-mcp-visual schema --json             # JSON output only (no browser)
   convex-mcp-visual dashboard                 # Open metrics dashboard
@@ -235,6 +235,8 @@ async function handleDirectCLI(
       options.ascii = true;
     } else if (arg === "--graph") {
       options.graph = true;
+    } else if (arg === "--list") {
+      options.list = true;
     } else if (arg === "--deployment" && args[i + 1]) {
       const deploymentName = args[++i];
       process.env.CONVEX_URL = `https://${deploymentName}.convex.cloud`;
@@ -267,7 +269,7 @@ async function handleDirectCLI(
         table: options.table,
         showInferred: true,
         pageSize: 50,
-        viewMode: options.graph ? "graph" : "list",
+        viewMode: options.list ? "list" : "graph",
       });
       if (options.json) {
         // JSON output mode - extract structured data
@@ -328,7 +330,7 @@ Browse your Convex database schema with interactive UI.
 
 OPTIONS:
   --table <name>      Pre-select a specific table
-  --graph             Open in graph view (visual diagram)
+  --list              Open in list view (table-based)
   --json              Output JSON only (no browser)
   --no-browser        Terminal output only
   --deployment <name> Connect to specific deployment
@@ -337,7 +339,7 @@ OPTIONS:
 EXAMPLES:
   convex-mcp-visual schema
   convex-mcp-visual schema --table users
-  convex-mcp-visual schema --graph
+  convex-mcp-visual schema --list
   convex-mcp-visual schema --json
 `);
       break;
@@ -773,10 +775,17 @@ function getConfigPath(client: "cursor" | "opencode" | "claude"): string {
   return paths.linux;
 }
 
-// MCP server config for convex-visual
-const MCP_SERVER_CONFIG = {
+// MCP server config for convex-visual (Claude Desktop / Cursor format)
+const MCP_SERVER_CONFIG_STANDARD = {
   command: "npx",
   args: ["convex-mcp-visual", "--stdio"],
+};
+
+// MCP server config for OpenCode (different schema)
+const MCP_SERVER_CONFIG_OPENCODE = {
+  type: "local",
+  command: ["npx", "-y", "convex-mcp-visual", "--stdio"],
+  enabled: true,
 };
 
 /**
@@ -846,19 +855,19 @@ async function installToClient(
 
     // Add MCP server config based on client type
     if (client === "opencode") {
-      // OpenCode uses "mcp" key
+      // OpenCode uses "mcp" key with different schema (type, command array, enabled)
       if (!config.mcp) {
         config.mcp = {};
       }
       (config.mcp as Record<string, unknown>)["convex-visual"] =
-        MCP_SERVER_CONFIG;
+        MCP_SERVER_CONFIG_OPENCODE;
     } else {
-      // Cursor and Claude Desktop use "mcpServers" key
+      // Cursor and Claude Desktop use "mcpServers" key with standard schema
       if (!config.mcpServers) {
         config.mcpServers = {};
       }
       (config.mcpServers as Record<string, unknown>)["convex-visual"] =
-        MCP_SERVER_CONFIG;
+        MCP_SERVER_CONFIG_STANDARD;
     }
 
     // Write updated config

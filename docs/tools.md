@@ -19,7 +19,7 @@ In Claude, ask:
 | `table`        | string  | none    | Pre-select a specific table                      |
 | `showInferred` | boolean | true    | Show inferred schemas from documents             |
 | `pageSize`     | number  | 50      | Documents per page in list view                  |
-| `viewMode`     | string  | "list"  | Initial view: "list" (table) or "graph" (visual) |
+| `viewMode`     | string  | "graph" | Initial view: "graph" (visual) or "list" (table) |
 
 ### Views
 

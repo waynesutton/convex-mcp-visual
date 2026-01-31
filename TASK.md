@@ -2,12 +2,19 @@
 
 Current development tasks and progress.
 
+## Completed (v1.2.3)
+
+- [x] Fix OpenCode MCP config format in `--install-opencode` command
+- [x] OpenCode now generates correct schema: `type: "local"`, command array, `enabled: true`
+- [x] Update docs/setup.md with correct OpenCode manual configuration example
+- [x] Verify TypeScript type safety (tsc --noEmit passes)
+
 ## Completed (v1.2.2)
 
-- [x] Fix schema browser defaulting to graph view instead of list view
-- [x] Add `--graph` flag to CLI `schema` command for explicit graph view
-- [x] Add `viewMode` parameter to `schema_browser` MCP tool
-- [x] Update README with `--graph` flag documentation
+- [x] Add `viewMode` parameter to `schema_browser` MCP tool (graph/list)
+- [x] Set graph view as default for schema browser (all usage modes)
+- [x] Add `--list` flag to CLI `schema` command for list view
+- [x] Update README and docs with updated flag documentation
 - [x] Verify TypeScript type safety (tsc --noEmit passes)
 
 ## Completed (v1.2.0)

@@ -109,7 +109,7 @@ class SchemaBrowserApp {
   private pageSize = 50;
   private searchQuery = "";
   private queryModalOpen = false;
-  private viewMode: ViewMode = "list";
+  private viewMode: ViewMode = "graph";
 
   // Sidebar state
   private sidebarWidth = 260;

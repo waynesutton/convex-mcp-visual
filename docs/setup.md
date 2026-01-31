@@ -388,12 +388,15 @@ Add to `~/.config/opencode/opencode.json`:
 {
   "mcp": {
     "convex-visual": {
-      "command": "npx",
-      "args": ["convex-mcp-visual", "--stdio"]
+      "type": "local",
+      "command": ["npx", "-y", "convex-mcp-visual", "--stdio"],
+      "enabled": true
     }
   }
 }
 ```
+
+Note: OpenCode uses a different MCP config schema than Claude Desktop and Cursor. It requires `type: "local"`, `command` as an array (not separate command/args), and `enabled: true`.
 
 ### VS Code (Manual)
 
