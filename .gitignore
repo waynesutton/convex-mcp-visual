@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# macOS
+.DS_Store
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Editor configs
+.cursor/
+
+# Temporary/output data
+mnt/
+
+# Test artifacts
+test-convex-project/node_modules/
