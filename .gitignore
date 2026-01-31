@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Build output (npm publishes via files array, not git)
+dist/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE and editor
+.cursor/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Output and temp
+mnt/
+.cache/
+.temp/
+.tmp/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build artifacts
+*.tsbuildinfo
+
+# Package archives
+*.tgz
+
+# Test projects (if recreated)
+test-convex-project/
