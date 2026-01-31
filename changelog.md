@@ -15,17 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OpenCode requires `type: "local"`, `command` as array, and `enabled: true`
 - Updated docs/setup.md with correct OpenCode manual configuration example
 
-## [1.2.2] - 2026-01-31
+## [1.2.3] - 2026-01-31
 
 ### Added
 
 - `viewMode` parameter for `schema_browser` MCP tool (accepts "graph" or "list")
-- `--list` flag for CLI `schema` command to open list view
+- `--graph` and `--list` flags for CLI `schema` command to explicitly set view mode
 
 ### Changed
 
 - Schema browser now defaults to graph view (visual diagram) for all usage modes
-- CLI `schema` command opens graph view by default, use `--list` for table view
+- MCP "Show me my Convex schema" opens graph view by default
+- CLI `schema` command opens graph view by default
 
 ## [1.2.0] - 2026-01-31
 

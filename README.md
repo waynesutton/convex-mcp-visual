@@ -118,17 +118,17 @@ npx convex-mcp-visual --test
 
 | What you say                          | Tool triggered                    |
 | ------------------------------------- | --------------------------------- |
-| "Show me my Convex schema"            | `schema_browser`                  |
-| "What tables do I have?"              | `schema_browser`                  |
-| "Browse my database"                  | `schema_browser`                  |
+| "Show me my Convex schema"            | `schema_browser` (graph view)     |
+| "What tables do I have?"              | `schema_browser` (graph view)     |
+| "Browse my database"                  | `schema_browser` (graph view)     |
 | "Show schema for users table"         | `schema_browser` with table param |
 | "Create a dashboard for my data"      | `dashboard_view`                  |
 | "Show me metrics for my app"          | `dashboard_view`                  |
-| "Generate a diagram of my schema"     | `schema_diagram`                  |
+| "Generate a diagram of my schema"     | `schema_diagram` (Mermaid ER)     |
 | "Show me a Mermaid ER diagram"        | `schema_diagram`                  |
 | "Visualize my database relationships" | `schema_diagram`                  |
 
-All tools open an interactive browser UI and return output to the terminal.
+All tools open an interactive browser UI and return output to the terminal. The schema browser defaults to graph view (visual diagram with table relationships).
 
 **Schema Diagram Features:**
 
@@ -233,16 +233,17 @@ npx convex-mcp-visual --uninstall-cursor  # Cursor only
 ### Direct CLI Commands
 
 ```bash
-convex-mcp-visual schema              # Browse schema in graph view (default)
-convex-mcp-visual schema --list       # Browse schema in list view
+convex-mcp-visual schema               # Browse schema in graph view (default)
+convex-mcp-visual schema --graph       # Explicitly open graph view
+convex-mcp-visual schema --list        # Browse schema in list view
 convex-mcp-visual schema --table users # Focus on specific table
-convex-mcp-visual schema --json       # JSON output only
+convex-mcp-visual schema --json        # JSON output only
 
-convex-mcp-visual dashboard           # View metrics dashboard
+convex-mcp-visual dashboard            # View metrics dashboard
 
-convex-mcp-visual diagram             # Generate Mermaid ER diagram
+convex-mcp-visual diagram              # Generate Mermaid ER diagram
 convex-mcp-visual diagram --theme dracula
-convex-mcp-visual diagram --ascii     # ASCII output for terminal
+convex-mcp-visual diagram --ascii      # ASCII output for terminal
 ```
 
 ### MCP Server Options

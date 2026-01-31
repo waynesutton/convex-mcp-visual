@@ -2,15 +2,23 @@
 
 ## schema_browser
 
-Interactive schema explorer with two view modes.
+Interactive schema explorer with two view modes. Opens in graph view by default.
 
 ### Usage
 
 In Claude, ask:
 
-- "Show me my Convex schema"
-- "What tables do I have?"
+- "Show me my Convex schema" (opens graph view)
+- "What tables do I have?" (opens graph view)
 - "Show me the users table"
+
+### CLI Flags
+
+```bash
+convex-mcp-visual schema          # Graph view (default)
+convex-mcp-visual schema --graph  # Explicitly graph view
+convex-mcp-visual schema --list   # List view (table-based)
+```
 
 ### Parameters
 

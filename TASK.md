@@ -9,12 +9,13 @@ Current development tasks and progress.
 - [x] Update docs/setup.md with correct OpenCode manual configuration example
 - [x] Verify TypeScript type safety (tsc --noEmit passes)
 
-## Completed (v1.2.2)
+## Completed (v1.2.3)
 
 - [x] Add `viewMode` parameter to `schema_browser` MCP tool (graph/list)
 - [x] Set graph view as default for schema browser (all usage modes)
-- [x] Add `--list` flag to CLI `schema` command for list view
-- [x] Update README and docs with updated flag documentation
+- [x] Add `--graph` and `--list` flags to CLI `schema` command
+- [x] Update README MCP commands table to show graph view default
+- [x] Update docs/tools.md with CLI flags section
 - [x] Verify TypeScript type safety (tsc --noEmit passes)
 
 ## Completed (v1.2.0)

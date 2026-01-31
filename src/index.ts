@@ -188,11 +188,12 @@ INSTALL EXAMPLES:
 
 DIRECT CLI EXAMPLES:
   convex-mcp-visual schema                    # Browse schema in graph view (default)
+  convex-mcp-visual schema --graph            # Explicitly open graph view
   convex-mcp-visual schema --list             # Browse schema in list view
   convex-mcp-visual schema --table users      # Focus on users table
   convex-mcp-visual schema --json             # JSON output only (no browser)
   convex-mcp-visual dashboard                 # Open metrics dashboard
-  convex-mcp-visual diagram                   # Generate ER diagram (Mermaid)
+  convex-mcp-visual diagram                   # Generate Mermaid ER diagram
   convex-mcp-visual diagram --theme dracula   # Use dracula theme
 
 MCP SERVER EXAMPLES:
@@ -327,10 +328,12 @@ function printSubcommandHelp(subcommand: Subcommand): void {
 convex-mcp-visual schema
 
 Browse your Convex database schema with interactive UI.
+Opens in graph view by default (visual diagram with table relationships).
 
 OPTIONS:
-  --table <name>      Pre-select a specific table
+  --graph             Open in graph view (default)
   --list              Open in list view (table-based)
+  --table <name>      Pre-select a specific table
   --json              Output JSON only (no browser)
   --no-browser        Terminal output only
   --deployment <name> Connect to specific deployment
@@ -338,8 +341,9 @@ OPTIONS:
 
 EXAMPLES:
   convex-mcp-visual schema
-  convex-mcp-visual schema --table users
+  convex-mcp-visual schema --graph
   convex-mcp-visual schema --list
+  convex-mcp-visual schema --table users
   convex-mcp-visual schema --json
 `);
       break;
