@@ -1,16 +1,22 @@
-# Convex MCP Schema Visualizer
+# Convex MCP Visual
 
-Schema visualizer and dashboard view tools for exploring Convex databases. Opens interactive browser UIs alongside terminal output.
+Schema visualizer and dashboard tools for exploring Convex databases. Opens interactive browser UIs alongside terminal output.
 
 **Features:**
 
-- Schema visualizer graph view with draggable table nodes and relationship lines
-- List view with document browser and schema details
-- Dashboard view with real time metrics and charts
+- Schema browser with graph view, list view, and document browser
+- Real-time dashboard with metrics and charts
+- Mermaid ER diagrams with relationship detection
 - Dark mode support
-- Multi deployment support for developers with multiple Convex apps
+- Multi deployment support
 
-Works with Claude Code, Claude Desktop, Cursor, and any MCP client.
+**Three ways to use:**
+
+| Method            | Use case                             |
+| ----------------- | ------------------------------------ |
+| **Direct CLI**    | Run from any terminal without MCP    |
+| **MCP Server**    | Claude Code, Claude Desktop, Cursor  |
+| **Claude Plugin** | Install from Claude Code marketplace |
 
 **Convex References:**
 
@@ -20,14 +26,36 @@ Works with Claude Code, Claude Desktop, Cursor, and any MCP client.
 
 ## Quick Start
 
-### 1. Install
+### Option A: Direct CLI (any terminal)
+
+```bash
+# Install globally
+npm install -g convex-mcp-visual
+
+# Setup deploy key
+convex-mcp-visual --setup
+
+# Use it
+convex-mcp-visual schema      # Browse schema
+convex-mcp-visual dashboard   # View metrics
+convex-mcp-visual diagram     # Generate ER diagram
+```
+
+### Option B: MCP Server (Claude/Cursor)
 
 ```bash
 # Claude Code
 claude mcp add convex-visual -- npx convex-mcp-visual --stdio
 
-# Or install globally
-npm install -g convex-mcp-visual
+# Setup deploy key
+npx convex-mcp-visual --setup
+```
+
+### Option C: Claude Code Plugin
+
+```shell
+/plugin marketplace add waynesutton/convex-mcp-visual
+/plugin install convex-visual@waynesutton-convex-mcp-visual
 ```
 
 ### 2. Setup Deploy Key
@@ -104,7 +132,7 @@ All tools open an interactive browser UI and return output to the terminal.
 ## Documentation
 
 - [Setup Guide](docs/setup.md) - Detailed configuration options
-- [Junior Guide](docs/junior-guide.md) - Intro for Claude web, stack, and read only access
+- [Plugin Distribution](deployplugin.md) - Claude Code plugin marketplace
 - [Tools Reference](docs/tools.md) - Parameters and keyboard shortcuts
 - [Architecture](docs/architecture.md) - How it works
 - [Troubleshooting](docs/troubleshooting.md) - Common issues and fixes
@@ -145,15 +173,32 @@ Add to MCP settings:
 }
 ```
 
-## CLI Options
+## CLI Reference
+
+### Direct CLI Commands
+
+```bash
+convex-mcp-visual schema              # Browse schema (browser + terminal)
+convex-mcp-visual schema --table users # Focus on specific table
+convex-mcp-visual schema --json       # JSON output only
+
+convex-mcp-visual dashboard           # View metrics dashboard
+
+convex-mcp-visual diagram             # Generate ER diagram
+convex-mcp-visual diagram --theme dracula
+convex-mcp-visual diagram --ascii     # ASCII output for terminal
+```
+
+### MCP Server Options
 
 ```
 convex-mcp-visual [options]
 
 Options:
-  --stdio              Run in stdio mode (default)
+  --stdio              Run in stdio mode (default for MCP)
   --http               Run in HTTP mode
   --port <num>         Port for HTTP mode (default: 3001)
+  --deployment <name>  Connect to specific deployment
   --test               Test Convex connection
   --setup              Interactive setup wizard
   --config             Show all detected config sources

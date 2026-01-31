@@ -6,6 +6,12 @@ apps/
 tsconfig*.json
 vite.config.ts
 
+# Note: These are INCLUDED for Claude Code plugin distribution:
+# - .claude-plugin/
+# - .mcp.json
+# - skills/
+# - deployplugin.md
+
 # Documentation (README.md is auto-included)
 CLAUDE.md
 OVERVIEW.md
@@ -72,15 +78,20 @@ mnt/
 .travis.yml
 Jenkinsfile
 
-# Documentation extras (keep docs/ folder and README.md)
+# Documentation extras (keep essential docs)
 CLAUDE.md
 OVERVIEW.md
 SETUP.md
 PUBLISHING.md
 USER_GUIDE_*.md
+TASK.md
+files.md
+changelog.md
 *.md
 !README.md
+!deployplugin.md
 !docs/*.md
+!skills/**/*.md
 
 # Lock files (npm will use package.json)
 package-lock.json

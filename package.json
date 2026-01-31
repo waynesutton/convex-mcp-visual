@@ -1,7 +1,7 @@
 {
   "name": "convex-mcp-visual",
-  "version": "1.0.23",
-  "description": "Visual MCP tools for exploring Convex databases - graph view, schema browser, and dashboards",
+  "version": "1.1.0",
+  "description": "Visual MCP tools for exploring Convex databases - schema browser, dashboard, ER diagrams. Works as CLI, MCP server, or Claude Code plugin.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -9,7 +9,10 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    ".claude-plugin",
+    ".mcp.json",
+    "skills"
   ],
   "scripts": {
     "build": "npm run build:server && npm run build:apps",
@@ -47,7 +50,10 @@
     "mermaid",
     "er-diagram",
     "claude",
-    "claude-code"
+    "claude-code",
+    "cursor",
+    "cli",
+    "plugin"
   ],
   "license": "MIT",
   "repository": {

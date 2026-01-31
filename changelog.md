@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-01-31
+
+### Added
+
+- Direct CLI subcommands: `schema`, `dashboard`, `diagram` for terminal usage without MCP
+- Claude Code plugin structure (`.claude-plugin/plugin.json`, `.mcp.json`)
+- Plugin skills for automatic tool discovery (`skills/convex-schema/SKILL.md`)
+- `deployplugin.md` with Claude Code marketplace distribution instructions
+- `--json` flag for JSON output in direct CLI mode
+- `--no-browser` flag to skip browser UI in direct CLI mode
+- Subcommand-specific help (`convex-mcp-visual schema --help`)
+
+### Changed
+
+- Package now supports three distribution methods: npm CLI, MCP server, Claude Code plugin
+- Updated help text to show all usage modes
+- Updated OVERVIEW.md with distribution method documentation
+- Updated files.md with new plugin files
+- Version bump to 1.1.0 for new feature release
+
 ## [1.0.22] - 2026-01-31
 
 ### Added

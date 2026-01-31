@@ -1,58 +1,115 @@
-# Convex MCP Apps - Project Overview
+# Convex MCP Visual - Project Overview
 
 This document summarizes the project structure and how all the pieces fit together.
 
 ## What this project is
 
-Convex MCP Apps brings interactive UI components to Claude (and other MCP Apps hosts) for exploring and visualizing Convex data. Instead of text-only responses about your database, you get:
+Convex MCP Visual brings interactive UI components for exploring and visualizing Convex data. Instead of text-only responses about your database, you get:
 
 - **Schema Browser** - Click through tables, view schemas, inspect documents
 - **Realtime Dashboard** - Live charts and metrics that update as your data changes
+- **Schema Diagram** - Mermaid ER diagrams showing table relationships
+
+## Distribution methods
+
+This project supports three ways to use it:
+
+| Method                 | Use case                            | Installation                        |
+| ---------------------- | ----------------------------------- | ----------------------------------- |
+| **npm package**        | Direct CLI usage from any terminal  | `npm install -g convex-mcp-visual`  |
+| **MCP Server**         | Claude Code, Claude Desktop, Cursor | Configure in MCP settings           |
+| **Claude Code Plugin** | Claude Code marketplace             | `/plugin install convex-visual@...` |
+
+### 1. Direct CLI (any terminal)
+
+Run tools directly without MCP protocol:
+
+```bash
+npx convex-mcp-visual schema          # Browse schema in browser
+npx convex-mcp-visual dashboard       # Open metrics dashboard
+npx convex-mcp-visual diagram         # Generate ER diagram
+```
+
+### 2. MCP Server (Claude/Cursor)
+
+Start as MCP server for AI assistants:
+
+```bash
+npx convex-mcp-visual --stdio         # For Claude Code/Desktop
+npx convex-mcp-visual --http          # For HTTP transport
+```
+
+### 3. Claude Code Plugin
+
+Install from marketplace:
+
+```shell
+/plugin marketplace add waynesutton/convex-mcp-visual
+/plugin install convex-visual@waynesutton-convex-mcp-visual
+```
 
 ## Architecture
 
 ```
-User asks Claude: "Show me my schema"
-         │
-         ▼
-┌─────────────────────────────────────┐
-│         Claude / Host               │
-│  Calls schema_browser tool          │
-└─────────────────────────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────┐
-│      Convex MCP Apps Server         │
-│  1. Returns tool result             │
-│  2. Returns UI resource             │
-└─────────────────────────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────┐
-│     Host renders UI in iframe       │
-│  - Schema Browser appears           │
-│  - User clicks tables               │
-│  - Queries sent back to server      │
-└─────────────────────────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────┐
-│       Convex Deployment             │
-│  - Tables and schemas               │
-│  - Real-time subscriptions          │
-└─────────────────────────────────────┘
+                    ┌─────────────────────────────────────┐
+                    │           User Interface            │
+                    │  CLI / Claude / Cursor / VS Code    │
+                    └─────────────────────────────────────┘
+                                     │
+                                     ▼
+         ┌───────────────────────────┼───────────────────────────┐
+         │                           │                           │
+         ▼                           ▼                           ▼
+┌─────────────────┐     ┌─────────────────────┐     ┌─────────────────┐
+│   Direct CLI    │     │     MCP Server      │     │  Claude Plugin  │
+│  schema         │     │  stdio / http       │     │  marketplace    │
+│  dashboard      │     │                     │     │                 │
+│  diagram        │     │                     │     │                 │
+└─────────────────┘     └─────────────────────┘     └─────────────────┘
+         │                           │                           │
+         └───────────────────────────┼───────────────────────────┘
+                                     │
+                                     ▼
+                    ┌─────────────────────────────────────┐
+                    │        Convex MCP Visual Core       │
+                    │  - schema_browser tool              │
+                    │  - dashboard_view tool              │
+                    │  - schema_diagram tool              │
+                    └─────────────────────────────────────┘
+                                     │
+                    ┌────────────────┼────────────────┐
+                    │                │                │
+                    ▼                ▼                ▼
+           ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+           │   Terminal   │  │   Browser    │  │   Convex     │
+           │   Output     │  │   UI Apps    │  │   Cloud      │
+           │   (markdown) │  │   (port 3456)│  │   (API)      │
+           └──────────────┘  └──────────────┘  └──────────────┘
 ```
 
 ## Key components
 
-### MCP Server (`src/`)
+### CLI and MCP Server (`src/`)
 
-The server exposes tools and UI resources:
+The main entry point handles three modes:
 
-- `schema_browser` tool - Opens the schema browser
-- `dashboard_view` tool - Creates dashboard visualizations
-- `ui://schema-browser/*` resource - HTML for schema browser
-- `ui://dashboard/*` resource - HTML for dashboard
+- **Direct CLI**: `schema`, `dashboard`, `diagram` subcommands
+- **MCP stdio**: `--stdio` flag for Claude/Cursor integration
+- **MCP HTTP**: `--http` flag for team deployments
+
+Tools exposed:
+
+- `schema_browser` - Interactive schema explorer
+- `dashboard_view` - Real-time metrics and charts
+- `schema_diagram` - Mermaid ER diagrams
+
+### Claude Code Plugin (`.claude-plugin/`)
+
+Plugin distribution files:
+
+- `plugin.json` - Plugin manifest with metadata
+- `.mcp.json` - MCP server configuration
+- `skills/` - Skills that help Claude use the tools
 
 ### Schema Browser (`apps/schema-browser/`)
 
@@ -72,17 +129,14 @@ Live data visualizations:
 - Tables for detailed records
 - Real-time updates via Convex subscriptions
 
-## How MCP Apps work
+## How the tools work
 
-MCP Apps extend the Model Context Protocol with interactive UIs. The pattern:
+All three distribution methods use the same underlying tool handlers:
 
-1. **Tool definition** declares a `ui://` resource
-2. **Host calls tool** and receives result + resource URI
-3. **Host fetches resource** (HTML bundle)
-4. **Host renders in iframe** with sandboxing
-5. **UI communicates** with host via JSON-RPC postMessage
-
-This project implements that pattern for Convex-specific tools.
+1. **Tool handler** fetches data from Convex using system queries
+2. **Terminal output** returns markdown formatted results
+3. **Browser UI** launches local server and opens interactive app
+4. **Both outputs** happen simultaneously (terminal + browser)
 
 ## Authentication and security
 
@@ -125,50 +179,56 @@ convex-mcp-visual/
 ├── tsconfig.json             # TypeScript config (apps)
 ├── tsconfig.server.json      # TypeScript config (server)
 ├── vite.config.ts            # Vite bundler config
-├── CONTRIBUTING.md           # Contribution guide
+├── deployplugin.md           # Claude Code plugin distribution guide
 │
-├── src/                      # Server source
-│   ├── index.ts             # Entry point
+├── .claude-plugin/           # Claude Code plugin
+│   └── plugin.json          # Plugin manifest
+├── .mcp.json                 # MCP server configuration
+├── skills/                   # Plugin skills
+│   └── convex-schema/
+│       └── SKILL.md         # Schema browsing skill
+│
+├── src/                      # Server and CLI source
+│   ├── index.ts             # CLI entry point (schema, dashboard, diagram)
 │   ├── server.ts            # MCP server setup
+│   ├── convex-client.ts     # Convex API client
+│   ├── ui-server.ts         # Local browser UI server
 │   ├── tools/               # Tool implementations
 │   │   ├── schema-browser.ts
-│   │   └── dashboard.ts
+│   │   ├── dashboard.ts
+│   │   └── schema-diagram.ts
 │   └── resources/           # UI resource handlers
 │       ├── schema-browser.ts
 │       └── dashboard.ts
 │
-├── apps/                     # UI applications
+├── apps/                     # Browser UI applications
 │   ├── schema-browser/
-│   │   ├── README.md        # Developer docs
-│   │   ├── index.html       # Entry HTML
+│   │   ├── index.html
 │   │   └── src/
-│   │       ├── app.ts       # Main app logic
-│   │       ├── components/  # UI components
+│   │       ├── app.ts
 │   │       └── styles.css
 │   │
 │   └── realtime-dashboard/
-│       ├── README.md        # Developer docs
-│       ├── index.html       # Entry HTML
+│       ├── index.html
 │       └── src/
-│           ├── app.ts       # Main app logic
-│           ├── components/  # Chart components
+│           ├── app.ts
 │           └── styles.css
 │
 ├── docs/                     # User documentation
-│   ├── SETUP.md             # Installation guide
-│   ├── USER_GUIDE_SCHEMA_BROWSER.md
-│   └── USER_GUIDE_DASHBOARD.md
+│   ├── setup.md
+│   ├── tools.md
+│   ├── architecture.md
+│   └── troubleshooting.md
 │
 └── dist/                     # Build output (generated)
-    ├── index.js             # Compiled server
+    ├── index.js             # Compiled server/CLI
     └── apps/
-        ├── schema-browser.html
-        └── realtime-dashboard.html
+        └── assets/          # Bundled UI apps
 ```
 
 ## Hosting requirements
 
-**None for basic usage.** The MCP server runs locally via stdio. UI resources are bundled into the server and served as data URIs.
+**None for basic usage.** The CLI and MCP server run locally. Browser UIs are served from a local HTTP server (port 3456).
 
 For team deployments:
 
@@ -180,17 +240,43 @@ For team deployments:
 
 This project complements (doesn't replace) the official `npx convex mcp start`:
 
-| Official Convex MCP     | This Project                       |
-| ----------------------- | ---------------------------------- |
-| Text-only tools         | Interactive UI tools               |
-| `tables`, `data`, `run` | `schema_browser`, `dashboard_view` |
-| CLI-integrated          | Standalone package                 |
+| Official Convex MCP     | This Project                                         |
+| ----------------------- | ---------------------------------------------------- |
+| Text-only tools         | Interactive UI tools                                 |
+| `tables`, `data`, `run` | `schema_browser`, `dashboard_view`, `schema_diagram` |
+| CLI-integrated          | Standalone CLI + MCP + Plugin                        |
 
 You can run both together. The official server handles function execution and raw data queries. This project adds visual exploration.
 
-## Next steps
+## Quick start by distribution method
 
-1. Clone and install: `npm install`
-2. Build: `npm run build`
-3. Add to Claude: See [SETUP.md](docs/SETUP.md)
-4. Try it: "Show me my Convex schema"
+### npm CLI (any terminal)
+
+```bash
+npm install -g convex-mcp-visual
+convex-mcp-visual --setup
+convex-mcp-visual schema
+```
+
+### MCP Server (Claude/Cursor)
+
+```bash
+# Claude Code
+claude mcp add convex-visual -- npx convex-mcp-visual --stdio
+
+# Cursor - add to ~/.cursor/mcp.json
+```
+
+### Claude Code Plugin
+
+```shell
+/plugin marketplace add waynesutton/convex-mcp-visual
+/plugin install convex-visual@waynesutton-convex-mcp-visual
+```
+
+## Documentation
+
+- [README.md](README.md) - Quick start and overview
+- [SETUP.md](SETUP.md) - Detailed configuration
+- [deployplugin.md](deployplugin.md) - Claude Code plugin distribution
+- [docs/](docs/) - Tool reference and troubleshooting

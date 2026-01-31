@@ -2,6 +2,23 @@
 
 Current development tasks and progress.
 
+## Completed (v1.1.0)
+
+- [x] Add direct CLI subcommands (schema, dashboard, diagram)
+- [x] Create Claude Code plugin structure (.claude-plugin/plugin.json)
+- [x] Create MCP server config (.mcp.json)
+- [x] Create plugin skills (skills/convex-schema/SKILL.md)
+- [x] Create deployplugin.md with marketplace distribution guide
+- [x] Update OVERVIEW.md with three distribution methods
+- [x] Update package.json with plugin files
+- [x] Update files.md with new structure
+- [x] Update changelog.md with v1.1.0 changes
+- [x] Add --json flag for JSON output
+- [x] Add --no-browser flag option
+- [x] Add subcommand-specific help
+- [x] Build and verify all three distribution methods work
+- [x] Verify TypeScript type safety (tsc --noEmit passes)
+
 ## Completed (v1.0.22)
 
 - [x] Add schema_diagram tool with Mermaid ER diagram generation
@@ -75,6 +92,7 @@ Current development tasks and progress.
 
 ## Backlog
 
+- [ ] Submit to Claude Code official marketplace
 - [ ] Add query builder UI
 - [ ] Improve relationship detection for array references
 - [ ] Add table statistics (min/max/avg for numeric fields)
@@ -83,3 +101,4 @@ Current development tasks and progress.
 - [ ] Add collaborative viewing (share schema views)
 - [ ] Investigate Claude.ai web integration options
 - [ ] Add flowchart diagram type for data flows
+- [ ] Add opencode CLI integration guide

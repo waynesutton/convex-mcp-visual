@@ -3,7 +3,10 @@
  * Convex MCP Visual Server
  *
  * An MCP server that provides interactive UI components for exploring Convex databases.
- * Supports stdio (default) and HTTP transports.
+ * Supports three distribution modes:
+ * 1. MCP Server (stdio/HTTP) - For Claude Code, Claude Desktop, Cursor
+ * 2. Direct CLI - schema, dashboard, diagram subcommands
+ * 3. Claude Code Plugin - Via marketplace distribution
  */
 
 import { createServer } from "./server.js";
@@ -23,7 +26,24 @@ const packageJsonPath = join(__dirname, "..", "package.json");
 const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
 const VERSION = packageJson.version as string;
 
+// Subcommand type for direct CLI usage
+type Subcommand = "schema" | "dashboard" | "diagram";
+
 async function main() {
+  // Check for subcommands first (schema, dashboard, diagram)
+  const args = process.argv.slice(2);
+  const subcommand = args[0] as Subcommand | undefined;
+
+  // Handle direct CLI subcommands
+  if (
+    subcommand === "schema" ||
+    subcommand === "dashboard" ||
+    subcommand === "diagram"
+  ) {
+    await handleDirectCLI(subcommand, args.slice(1));
+    return;
+  }
+
   const { values } = parseArgs({
     options: {
       stdio: { type: "boolean", default: false },
@@ -45,38 +65,7 @@ async function main() {
   }
 
   if (values.help) {
-    console.log(`
-Convex MCP Visual Server v${VERSION}
-
-Usage:
-  convex-mcp-visual [options]
-
-Options:
-  --stdio              Run in stdio mode (default if no mode specified)
-  --http               Run in HTTP mode
-  --port <num>         Port for HTTP mode (default: 3001)
-  --deployment <name>  Connect to specific deployment (e.g., happy-animal-123)
-  --test               Run connection test and exit
-  --setup              Interactive setup wizard for deploy key
-  --config             Show all detected config sources
-  -v, --version        Show version number
-  -h, --help           Show this help message
-
-Examples:
-  convex-mcp-visual --stdio                           # For Claude Code/Desktop
-  convex-mcp-visual --deployment happy-animal-123     # Connect to specific deployment
-  convex-mcp-visual --http --port 3001                # For team deployments
-  convex-mcp-visual --test                            # Test Convex connection
-  convex-mcp-visual --setup                           # Setup deploy key
-  convex-mcp-visual --config                          # Debug config sources
-
-Environment Variables:
-  CONVEX_URL         Override deployment URL
-  CONVEX_DEPLOY_KEY  Deploy key for authentication
-  MCP_TIMEOUT        Server startup timeout (ms, default: 10000)
-
-Docs: https://docs.convex.dev/cli/deploy-key-types
-`);
+    printHelp();
     process.exit(0);
   }
 
@@ -115,6 +104,230 @@ Docs: https://docs.convex.dev/cli/deploy-key-types
     // Default to stdio mode
     await server.startStdio();
     console.error("Convex MCP Visual server running in stdio mode");
+  }
+}
+
+/**
+ * Print help message with all usage modes
+ */
+function printHelp(): void {
+  console.log(`
+Convex MCP Visual v${VERSION}
+
+Visual schema browser, dashboard, and diagrams for Convex databases.
+Works as MCP server, standalone CLI, or Claude Code plugin.
+
+USAGE:
+  convex-mcp-visual [command] [options]
+
+COMMANDS (Direct CLI):
+  schema              Show database schema (opens browser + terminal output)
+  dashboard           Show metrics dashboard (opens browser + terminal output)
+  diagram             Generate ER diagram (opens browser + terminal output)
+
+MCP SERVER OPTIONS:
+  --stdio             Run as MCP server in stdio mode (default)
+  --http              Run as MCP server in HTTP mode
+  --port <num>        Port for HTTP mode (default: 3001)
+
+CONFIGURATION:
+  --deployment <name> Connect to specific deployment (e.g., happy-animal-123)
+  --test              Test Convex connection and exit
+  --setup             Interactive setup wizard for deploy key
+  --config            Show all detected config sources
+
+OTHER:
+  -v, --version       Show version number
+  -h, --help          Show this help message
+
+DIRECT CLI EXAMPLES:
+  convex-mcp-visual schema                    # Browse schema in browser
+  convex-mcp-visual schema --table users      # Focus on users table
+  convex-mcp-visual schema --json             # JSON output only (no browser)
+  convex-mcp-visual dashboard                 # Open metrics dashboard
+  convex-mcp-visual diagram                   # Generate ER diagram
+  convex-mcp-visual diagram --theme dracula   # Use dracula theme
+
+MCP SERVER EXAMPLES:
+  convex-mcp-visual --stdio                   # For Claude Code/Desktop/Cursor
+  convex-mcp-visual --http --port 3001        # For team deployments
+
+CLAUDE CODE PLUGIN:
+  See deployplugin.md for marketplace distribution instructions.
+  Install via: /plugin install convex-visual@convex-tools
+
+ENVIRONMENT VARIABLES:
+  CONVEX_URL          Override deployment URL
+  CONVEX_DEPLOY_KEY   Deploy key for authentication
+
+Docs: https://github.com/waynesutton/convex-mcp-visual
+`);
+}
+
+/**
+ * Handle direct CLI subcommands (schema, dashboard, diagram)
+ * These run the tools directly without MCP protocol
+ */
+async function handleDirectCLI(
+  subcommand: Subcommand,
+  args: string[],
+): Promise<void> {
+  // Parse subcommand-specific options
+  const options: Record<string, string | boolean> = {};
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--json") {
+      options.json = true;
+    } else if (arg === "--no-browser") {
+      options.noBrowser = true;
+    } else if (arg === "--table" && args[i + 1]) {
+      options.table = args[++i];
+    } else if (arg === "--theme" && args[i + 1]) {
+      options.theme = args[++i];
+    } else if (arg === "--ascii") {
+      options.ascii = true;
+    } else if (arg === "--deployment" && args[i + 1]) {
+      const deploymentName = args[++i];
+      process.env.CONVEX_URL = `https://${deploymentName}.convex.cloud`;
+    } else if (arg === "--help" || arg === "-h") {
+      printSubcommandHelp(subcommand);
+      return;
+    }
+  }
+
+  // Import tool handlers
+  const { ConvexClient } = await import("./convex-client.js");
+  const client = new ConvexClient();
+
+  // Check connection
+  if (!client.isConnected()) {
+    console.error("Error: No Convex deployment configured.\n");
+    console.error("To connect:");
+    console.error("  1. Run: npx convex-mcp-visual --setup");
+    console.error("  2. Or set CONVEX_DEPLOY_KEY environment variable\n");
+    process.exit(1);
+  }
+
+  console.log(`Connected to: ${client.getDeploymentUrl()}\n`);
+
+  // Execute the appropriate tool
+  switch (subcommand) {
+    case "schema": {
+      const { handleSchemaBrowser } = await import("./tools/schema-browser.js");
+      const result = await handleSchemaBrowser(client, {
+        table: options.table,
+        showInferred: true,
+        pageSize: 50,
+      });
+      if (options.json) {
+        // JSON output mode - extract structured data
+        console.log(
+          JSON.stringify({ output: result.content[0].text }, null, 2),
+        );
+      } else {
+        console.log(result.content[0].text);
+      }
+      break;
+    }
+
+    case "dashboard": {
+      const { handleDashboard } = await import("./tools/dashboard.js");
+      const result = await handleDashboard(client, {
+        metrics: [],
+        charts: [],
+        refreshInterval: 5,
+      });
+      if (options.json) {
+        console.log(
+          JSON.stringify({ output: result.content[0].text }, null, 2),
+        );
+      } else {
+        console.log(result.content[0].text);
+      }
+      break;
+    }
+
+    case "diagram": {
+      const { handleSchemaDiagram } = await import("./tools/schema-diagram.js");
+      const result = await handleSchemaDiagram(client, {
+        theme: options.theme || "github-dark",
+        ascii: options.ascii || false,
+      });
+      if (options.json) {
+        console.log(
+          JSON.stringify({ output: result.content[0].text }, null, 2),
+        );
+      } else {
+        console.log(result.content[0].text);
+      }
+      break;
+    }
+  }
+}
+
+/**
+ * Print help for a specific subcommand
+ */
+function printSubcommandHelp(subcommand: Subcommand): void {
+  switch (subcommand) {
+    case "schema":
+      console.log(`
+convex-mcp-visual schema
+
+Browse your Convex database schema with interactive UI.
+
+OPTIONS:
+  --table <name>      Pre-select a specific table
+  --json              Output JSON only (no browser)
+  --no-browser        Terminal output only
+  --deployment <name> Connect to specific deployment
+  -h, --help          Show this help
+
+EXAMPLES:
+  convex-mcp-visual schema
+  convex-mcp-visual schema --table users
+  convex-mcp-visual schema --json
+`);
+      break;
+
+    case "dashboard":
+      console.log(`
+convex-mcp-visual dashboard
+
+View real-time metrics dashboard for your Convex database.
+
+OPTIONS:
+  --json              Output JSON only (no browser)
+  --no-browser        Terminal output only
+  --deployment <name> Connect to specific deployment
+  -h, --help          Show this help
+
+EXAMPLES:
+  convex-mcp-visual dashboard
+  convex-mcp-visual dashboard --json
+`);
+      break;
+
+    case "diagram":
+      console.log(`
+convex-mcp-visual diagram
+
+Generate Mermaid ER diagram of your Convex schema.
+
+OPTIONS:
+  --theme <name>      Color theme: github-dark, github-light, dracula, nord, tokyo-night
+  --ascii             Use ASCII characters for terminal output
+  --json              Output JSON only (no browser)
+  --no-browser        Terminal output only
+  --deployment <name> Connect to specific deployment
+  -h, --help          Show this help
+
+EXAMPLES:
+  convex-mcp-visual diagram
+  convex-mcp-visual diagram --theme dracula
+  convex-mcp-visual diagram --ascii
+`);
+      break;
   }
 }
 

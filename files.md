@@ -4,17 +4,33 @@ Overview of the codebase structure.
 
 ## Source Files (`src/`)
 
-| File                          | Description                                                    |
-| ----------------------------- | -------------------------------------------------------------- |
-| `index.ts`                    | CLI entry point with --stdio, --http, --test, --setup flags    |
-| `server.ts`                   | MCP server setup, tool registration, and request handlers      |
-| `convex-client.ts`            | Convex API client with system queries for schema and documents |
-| `ui-server.ts`                | Local HTTP server for browser UI (port 3456)                   |
-| `tools/schema-browser.ts`     | Schema browser tool with real data from Convex system queries  |
-| `tools/dashboard.ts`          | Dashboard tool with real metrics from Convex                   |
-| `tools/schema-diagram.ts`     | Schema diagram tool with Mermaid ER diagrams and ASCII output  |
-| `resources/schema-browser.ts` | Fallback HTML for schema browser                               |
-| `resources/dashboard.ts`      | Fallback HTML for dashboard                                    |
+| File                          | Description                                                           |
+| ----------------------------- | --------------------------------------------------------------------- |
+| `index.ts`                    | CLI entry point: subcommands (schema, dashboard, diagram) + MCP modes |
+| `server.ts`                   | MCP server setup, tool registration, and request handlers             |
+| `convex-client.ts`            | Convex API client with system queries for schema and documents        |
+| `ui-server.ts`                | Local HTTP server for browser UI (port 3456)                          |
+| `tools/schema-browser.ts`     | Schema browser tool with real data from Convex system queries         |
+| `tools/dashboard.ts`          | Dashboard tool with real metrics from Convex                          |
+| `tools/schema-diagram.ts`     | Schema diagram tool with Mermaid ER diagrams and ASCII output         |
+| `resources/schema-browser.ts` | Fallback HTML for schema browser                                      |
+| `resources/dashboard.ts`      | Fallback HTML for dashboard                                           |
+
+## Claude Code Plugin (`.claude-plugin/`)
+
+| File          | Description                               |
+| ------------- | ----------------------------------------- |
+| `plugin.json` | Plugin manifest with metadata and version |
+
+| File        | Description              |
+| ----------- | ------------------------ |
+| `.mcp.json` | MCP server configuration |
+
+## Plugin Skills (`skills/`)
+
+| Directory        | Description                                     |
+| ---------------- | ----------------------------------------------- |
+| `convex-schema/` | Skill for browsing Convex schemas with SKILL.md |
 
 ## UI Applications (`apps/`)
 
@@ -39,6 +55,17 @@ Each app contains:
 | `architecture.md`    | Technical architecture and design                              |
 | `troubleshooting.md` | Common issues and solutions                                    |
 | `limitations.md`     | Known limitations and compatibility                            |
+
+## Root Documentation
+
+| File              | Description                           |
+| ----------------- | ------------------------------------- |
+| `README.md`       | Quick start and overview              |
+| `OVERVIEW.md`     | Project architecture and structure    |
+| `SETUP.md`        | Detailed installation guide           |
+| `deployplugin.md` | Claude Code plugin distribution guide |
+| `changelog.md`    | Version history                       |
+| `TASK.md`         | Development task tracker              |
 
 ## Configuration Files
 
