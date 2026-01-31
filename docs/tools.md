@@ -112,3 +112,70 @@ In Claude, ask:
   "refreshInterval": 10
 }
 ```
+
+---
+
+## schema_diagram
+
+Generates Mermaid ER diagrams from your Convex schema.
+
+### Usage
+
+In Claude, ask:
+
+- "Generate a diagram of my schema"
+- "Show me a Mermaid ER diagram"
+- "Visualize my database relationships"
+
+### Parameters
+
+| Parameter | Type    | Default       | Description                              |
+| --------- | ------- | ------------- | ---------------------------------------- |
+| `theme`   | string  | "github-dark" | Color theme for SVG output               |
+| `ascii`   | boolean | false         | Use ASCII instead of Unicode box drawing |
+| `tables`  | array   | all           | Specific tables to include               |
+
+### Available Themes
+
+- `github-dark` - Dark mode GitHub style (default)
+- `github-light` - Light mode GitHub style
+- `tokyo-night` - Tokyo Night color scheme
+- `dracula` - Dracula theme
+- `nord` - Nord color palette
+- `zinc-dark` - Neutral dark
+- `zinc-light` - Neutral light
+
+### Output
+
+**Terminal** - ASCII/Unicode box drawing diagram
+
+```
+erDiagram
+    users {
+        id _id
+        string name
+        string email
+    }
+    posts {
+        id _id
+        id userId
+        string content
+    }
+    users ||--o{ posts : "userId"
+```
+
+**Browser** - Interactive SVG with:
+
+- Themed visual diagram
+- Copy Mermaid code button
+- Responsive layout
+
+### Relationship Detection
+
+The tool auto detects relationships from field patterns:
+
+- Fields ending in `Id` (e.g., `userId`, `postId`)
+- Fields ending in `_id` (e.g., `user_id`)
+- Fields with `v.id("tableName")` type
+
+Relationships are shown as one to many (`||--o{`) by default.

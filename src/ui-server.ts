@@ -5,12 +5,12 @@
  * and opens them in the user's default browser.
  */
 
-import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { readFileSync, existsSync } from 'fs';
-import { join, dirname, extname } from 'path';
-import { fileURLToPath } from 'url';
-import { exec } from 'child_process';
-import { platform } from 'os';
+import { createServer, IncomingMessage, ServerResponse } from "http";
+import { readFileSync, existsSync } from "fs";
+import { join, dirname, extname } from "path";
+import { fileURLToPath } from "url";
+import { exec } from "child_process";
+import { platform } from "os";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -19,15 +19,15 @@ const activeServers = new Map<number, ReturnType<typeof createServer>>();
 
 // MIME types for serving static files
 const MIME_TYPES: Record<string, string> = {
-  '.html': 'text/html',
-  '.js': 'application/javascript',
-  '.css': 'text/css',
-  '.json': 'application/json',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.svg': 'image/svg+xml',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
+  ".html": "text/html",
+  ".js": "application/javascript",
+  ".css": "text/css",
+  ".json": "application/json",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".svg": "image/svg+xml",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
 };
 
 // Find an available port starting from the base
@@ -42,11 +42,11 @@ async function findAvailablePort(basePort: number): Promise<number> {
 // Open URL in default browser (cross-platform)
 function openBrowser(url: string): void {
   const cmd =
-    platform() === 'darwin'
-      ? 'open'
-      : platform() === 'win32'
-        ? 'start'
-        : 'xdg-open';
+    platform() === "darwin"
+      ? "open"
+      : platform() === "win32"
+        ? "start"
+        : "xdg-open";
 
   exec(`${cmd} "${url}"`, (error) => {
     if (error) {
@@ -57,7 +57,7 @@ function openBrowser(url: string): void {
 
 // Get the base path for built apps
 function getDistAppsPath(): string {
-  return join(__dirname, '..', 'dist', 'apps');
+  return join(__dirname, "..", "dist", "apps");
 }
 
 // Get the path to an app's index.html
@@ -65,19 +65,19 @@ function getAppHtmlPath(appName: string): string {
   const basePath = getDistAppsPath();
 
   // Try Vite's nested output: dist/apps/apps/{appName}/index.html
-  const nestedPath = join(basePath, 'apps', appName, 'index.html');
+  const nestedPath = join(basePath, "apps", appName, "index.html");
   if (existsSync(nestedPath)) {
     return nestedPath;
   }
 
   // Try flat structure: dist/apps/{appName}/index.html
-  const flatPath = join(basePath, appName, 'index.html');
+  const flatPath = join(basePath, appName, "index.html");
   if (existsSync(flatPath)) {
     return flatPath;
   }
 
   // Try source: apps/{appName}/index.html
-  const srcPath = join(__dirname, '..', 'apps', appName, 'index.html');
+  const srcPath = join(__dirname, "..", "apps", appName, "index.html");
   if (existsSync(srcPath)) {
     return srcPath;
   }
@@ -86,10 +86,11 @@ function getAppHtmlPath(appName: string): string {
 }
 
 export interface UIServerConfig {
-  appName: 'schema-browser' | 'realtime-dashboard';
+  appName: "schema-browser" | "realtime-dashboard" | "schema-diagram";
   config: Record<string, unknown>;
   port?: number;
   autoClose?: number; // Auto-close after N milliseconds (0 = never)
+  customHtml?: string; // Optional custom HTML content (bypasses app loading)
 }
 
 export interface UIServerResult {
@@ -101,29 +102,41 @@ export interface UIServerResult {
 /**
  * Start a local server for a UI app and open it in the browser
  */
-export async function launchUIApp(options: UIServerConfig): Promise<UIServerResult> {
-  const { appName, config, port: preferredPort = 3456, autoClose = 0 } = options;
+export async function launchUIApp(
+  options: UIServerConfig,
+): Promise<UIServerResult> {
+  const {
+    appName,
+    config,
+    port: preferredPort = 3456,
+    autoClose = 0,
+    customHtml,
+  } = options;
 
   const port = await findAvailablePort(preferredPort);
   const configJson = JSON.stringify(config);
   const distAppsPath = getDistAppsPath();
 
-  // Read and modify the HTML with injected config
+  // Use custom HTML if provided (for diagram viewer etc)
   let indexHtml: string;
-  try {
-    const appHtmlPath = getAppHtmlPath(appName);
-    indexHtml = readFileSync(appHtmlPath, 'utf-8');
+  if (customHtml) {
+    indexHtml = customHtml;
+  } else {
+    // Read and modify the HTML with injected config
+    try {
+      const appHtmlPath = getAppHtmlPath(appName);
+      indexHtml = readFileSync(appHtmlPath, "utf-8");
 
-    // Inject the config into the HTML
-    const configScript = `
+      // Inject the config into the HTML
+      const configScript = `
     <script>
       window.__CONVEX_CONFIG__ = ${configJson};
     </script>
     `;
-    indexHtml = indexHtml.replace('<head>', `<head>\n${configScript}`);
-  } catch (error) {
-    // If app HTML not found, serve an error page
-    indexHtml = `
+      indexHtml = indexHtml.replace("<head>", `<head>\n${configScript}`);
+    } catch (error) {
+      // If app HTML not found, serve an error page
+      indexHtml = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -144,36 +157,37 @@ export async function launchUIApp(options: UIServerConfig): Promise<UIServerResu
 </body>
 </html>
     `;
+    }
   }
 
   return new Promise((resolve, reject) => {
     const server = createServer((req: IncomingMessage, res: ServerResponse) => {
-      const url = req.url || '/';
+      const url = req.url || "/";
 
       // Serve index.html for root
-      if (url === '/' || url === '/index.html') {
+      if (url === "/" || url === "/index.html") {
         res.writeHead(200, {
-          'Content-Type': 'text/html',
-          'Cache-Control': 'no-cache',
+          "Content-Type": "text/html",
+          "Cache-Control": "no-cache",
         });
         res.end(indexHtml);
         return;
       }
 
       // Serve static assets from dist/apps/assets/
-      if (url.startsWith('/assets/') || url.includes('/assets/')) {
-        const assetPath = url.replace(/^.*\/assets\//, 'assets/');
+      if (url.startsWith("/assets/") || url.includes("/assets/")) {
+        const assetPath = url.replace(/^.*\/assets\//, "assets/");
         const filePath = join(distAppsPath, assetPath);
 
         if (existsSync(filePath)) {
           const ext = extname(filePath);
-          const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+          const contentType = MIME_TYPES[ext] || "application/octet-stream";
 
           try {
             const content = readFileSync(filePath);
             res.writeHead(200, {
-              'Content-Type': contentType,
-              'Cache-Control': 'public, max-age=31536000',
+              "Content-Type": contentType,
+              "Cache-Control": "public, max-age=31536000",
             });
             res.end(content);
             return;
@@ -184,12 +198,12 @@ export async function launchUIApp(options: UIServerConfig): Promise<UIServerResu
       }
 
       // 404 for everything else
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('Not found');
+      res.writeHead(404, { "Content-Type": "text/plain" });
+      res.end("Not found");
     });
 
-    server.on('error', (error: Error & { code?: string }) => {
-      if (error.code === 'EADDRINUSE') {
+    server.on("error", (error: Error & { code?: string }) => {
+      if (error.code === "EADDRINUSE") {
         // Port in use, try next
         launchUIApp({ ...options, port: port + 1 })
           .then(resolve)
@@ -199,7 +213,7 @@ export async function launchUIApp(options: UIServerConfig): Promise<UIServerResu
       }
     });
 
-    server.listen(port, '127.0.0.1', () => {
+    server.listen(port, "127.0.0.1", () => {
       activeServers.set(port, server);
 
       const url = `http://127.0.0.1:${port}`;

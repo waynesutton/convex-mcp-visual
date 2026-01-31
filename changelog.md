@@ -7,13 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.22] - 2026-01-31
+
 ### Added
 
-- Junior guide for Claude web goals, stack, and read only access
+- `schema_diagram` tool for generating Mermaid ER diagrams from Convex schema
+- Auto relationship detection from foreign key patterns (`userId`, `tableId`, etc.)
+- ASCII/Unicode diagram output for terminal using beautiful-mermaid
+- SVG diagram output in browser with theme options (github-dark, tokyo-night, dracula, etc.)
+- Exportable Mermaid code from diagram viewer
+- Clear MCP command instructions table in README
+- `--config` CLI flag to show all detected config sources and which one wins
+- Config source tracking in `--test` output
+- Warning in `--setup` when CONVEX_DEPLOY_KEY env var will override config file
+- `--deployment <name>` CLI flag to connect to specific deployment by name
+- Multi deployment support for developers with multiple Convex apps
+- Convex reference links in README and setup docs
+- Auto project detection in `--setup` wizard reads `.env.local` and `.convex/deployment.json`
 
 ### Changed
 
-- README branding for the schema visualizer and dashboard view
+- README updated with MCP commands table for all three tools
+- Simplified deploy key switching instructions
+- Setup wizard shows which project to select when run in a Convex project folder
+
+### Fixed
+
+- Dashboard page now scrolls properly when content exceeds viewport height
 
 ## [1.0.15] - 2026-01-30
 

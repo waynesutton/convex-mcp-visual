@@ -5,10 +5,11 @@
  * and opens them in the user's default browser.
  */
 export interface UIServerConfig {
-    appName: 'schema-browser' | 'realtime-dashboard';
+    appName: "schema-browser" | "realtime-dashboard" | "schema-diagram";
     config: Record<string, unknown>;
     port?: number;
     autoClose?: number;
+    customHtml?: string;
 }
 export interface UIServerResult {
     url: string;

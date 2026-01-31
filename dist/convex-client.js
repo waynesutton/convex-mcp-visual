@@ -19,8 +19,132 @@ const DEFAULT_DOC_SAMPLE_LIMIT = parseInt(process.env.CONVEX_DOC_SAMPLE_LIMIT ||
 export class ConvexClient {
     deploymentUrl = null;
     adminKey = null;
+    urlSource = "none";
+    keySource = "none";
     constructor() {
         this.initialize();
+    }
+    /**
+     * Get all detected config sources for debugging
+     */
+    static getConfigSources() {
+        const sources = [];
+        // Check CONVEX_DEPLOY_KEY env var
+        const deployKey = process.env.CONVEX_DEPLOY_KEY;
+        if (deployKey) {
+            let deployment;
+            if (deployKey.includes("|") && deployKey.includes(":")) {
+                const pipeIndex = deployKey.indexOf("|");
+                const prefix = deployKey.substring(0, pipeIndex);
+                const colonIndex = prefix.indexOf(":");
+                deployment = prefix.substring(colonIndex + 1);
+            }
+            sources.push({
+                source: "CONVEX_DEPLOY_KEY env",
+                path: "environment variable",
+                hasUrl: !!deployment,
+                hasKey: true,
+                deployment: deployment
+                    ? `https://${deployment}.convex.cloud`
+                    : undefined,
+            });
+        }
+        // Check CONVEX_URL env var
+        const convexUrl = process.env.CONVEX_URL;
+        if (convexUrl) {
+            sources.push({
+                source: "CONVEX_URL env",
+                path: "environment variable",
+                hasUrl: true,
+                hasKey: false,
+                deployment: convexUrl,
+            });
+        }
+        // Check .env.local
+        const envLocalPath = join(process.cwd(), ".env.local");
+        if (existsSync(envLocalPath)) {
+            try {
+                const envContent = readFileSync(envLocalPath, "utf-8");
+                const urlMatch = envContent.match(/CONVEX_URL=(.+)/);
+                if (urlMatch) {
+                    sources.push({
+                        source: ".env.local",
+                        path: envLocalPath,
+                        hasUrl: true,
+                        hasKey: false,
+                        deployment: urlMatch[1].trim().replace(/["']/g, ""),
+                    });
+                }
+            }
+            catch {
+                // Ignore
+            }
+        }
+        // Check .convex/deployment.json
+        const convexJsonPath = join(process.cwd(), ".convex", "deployment.json");
+        if (existsSync(convexJsonPath)) {
+            try {
+                const config = JSON.parse(readFileSync(convexJsonPath, "utf-8"));
+                sources.push({
+                    source: ".convex/deployment.json",
+                    path: convexJsonPath,
+                    hasUrl: !!config.url,
+                    hasKey: !!config.adminKey,
+                    deployment: config.url,
+                });
+            }
+            catch {
+                // Ignore
+            }
+        }
+        // Check ~/.convex/config.json
+        const globalConfigPath = join(homedir(), ".convex", "config.json");
+        if (existsSync(globalConfigPath)) {
+            try {
+                const globalConfig = JSON.parse(readFileSync(globalConfigPath, "utf-8"));
+                if (globalConfig.accessToken) {
+                    sources.push({
+                        source: "~/.convex/config.json",
+                        path: globalConfigPath,
+                        hasUrl: false,
+                        hasKey: true,
+                    });
+                }
+            }
+            catch {
+                // Ignore
+            }
+        }
+        // Check ~/.convex-mcp-visual.json
+        const mcpConfigPath = join(homedir(), ".convex-mcp-visual.json");
+        if (existsSync(mcpConfigPath)) {
+            try {
+                const mcpConfig = JSON.parse(readFileSync(mcpConfigPath, "utf-8"));
+                sources.push({
+                    source: "~/.convex-mcp-visual.json",
+                    path: mcpConfigPath,
+                    hasUrl: !!mcpConfig.deploymentUrl,
+                    hasKey: !!mcpConfig.adminKey,
+                    deployment: mcpConfig.deploymentUrl,
+                });
+            }
+            catch {
+                // Ignore
+            }
+        }
+        return sources;
+    }
+    /**
+     * Get which source provided the current URL
+     */
+    getUrlSource() {
+        return this.urlSource;
+    }
+    /**
+     * Get which source provided the current key
+     */
+    getKeySource() {
+        return this.keySource;
     }
     initialize() {
         // Try environment variables first
@@ -33,22 +157,26 @@ export class ConvexClient {
                 const pipeIndex = deployKey.indexOf("|");
                 const prefix = deployKey.substring(0, pipeIndex);
                 this.adminKey = deployKey.substring(pipeIndex + 1);
+                this.keySource = "CONVEX_DEPLOY_KEY env";
                 // Extract deployment name from prefix (e.g., "prod:happy-animal-123")
                 if (prefix.includes(":")) {
                     const colonIndex = prefix.indexOf(":");
                     const deploymentName = prefix.substring(colonIndex + 1);
                     if (!explicitUrl && deploymentName) {
                         this.deploymentUrl = `https://${deploymentName}.convex.cloud`;
+                        this.urlSource = "CONVEX_DEPLOY_KEY env";
                     }
                 }
             }
             else {
                 // Just an admin key without prefix
                 this.adminKey = deployKey;
+                this.keySource = "CONVEX_DEPLOY_KEY env";
             }
         }
         if (explicitUrl) {
             this.deploymentUrl = explicitUrl;
+            this.urlSource = "CONVEX_URL env";
         }
         // Try to read from local project .env.local
         if (!this.deploymentUrl) {
@@ -59,6 +187,7 @@ export class ConvexClient {
                     const urlMatch = envContent.match(/CONVEX_URL=(.+)/);
                     if (urlMatch) {
                         this.deploymentUrl = urlMatch[1].trim().replace(/["']/g, "");
+                        this.urlSource = ".env.local";
                     }
                 }
                 catch {
@@ -74,9 +203,11 @@ export class ConvexClient {
                     const config = JSON.parse(readFileSync(convexJsonPath, "utf-8"));
                     if (config.url && !this.deploymentUrl) {
                         this.deploymentUrl = config.url;
+                        this.urlSource = ".convex/deployment.json";
                     }
                     if (config.adminKey && !this.adminKey) {
                         this.adminKey = config.adminKey;
+                        this.keySource = ".convex/deployment.json";
                     }
                 }
                 catch {
@@ -93,6 +224,7 @@ export class ConvexClient {
                     // Global config may have an accessToken for CLI auth
                     if (globalConfig.accessToken && !this.adminKey) {
                         this.adminKey = globalConfig.accessToken;
+                        this.keySource = "~/.convex/config.json";
                     }
                 }
                 catch {
@@ -108,9 +240,11 @@ export class ConvexClient {
                     const mcpConfig = JSON.parse(readFileSync(mcpConfigPath, "utf-8"));
                     if (mcpConfig.deploymentUrl && !this.deploymentUrl) {
                         this.deploymentUrl = mcpConfig.deploymentUrl;
+                        this.urlSource = "~/.convex-mcp-visual.json";
                     }
                     if (mcpConfig.adminKey && !this.adminKey) {
                         this.adminKey = mcpConfig.adminKey;
+                        this.keySource = "~/.convex-mcp-visual.json";
                     }
                 }
                 catch {

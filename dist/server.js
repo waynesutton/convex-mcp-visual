@@ -10,6 +10,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema, ListResourcesRequestSche
 import { createServer as createHttpServer } from "http";
 import { schemaBrowserTool, handleSchemaBrowser, } from "./tools/schema-browser.js";
 import { dashboardTool, handleDashboard } from "./tools/dashboard.js";
+import { schemaDiagramTool, handleSchemaDiagram, } from "./tools/schema-diagram.js";
 import { getSchemaResourceContent } from "./resources/schema-browser.js";
 import { getDashboardResourceContent } from "./resources/dashboard.js";
 import { ConvexClient } from "./convex-client.js";
@@ -36,7 +37,7 @@ export async function createServer() {
     // List available tools
     server.setRequestHandler(ListToolsRequestSchema, async () => {
         return {
-            tools: [schemaBrowserTool, dashboardTool],
+            tools: [schemaBrowserTool, dashboardTool, schemaDiagramTool],
         };
     });
     // Handle tool calls
@@ -49,6 +50,9 @@ export async function createServer() {
                 break;
             case "dashboard_view":
                 result = await handleDashboard(convexClient, args);
+                break;
+            case "schema_diagram":
+                result = await handleSchemaDiagram(convexClient, args);
                 break;
             default:
                 throw new Error(`Unknown tool: ${name}`);

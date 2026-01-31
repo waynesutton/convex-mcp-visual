@@ -2,7 +2,23 @@
 
 Current development tasks and progress.
 
-## Completed
+## Completed (v1.0.22)
+
+- [x] Add schema_diagram tool with Mermaid ER diagram generation
+- [x] Auto relationship detection from foreign key patterns
+- [x] ASCII/Unicode terminal output using beautiful-mermaid
+- [x] SVG browser output with theme options
+- [x] Fix dashboard scroll when content exceeds viewport
+- [x] Add clear MCP command instructions to README
+- [x] Add --config flag to show all detected config sources
+- [x] Add config source tracking to --test output
+- [x] Add warning in --setup when env var will override config file
+- [x] Add --deployment flag for explicit deployment selection
+- [x] Multi deployment support documentation
+- [x] Convex reference links in README and setup docs
+- [x] Auto detect project in --setup wizard from .env.local
+
+## Completed (Prior)
 
 - [x] Fix data access in `src/convex-client.ts` using Convex system queries
 - [x] Implement `queryDocuments()` with `_system/cli/tableData`
@@ -19,7 +35,6 @@ Current development tasks and progress.
 - [x] Create project hygiene files (files.md, changelog.md, TASK.md)
 - [x] Update README naming for schema visualizer and dashboard view
 - [x] Add junior guide doc for Claude web, stack, and read only access
-- [x] Update files index and changelog for doc and README changes
 
 ## Completed (v1.0.9)
 
@@ -60,7 +75,6 @@ Current development tasks and progress.
 
 ## Backlog
 
-- [ ] Add schema export as PNG/SVG
 - [ ] Add query builder UI
 - [ ] Improve relationship detection for array references
 - [ ] Add table statistics (min/max/avg for numeric fields)
@@ -68,3 +82,4 @@ Current development tasks and progress.
 - [ ] Add schema diff view between environments
 - [ ] Add collaborative viewing (share schema views)
 - [ ] Investigate Claude.ai web integration options
+- [ ] Add flowchart diagram type for data flows

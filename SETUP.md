@@ -1,6 +1,13 @@
 # Setup Guide
 
-Complete installation and configuration for Convex MCP Apps.
+Complete installation and configuration for Convex MCP Visual.
+
+## Convex References
+
+- [Deploy Keys](https://docs.convex.dev/cli/deploy-key-types) - Types of deploy keys and when to use them
+- [Management API](https://docs.convex.dev/management-api) - Programmatic project and deployment management
+- [Platform APIs](https://docs.convex.dev/platform-apis) - Building integrations on Convex
+- [CLI Documentation](https://docs.convex.dev/cli) - Convex command line interface
 
 ## Prerequisites
 
@@ -8,7 +15,7 @@ Before you begin
 
 - **Node.js 18+** - Check with `node --version`
 - **A Convex deployment** - Create one at [convex.dev](https://convex.dev) or use an existing project
-- **An MCP Apps-compatible host** - Claude Code, Claude Desktop, ChatGPT, or VS Code with MCP support
+- **An MCP compatible host** - Claude Code, Claude Desktop, Cursor, or VS Code with MCP support
 
 ## Installation
 
@@ -174,6 +181,46 @@ Or in your MCP config:
 - Scoped to a single deployment
 - Can be revoked anytime from dashboard
 
+### Switching deploy keys
+
+#### Using the --deployment flag (simplest)
+
+Connect to any deployment by name without changing environment variables:
+
+```bash
+npx convex-mcp-visual --deployment happy-animal-123 --test
+```
+
+Register MCP servers for multiple apps:
+
+```bash
+claude mcp add convex-app1 -- npx convex-mcp-visual --deployment happy-animal-123 --stdio
+claude mcp add convex-app2 -- npx convex-mcp-visual --deployment jolly-jaguar-456 --stdio
+```
+
+#### Using --setup wizard
+
+The `--setup` wizard only writes `~/.convex-mcp-visual.json`. It does not update `CONVEX_DEPLOY_KEY` in your shell profile or MCP client config. If the server still uses the old key, update the source that takes priority, then restart your MCP client.
+
+#### Deploy key priority order
+
+1. `CONVEX_DEPLOY_KEY` environment variable
+2. `CONVEX_URL` environment variable for the url
+3. `.env.local` for `CONVEX_URL`
+4. `.convex/deployment.json` for `url` and `adminKey`
+5. `~/.convex/config.json` for `accessToken`
+6. `~/.convex-mcp-visual.json` for `deploymentUrl` and `adminKey`
+
+If you want the setup wizard value to win, remove any higher priority source or set `CONVEX_DEPLOY_KEY` directly in your MCP client config.
+
+#### Debug config sources
+
+See all detected config sources and which one is being used:
+
+```bash
+npx convex-mcp-visual --config
+```
+
 ### Option 3: Deployment URL (for specific deployments)
 
 Point directly at a deployment URL when you know exactly which one to use.
@@ -187,15 +234,45 @@ This still requires either local credentials or a deploy key for authentication.
 
 ### Multiple deployments
 
-The server can access any deployment you have permissions for. The flow:
+#### Method 1: Using --deployment flag
 
-1. Claude calls the `status` tool
-2. Server returns list of available deployments (dev, prod, previews)
-3. You tell Claude which one to use
-4. Server returns a deployment selector (opaque token)
-5. All subsequent requests include that selector
+The simplest way to work with multiple Convex apps:
 
-The selector encodes the deployment info so you don't have to repeat it.
+```bash
+# Register separate MCP servers for each app
+claude mcp add convex-prod -- npx convex-mcp-visual --deployment happy-animal-123 --stdio
+claude mcp add convex-staging -- npx convex-mcp-visual --deployment staging-cat-456 --stdio
+```
+
+#### Method 2: Using environment variables
+
+```bash
+claude mcp add convex-prod -e CONVEX_DEPLOY_KEY=prod:happy-animal-123|key1 -- npx convex-mcp-visual --stdio
+claude mcp add convex-dev -e CONVEX_DEPLOY_KEY=dev:cool-cat-789|key2 -- npx convex-mcp-visual --stdio
+```
+
+#### Method 3: MCP client config
+
+For Claude Desktop or Cursor:
+
+```json
+{
+  "mcpServers": {
+    "convex-prod": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"],
+      "env": { "CONVEX_DEPLOY_KEY": "prod:happy-animal-123|your-key" }
+    },
+    "convex-staging": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"],
+      "env": { "CONVEX_DEPLOY_KEY": "prod:staging-deploy|your-key" }
+    }
+  }
+}
+```
+
+Each MCP server connects to a different Convex deployment. Claude will show both as available tools.
 
 ### Security model
 
@@ -373,8 +450,40 @@ npx convex login
 
 Some hosts require explicit MCP Apps support. Check your host's documentation for compatibility. The server falls back to text-only output for hosts that don't support MCP Apps.
 
+## How Deploy Keys Work
+
+Deploy keys are the recommended authentication method for MCP servers. They identify a specific deployment and grant permission to read schema and data.
+
+### Deploy Key Format
+
+```
+prod:happy-animal-123|convex_deploy_abc123xyz
+```
+
+- `prod:` or `dev:` prefix indicates deployment type
+- `happy-animal-123` is the deployment name
+- Everything after `|` is the admin key
+
+### Key Types
+
+| Type                  | Format                      | Use Case                               |
+| --------------------- | --------------------------- | -------------------------------------- |
+| Production deploy key | `prod:name\|key`            | Production MCP servers, CI/CD          |
+| Dev deploy key        | `dev:name\|key`             | Development MCP servers, local testing |
+| Preview deploy key    | `preview:team:project\|key` | Preview deployments                    |
+
+See [Convex Deploy Keys Documentation](https://docs.convex.dev/cli/deploy-key-types) for full details.
+
+### Getting a Deploy Key
+
+1. Go to [dashboard.convex.dev](https://dashboard.convex.dev)
+2. Select your project
+3. Navigate to Settings > Deploy Keys
+4. Click Generate Deploy Key
+5. Copy the full key including the prefix
+
 ## Next steps
 
 - [Schema Browser documentation](../apps/schema-browser/README.md)
 - [Realtime Dashboard documentation](../apps/realtime-dashboard/README.md)
-- [MCP Apps specification](https://github.com/modelcontextprotocol/ext-apps)
+- [Convex Documentation](https://docs.convex.dev)

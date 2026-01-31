@@ -43,10 +43,31 @@ export interface PaginatedResult<T> {
     continueCursor?: string;
     isDone: boolean;
 }
+export interface ConfigSource {
+    source: string;
+    path: string;
+    hasUrl: boolean;
+    hasKey: boolean;
+    deployment?: string;
+}
 export declare class ConvexClient {
     private deploymentUrl;
     private adminKey;
+    private urlSource;
+    private keySource;
     constructor();
+    /**
+     * Get all detected config sources for debugging
+     */
+    static getConfigSources(): ConfigSource[];
+    /**
+     * Get which source provided the current URL
+     */
+    getUrlSource(): string;
+    /**
+     * Get which source provided the current key
+     */
+    getKeySource(): string;
     private initialize;
     /**
      * Check if admin key is available for system queries

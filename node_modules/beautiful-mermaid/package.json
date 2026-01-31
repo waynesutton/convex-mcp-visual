@@ -1,0 +1,67 @@
+{
+  "name": "beautiful-mermaid",
+  "version": "0.1.3",
+  "license": "MIT",
+  "description": "Render Mermaid diagrams as beautiful SVGs or ASCII art. Ultra-fast, fully themeable, zero DOM dependencies.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./browser": {
+      "types": "./dist/beautiful-mermaid.browser.d.ts",
+      "default": "./dist/beautiful-mermaid.browser.global.js"
+    }
+  },
+  "unpkg": "./dist/beautiful-mermaid.browser.global.js",
+  "jsdelivr": "./dist/beautiful-mermaid.browser.global.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lukilabs/beautiful-mermaid"
+  },
+  "homepage": "https://github.com/lukilabs/beautiful-mermaid",
+  "bugs": {
+    "url": "https://github.com/lukilabs/beautiful-mermaid/issues"
+  },
+  "keywords": [
+    "mermaid",
+    "diagram",
+    "svg",
+    "ascii",
+    "flowchart",
+    "sequence-diagram",
+    "class-diagram",
+    "er-diagram",
+    "state-diagram",
+    "visualization",
+    "theming"
+  ],
+  "author": "Luki Labs",
+  "scripts": {
+    "test": "bun test src/__tests__/",
+    "samples": "bun run index.ts",
+    "dev": "bun run dev.ts",
+    "bench": "bun run bench.ts",
+    "build": "tsup",
+    "build:samples": "bun run index.ts && mkdir -p samples && mv index.html samples/ && cp -r public/* samples/",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "^1.1.8"
+  },
+  "devDependencies": {
+    "shiki": "^3.19.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}
