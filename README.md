@@ -49,58 +49,26 @@ export CONVEX_DEPLOY_KEY="prod:your-deployment|your-key"
 
 Get your deploy key from [dashboard.convex.dev](https://dashboard.convex.dev) under Settings > Deploy Keys.
 
-### Switching Deployments
-
-Connect to a specific deployment by name:
-
-```bash
-npx convex-mcp-visual --deployment happy-animal-123 --test
-```
-
-Or see which config source is being used:
-
-```bash
-npx convex-mcp-visual --config
-```
-
-Clear config and set up a new deployment:
-
-```bash
-rm -f ~/.convex-mcp-visual.json
-unset CONVEX_DEPLOY_KEY
-npx convex-mcp-visual --setup
-```
-
 ### Multiple Convex Apps
 
-Register separate MCP servers for each deployment:
+**One-time setup for each project:**
 
 ```bash
-# App 1
-claude mcp add convex-app1 -- npx convex-mcp-visual --deployment happy-animal-123 --stdio
-
-# App 2
-claude mcp add convex-app2 -- npx convex-mcp-visual --deployment jolly-jaguar-456 --stdio
+cd my-app-1/
+npx convex-mcp-visual --setup
+# Paste your deploy key when prompted, it saves to .env.local
 ```
 
-Or use environment variables:
+**Switching between apps:** Just `cd` to the project folder. The MCP server reads from that folder's `.env.local` automatically.
 
-```json
-{
-  "mcpServers": {
-    "convex-prod": {
-      "command": "npx",
-      "args": ["convex-mcp-visual", "--stdio"],
-      "env": { "CONVEX_DEPLOY_KEY": "prod:happy-animal-123|your-key" }
-    },
-    "convex-dev": {
-      "command": "npx",
-      "args": ["convex-mcp-visual", "--stdio"],
-      "env": { "CONVEX_DEPLOY_KEY": "dev:cool-cat-789|your-key" }
-    }
-  }
-}
+```bash
+cd my-app-1/   # Now using my-app-1's Convex deployment
+cd ../my-app-2/ # Now using my-app-2's Convex deployment
 ```
+
+No need to run `--setup` again after the initial setup.
+
+See [Convex Deploy Keys](https://docs.convex.dev/cli/deploy-key-types) for more details.
 
 ### 3. Test Connection
 
@@ -186,15 +154,12 @@ Options:
   --stdio              Run in stdio mode (default)
   --http               Run in HTTP mode
   --port <num>         Port for HTTP mode (default: 3001)
-  --deployment <name>  Connect to specific deployment by name
   --test               Test Convex connection
   --setup              Interactive setup wizard
   --config             Show all detected config sources
   -v, --version        Show version number
   -h, --help           Show help
 ```
-
-The `--deployment` flag lets you connect to any deployment without changing environment variables. This is useful when working with multiple Convex apps.
 
 ## Upgrading
 

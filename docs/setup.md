@@ -152,55 +152,40 @@ npx convex-mcp-visual --test
 
 ### Multiple Deployments
 
-#### Method 1: Using --deployment Flag (Simplest)
-
-Connect to any deployment by name without managing environment variables:
+**One-time setup for each project:**
 
 ```bash
-# Test connection to a specific deployment
-npx convex-mcp-visual --deployment happy-animal-123 --test
-
-# Register MCP servers for multiple apps
-claude mcp add convex-app1 -- npx convex-mcp-visual --deployment happy-animal-123 --stdio
-claude mcp add convex-app2 -- npx convex-mcp-visual --deployment jolly-jaguar-456 --stdio
+cd my-app-1/
+npx convex-mcp-visual --setup
+# Paste your deploy key when prompted, it saves to .env.local
 ```
 
-The `--deployment` flag sets the deployment URL directly. You still need a valid deploy key for authentication.
-
-#### Method 2: Using Environment Variables
-
-Register multiple MCP servers with separate deploy keys:
+**Switching between apps:** Just `cd` to the project folder. The MCP server reads from that folder's `.env.local` automatically.
 
 ```bash
-# Production
-claude mcp add convex-prod -e CONVEX_DEPLOY_KEY=prod:happy-animal-123|key1 -- npx convex-mcp-visual --stdio
-
-# Development
-claude mcp add convex-dev -e CONVEX_DEPLOY_KEY=dev:cool-cat-789|key2 -- npx convex-mcp-visual --stdio
+cd my-app-1/   # Now using my-app-1's Convex deployment
+cd ../my-app-2/ # Now using my-app-2's Convex deployment
 ```
 
-#### Method 3: MCP Client Config
+No need to run `--setup` again after the initial setup.
 
-For Claude Desktop or Cursor, configure multiple servers in your config file:
+#### Alternative: MCP Config (for Claude Desktop)
+
+If you prefer separate MCP servers per project:
 
 ```json
 {
   "mcpServers": {
-    "convex-prod": {
+    "convex-app1": {
       "command": "npx",
       "args": ["convex-mcp-visual", "--stdio"],
       "env": { "CONVEX_DEPLOY_KEY": "prod:happy-animal-123|your-key" }
-    },
-    "convex-staging": {
-      "command": "npx",
-      "args": ["convex-mcp-visual", "--stdio"],
-      "env": { "CONVEX_DEPLOY_KEY": "prod:staging-deploy|your-key" }
     }
   }
 }
 ```
 
-Each MCP server connects to a different Convex deployment. Claude will show both servers as available tools.
+See [Convex Deploy Keys](https://docs.convex.dev/cli/deploy-key-types) for more details.
 
 ## Upgrading
 

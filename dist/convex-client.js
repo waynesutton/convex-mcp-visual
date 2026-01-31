@@ -60,19 +60,30 @@ export class ConvexClient {
                 deployment: convexUrl,
             });
         }
-        // Check .env.local
+        // Check .env.local for CONVEX_DEPLOY_KEY and CONVEX_URL
         const envLocalPath = join(process.cwd(), ".env.local");
         if (existsSync(envLocalPath)) {
             try {
                 const envContent = readFileSync(envLocalPath, "utf-8");
-                const urlMatch = envContent.match(/CONVEX_URL=(.+)/);
-                if (urlMatch) {
+                const keyMatch = envContent.match(/CONVEX_DEPLOY_KEY=["']?([^"'\n]+)["']?/);
+                const urlMatch = envContent.match(/CONVEX_URL=["']?([^"'\n]+)["']?/);
+                if (keyMatch || urlMatch) {
+                    let deployment;
+                    if (keyMatch) {
+                        const key = keyMatch[1];
+                        // Parse deployment from key format: prod:deployment-name|adminkey
+                        if (key.includes("|") && key.includes(":")) {
+                            const prefix = key.substring(0, key.indexOf("|"));
+                            const colonIndex = prefix.indexOf(":");
+                            deployment = prefix.substring(colonIndex + 1);
+                        }
+                    }
                     sources.push({
                         source: ".env.local",
                         path: envLocalPath,
-                        hasUrl: true,
-                        hasKey: false,
-                        deployment: urlMatch[1].trim().replace(/["']/g, ""),
+                        hasUrl: !!urlMatch || !!deployment,
+                        hasKey: !!keyMatch,
+                        deployment: deployment || (urlMatch ? urlMatch[1].trim() : undefined),
                     });
                 }
             }
@@ -178,15 +189,40 @@ export class ConvexClient {
             this.deploymentUrl = explicitUrl;
             this.urlSource = "CONVEX_URL env";
         }
-        // Try to read from local project .env.local
-        if (!this.deploymentUrl) {
+        // Try to read from local project .env.local (CONVEX_DEPLOY_KEY and CONVEX_URL)
+        if (!this.adminKey || !this.deploymentUrl) {
             const envLocalPath = join(process.cwd(), ".env.local");
             if (existsSync(envLocalPath)) {
                 try {
                     const envContent = readFileSync(envLocalPath, "utf-8");
-                    const urlMatch = envContent.match(/CONVEX_URL=(.+)/);
-                    if (urlMatch) {
-                        this.deploymentUrl = urlMatch[1].trim().replace(/["']/g, "");
+                    // Check for CONVEX_DEPLOY_KEY first
+                    const keyMatch = envContent.match(/CONVEX_DEPLOY_KEY=["']?([^"'\n]+)["']?/);
+                    if (keyMatch && !this.adminKey) {
+                        const fileDeployKey = keyMatch[1];
+                        if (fileDeployKey.includes("|")) {
+                            const pipeIndex = fileDeployKey.indexOf("|");
+                            const prefix = fileDeployKey.substring(0, pipeIndex);
+                            this.adminKey = fileDeployKey.substring(pipeIndex + 1);
+                            this.keySource = ".env.local";
+                            // Extract deployment URL from prefix
+                            if (prefix.includes(":") && !this.deploymentUrl) {
+                                const colonIndex = prefix.indexOf(":");
+                                const deploymentName = prefix.substring(colonIndex + 1);
+                                if (deploymentName) {
+                                    this.deploymentUrl = `https://${deploymentName}.convex.cloud`;
+                                    this.urlSource = ".env.local";
+                                }
+                            }
+                        }
+                        else {
+                            this.adminKey = fileDeployKey;
+                            this.keySource = ".env.local";
+                        }
+                    }
+                    // Check for CONVEX_URL
+                    const urlMatch = envContent.match(/CONVEX_URL=["']?([^"'\n]+)["']?/);
+                    if (urlMatch && !this.deploymentUrl) {
+                        this.deploymentUrl = urlMatch[1].trim();
                         this.urlSource = ".env.local";
                     }
                 }

@@ -27,9 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `--setup` now saves deploy key to `.env.local` in current directory (per project)
+- MCP server reads `CONVEX_DEPLOY_KEY` from `.env.local` automatically
+- Just `cd` to project folder and it uses that folder's deploy key
 - README updated with MCP commands table for all three tools
-- Simplified deploy key switching instructions
 - Setup wizard shows which project to select when run in a Convex project folder
+- Legacy global config (`~/.convex-mcp-visual.json`) still read for backwards compatibility
 
 ### Fixed
 

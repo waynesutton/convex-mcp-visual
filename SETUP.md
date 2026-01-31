@@ -183,21 +183,6 @@ Or in your MCP config:
 
 ### Switching deploy keys
 
-#### Using the --deployment flag (simplest)
-
-Connect to any deployment by name without changing environment variables:
-
-```bash
-npx convex-mcp-visual --deployment happy-animal-123 --test
-```
-
-Register MCP servers for multiple apps:
-
-```bash
-claude mcp add convex-app1 -- npx convex-mcp-visual --deployment happy-animal-123 --stdio
-claude mcp add convex-app2 -- npx convex-mcp-visual --deployment jolly-jaguar-456 --stdio
-```
-
 #### Using --setup wizard
 
 The `--setup` wizard only writes `~/.convex-mcp-visual.json`. It does not update `CONVEX_DEPLOY_KEY` in your shell profile or MCP client config. If the server still uses the old key, update the source that takes priority, then restart your MCP client.
@@ -234,45 +219,36 @@ This still requires either local credentials or a deploy key for authentication.
 
 ### Multiple deployments
 
-#### Method 1: Using --deployment flag
-
-The simplest way to work with multiple Convex apps:
+**One-time setup for each project:**
 
 ```bash
-# Register separate MCP servers for each app
-claude mcp add convex-prod -- npx convex-mcp-visual --deployment happy-animal-123 --stdio
-claude mcp add convex-staging -- npx convex-mcp-visual --deployment staging-cat-456 --stdio
+cd my-app-1/
+npx convex-mcp-visual --setup
+# Paste your deploy key when prompted, it saves to .env.local
 ```
 
-#### Method 2: Using environment variables
+**Switching between apps:** Just `cd` to the project folder. The MCP server reads from that folder's `.env.local` automatically.
 
 ```bash
-claude mcp add convex-prod -e CONVEX_DEPLOY_KEY=prod:happy-animal-123|key1 -- npx convex-mcp-visual --stdio
-claude mcp add convex-dev -e CONVEX_DEPLOY_KEY=dev:cool-cat-789|key2 -- npx convex-mcp-visual --stdio
+cd my-app-1/   # Now using my-app-1's Convex deployment
+cd ../my-app-2/ # Now using my-app-2's Convex deployment
 ```
 
-#### Method 3: MCP client config
+No need to run `--setup` again after the initial setup.
 
-For Claude Desktop or Cursor:
+See [Convex Deploy Keys](https://docs.convex.dev/cli/deploy-key-types) for more details.
 
-```json
-{
-  "mcpServers": {
-    "convex-prod": {
-      "command": "npx",
-      "args": ["convex-mcp-visual", "--stdio"],
-      "env": { "CONVEX_DEPLOY_KEY": "prod:happy-animal-123|your-key" }
-    },
-    "convex-staging": {
-      "command": "npx",
-      "args": ["convex-mcp-visual", "--stdio"],
-      "env": { "CONVEX_DEPLOY_KEY": "prod:staging-deploy|your-key" }
-    }
-  }
-}
+#### Alternative: Shell Environment Variable
+
+If you work on one project at a time, set the deploy key in your current terminal:
+
+```bash
+cd my-convex-app/
+export CONVEX_DEPLOY_KEY="prod:happy-animal-123|your-key"
+npx convex-mcp-visual --test
 ```
 
-Each MCP server connects to a different Convex deployment. Claude will show both as available tools.
+When switching projects, export a different key for that project.
 
 ### Security model
 

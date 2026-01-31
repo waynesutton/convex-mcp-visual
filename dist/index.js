@@ -204,15 +204,31 @@ async function runSetupWizard() {
         console.log("  To use setup wizard instead, run:");
         console.log("    unset CONVEX_DEPLOY_KEY\n");
     }
-    // Check existing config file
+    // Check existing .env.local in current directory
+    const currentEnvLocal = join(process.cwd(), ".env.local");
+    if (existsSync(currentEnvLocal)) {
+        try {
+            const content = readFileSync(currentEnvLocal, "utf-8");
+            const match = content.match(/CONVEX_DEPLOY_KEY=["']?([^"'\n]+)["']?/);
+            if (match) {
+                console.log(`Found existing deploy key in ${currentEnvLocal}`);
+                console.log("  (will be updated)\n");
+            }
+        }
+        catch {
+            // Ignore parse errors
+        }
+    }
+    // Also check legacy global config file
     let existingConfig = {};
     if (existsSync(CONFIG_FILE)) {
         try {
             existingConfig = JSON.parse(readFileSync(CONFIG_FILE, "utf-8"));
-            console.log(`Found existing config at ${CONFIG_FILE}`);
+            console.log(`Found legacy config at ${CONFIG_FILE}`);
             if (existingConfig.deploymentUrl) {
-                console.log(`  Current deployment: ${existingConfig.deploymentUrl}\n`);
+                console.log(`  Deployment: ${existingConfig.deploymentUrl}`);
             }
+            console.log("  Note: New setup saves to .env.local (per project)\n");
         }
         catch {
             // Ignore parse errors
@@ -307,15 +323,31 @@ async function runSetupWizard() {
         (detectedProject ? detectedProject.url : null) ||
         existingConfig.deploymentUrl ||
         "";
-    // Save config
-    const config = {
-        deploymentUrl: finalDeploymentUrl,
-        adminKey,
-        savedAt: new Date().toISOString(),
-    };
+    // Save to .env.local in current directory (per-project config)
+    const envLocalPath = join(process.cwd(), ".env.local");
+    const deployKeyLine = `CONVEX_DEPLOY_KEY="${trimmedKey}"`;
     try {
-        writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
-        console.log(`\nConfig saved to ${CONFIG_FILE}`);
+        // Check if .env.local exists and already has CONVEX_DEPLOY_KEY
+        let envContent = "";
+        if (existsSync(envLocalPath)) {
+            envContent = readFileSync(envLocalPath, "utf-8");
+            if (envContent.includes("CONVEX_DEPLOY_KEY=")) {
+                // Replace existing key
+                envContent = envContent.replace(/CONVEX_DEPLOY_KEY=["']?[^"'\n]+["']?/, deployKeyLine);
+                console.log(`\nUpdated CONVEX_DEPLOY_KEY in ${envLocalPath}`);
+            }
+            else {
+                // Append new key
+                envContent = envContent.trimEnd() + "\n" + deployKeyLine + "\n";
+                console.log(`\nAdded CONVEX_DEPLOY_KEY to ${envLocalPath}`);
+            }
+        }
+        else {
+            // Create new .env.local
+            envContent = deployKeyLine + "\n";
+            console.log(`\nCreated ${envLocalPath}`);
+        }
+        writeFileSync(envLocalPath, envContent);
         if (finalDeploymentUrl) {
             console.log(`  Deployment: ${finalDeploymentUrl}`);
         }
