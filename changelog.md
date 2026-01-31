@@ -10,11 +10,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `.gitignore` to prevent committing generated files
+- `docs/files-docs.md` explaining each documentation file
+
+### Changed
+
+- Consolidated two SETUP.md files into single `docs/setup.md`
+- Moved user guides to `docs/` folder (user-guide-dashboard.md, user-guide-schema-browser.md)
+- Simplified `docs/OVERVIEW.md` to remove duplicate architecture content
+- Condensed `CLAUDE.md` to development essentials only
+- Expanded `skills/convex-schema/SKILL.md` with all tool parameters
+- Updated `.npmignore` to exclude docs/ from npm package
+- Updated `docs/PUBLISHING.md` file references
 
 ### Removed
 
 - `test-convex-project/` sample project (no longer needed)
 - Tracked build artifacts from git (node_modules, dist, .cursor, mnt)
+- Root `SETUP.md` (merged into docs/setup.md)
+- Root `USER_GUIDE_DASHBOARD.md` (moved to docs/)
+- Root `USER_GUIDE_SCHEMA_BROWSER.md` (moved to docs/)
 
 ## [1.1.0] - 2026-01-31
 

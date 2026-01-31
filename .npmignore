@@ -1,4 +1,4 @@
-# Source files (only dist/ is needed)
+# Source files (only dist/ is needed for npm)
 src/
 apps/
 *.ts
@@ -6,20 +6,20 @@ apps/
 tsconfig*.json
 vite.config.ts
 
-# Note: These are INCLUDED for Claude Code plugin distribution:
+# Documentation (README.md is auto-included)
+# All .md files except README and plugin-related files
+*.md
+!README.md
+
+# Docs folder excluded from npm (not needed for runtime)
+docs/
+
+# Keep these for Claude Code plugin distribution:
 # - .claude-plugin/
 # - .mcp.json
 # - skills/
-# - deployplugin.md
 
-# Documentation (README.md is auto-included)
-CLAUDE.md
-OVERVIEW.md
-SETUP.md
-USER_GUIDE_*.md
-PUBLISHING.md
-
-# Test files and directories
+# Test files
 test-convex-project/
 *.test.ts
 *.spec.ts
@@ -31,35 +31,30 @@ __tests__/
 *.swp
 *.swo
 *.sublime-*
+.cursor/
 
 # OS generated files
 .DS_Store
 .DS_Store?
 ._*
 Thumbs.db
-ehthumbs.db
 
 # Build artifacts not needed for runtime
 *.map
 *.tsbuildinfo
 
-# Environment and secrets (CRITICAL)
+# Environment and secrets
 .env
 .env.*
 .env.local
-.env.*.local
 
 # Logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Session and cache
 .claude/
 .cache/
-.temp/
-.tmp/
 
 # Mounted directories
 mnt/
@@ -75,25 +70,8 @@ mnt/
 # CI/CD
 .github/
 .gitlab-ci.yml
-.travis.yml
-Jenkinsfile
 
-# Documentation extras (keep essential docs)
-CLAUDE.md
-OVERVIEW.md
-SETUP.md
-PUBLISHING.md
-USER_GUIDE_*.md
-TASK.md
-files.md
-changelog.md
-*.md
-!README.md
-!deployplugin.md
-!docs/*.md
-!skills/**/*.md
-
-# Lock files (npm will use package.json)
+# Lock files
 package-lock.json
 yarn.lock
 pnpm-lock.yaml

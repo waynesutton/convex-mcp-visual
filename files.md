@@ -42,30 +42,35 @@ Overview of the codebase structure.
 Each app contains:
 
 - `index.html` - Entry HTML file
-- `src/app.ts` - Main application logic (TypeScript with WindowWithConfig type)
-- `src/styles.css` - Component styles (including shortcuts modal)
+- `src/app.ts` - Main application logic
+- `src/styles.css` - Component styles
 
 ## Documentation (`docs/`)
 
-| File                 | Description                                                    |
-| -------------------- | -------------------------------------------------------------- |
-| `setup.md`           | Detailed setup and configuration guide                         |
-| `junior-guide.md`    | Junior guide for Claude web goals, stack, and read only access |
-| `tools.md`           | Tool parameters and keyboard shortcuts                         |
-| `architecture.md`    | Technical architecture and design                              |
-| `troubleshooting.md` | Common issues and solutions                                    |
-| `limitations.md`     | Known limitations and compatibility                            |
+| File                           | Description                                  |
+| ------------------------------ | -------------------------------------------- |
+| `setup.md`                     | Installation, config, MCP clients, Docker    |
+| `tools.md`                     | Tool parameters and keyboard shortcuts       |
+| `architecture.md`              | Technical architecture and design            |
+| `troubleshooting.md`           | Common issues and solutions                  |
+| `limitations.md`               | Known limitations and compatibility          |
+| `OVERVIEW.md`                  | Project summary for GitHub/marketplace       |
+| `deployplugin.md`              | Claude Code plugin distribution guide        |
+| `PUBLISHING.md`                | npm publishing checklist and security        |
+| `101-guide.md`                 | Internal guide: data flow and read-only mode |
+| `user-guide-schema-browser.md` | How to use the schema browser                |
+| `user-guide-dashboard.md`      | How to use the dashboard                     |
+| `files-docs.md`                | Documentation file descriptions              |
 
-## Root Documentation
+## Root Files
 
-| File              | Description                           |
-| ----------------- | ------------------------------------- |
-| `README.md`       | Quick start and overview              |
-| `OVERVIEW.md`     | Project architecture and structure    |
-| `SETUP.md`        | Detailed installation guide           |
-| `deployplugin.md` | Claude Code plugin distribution guide |
-| `changelog.md`    | Version history                       |
-| `TASK.md`         | Development task tracker              |
+| File           | Description                     |
+| -------------- | ------------------------------- |
+| `README.md`    | Quick start and overview        |
+| `CLAUDE.md`    | Development guidance for Claude |
+| `changelog.md` | Version history                 |
+| `files.md`     | This file: codebase structure   |
+| `TASK.md`      | Development task tracker        |
 
 ## Configuration Files
 

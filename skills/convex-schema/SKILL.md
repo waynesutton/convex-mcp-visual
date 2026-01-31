@@ -1,11 +1,11 @@
 ---
 name: convex-schema
-description: Browse and visualize Convex database schemas. Use when exploring Convex tables, viewing document structure, or understanding database relationships.
+description: Browse and visualize Convex database schemas. Use when exploring Convex tables, viewing document structure, understanding database relationships, or creating dashboards.
 ---
 
 # Convex Schema Browser
 
-Use the `schema_browser` MCP tool to explore Convex database schemas interactively.
+Use the MCP tools to explore Convex databases interactively.
 
 ## When to use
 
@@ -13,14 +13,40 @@ Use the `schema_browser` MCP tool to explore Convex database schemas interactive
 - User wants to browse tables or documents
 - User needs to understand database structure
 - User asks about table relationships
+- User wants to visualize their data
+- User asks for metrics or dashboard
 
 ## Available tools
 
-This skill provides access to these MCP tools:
+### schema_browser
 
-1. **schema_browser** - Interactive schema explorer with graph and list views
-2. **dashboard_view** - Real-time metrics and document counts
-3. **schema_diagram** - Mermaid ER diagrams of table relationships
+Interactive schema explorer with graph and list views.
+
+**Parameters:**
+
+- `table` (string, optional): Pre-select a specific table
+- `showInferred` (boolean, default: true): Show inferred schemas
+- `pageSize` (number, default: 50): Documents per page
+
+### dashboard_view
+
+Real-time metrics dashboard with charts.
+
+**Parameters:**
+
+- `metrics` (array): Metric definitions with aggregations
+- `charts` (array): Chart configurations (line, bar, pie)
+- `refreshInterval` (number, default: 5): Refresh interval in seconds
+
+### schema_diagram
+
+Mermaid ER diagrams showing table relationships.
+
+**Parameters:**
+
+- `theme` (string): Color theme (github-dark, dracula, nord, etc.)
+- `ascii` (boolean): Use ASCII output for terminal
+- `tables` (array): Specific tables to include
 
 ## Example prompts
 
@@ -30,6 +56,8 @@ This skill provides access to these MCP tools:
 - "Show schema for the users table"
 - "Generate a diagram of my schema"
 - "Create a dashboard for my data"
+- "Show me metrics for my app"
+- "Visualize my database relationships"
 
 ## Requirements
 

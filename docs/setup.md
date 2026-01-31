@@ -8,6 +8,16 @@ Complete setup instructions for Convex MCP Visual.
 - A Convex project with data
 - An MCP client (Claude Code, Claude Desktop, Cursor, etc.)
 
+## Quick Install
+
+```bash
+# Install globally
+npm install -g convex-mcp-visual
+
+# Or run directly with npx
+npx convex-mcp-visual --setup
+```
+
 ## Convex References
 
 - [Deploy Keys](https://docs.convex.dev/cli/deploy-key-types) - Types of deploy keys and when to use them
@@ -286,3 +296,146 @@ npx convex-mcp-visual --setup
 ```
 
 For more help, see [Troubleshooting](./troubleshooting.md).
+
+## MCP Client Configuration
+
+### Claude Code
+
+```bash
+claude mcp add convex-visual -- npx convex-mcp-visual --stdio
+```
+
+Verify installation:
+
+```bash
+claude mcp list
+```
+
+### Claude Desktop
+
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+```json
+{
+  "mcpServers": {
+    "convex-visual": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"],
+      "env": {
+        "CONVEX_DEPLOY_KEY": "prod:your-deployment|your-key"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop after saving.
+
+### Cursor
+
+Add to `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "convex-visual": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"]
+    }
+  }
+}
+```
+
+### VS Code
+
+Add to settings or `.vscode/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "convex-visual": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"]
+    }
+  }
+}
+```
+
+## Advanced Deployment
+
+### HTTP Transport
+
+For team deployments or remote access:
+
+```bash
+npx convex-mcp-visual --http --port 3001
+```
+
+Configure clients to use HTTP:
+
+```bash
+claude mcp add --transport http convex-visual http://localhost:3001/mcp
+```
+
+### Docker
+
+```dockerfile
+FROM node:20-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY dist/ ./dist/
+EXPOSE 3001
+CMD ["node", "dist/index.js", "--http", "--port", "3001"]
+```
+
+Build and run:
+
+```bash
+docker build -t convex-mcp-visual .
+docker run -p 3001:3001 -e CONVEX_DEPLOY_KEY="prod:your-key" convex-mcp-visual
+```
+
+### systemd Service (Linux)
+
+Create `/etc/systemd/system/convex-mcp-visual.service`:
+
+```ini
+[Unit]
+Description=Convex MCP Visual Server
+After=network.target
+
+[Service]
+Type=simple
+User=youruser
+Environment=CONVEX_DEPLOY_KEY=prod:your-key
+ExecStart=/usr/bin/npx convex-mcp-visual --http --port 3001
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start:
+
+```bash
+sudo systemctl enable convex-mcp-visual
+sudo systemctl start convex-mcp-visual
+```
+
+## Building from Source
+
+For development or customization:
+
+```bash
+git clone https://github.com/waynesutton/convex-mcp-visual.git
+cd convex-mcp-visual
+npm install
+npm run build
+```
+
+Test the build:
+
+```bash
+node dist/index.js --test
+```

@@ -131,12 +131,14 @@ All tools open an interactive browser UI and return output to the terminal.
 
 ## Documentation
 
-- [Setup Guide](docs/setup.md) - Detailed configuration options
-- [Plugin Distribution](deployplugin.md) - Claude Code plugin marketplace
+- [Setup Guide](docs/setup.md) - Configuration and MCP client setup
 - [Tools Reference](docs/tools.md) - Parameters and keyboard shortcuts
 - [Architecture](docs/architecture.md) - How it works
 - [Troubleshooting](docs/troubleshooting.md) - Common issues and fixes
 - [Limitations](docs/limitations.md) - Known limitations
+- [Plugin Distribution](docs/deployplugin.md) - Claude Code marketplace
+- [User Guide: Schema Browser](docs/user-guide-schema-browser.md) - Using the schema browser
+- [User Guide: Dashboard](docs/user-guide-dashboard.md) - Using the dashboard
 
 ## Configuration
 

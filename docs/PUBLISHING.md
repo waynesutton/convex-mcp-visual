@@ -20,11 +20,12 @@ REMOVE BEFORE PUBLISHING:
 ├── *.log                       # Log files
 ├── .env                        # Environment files (NEVER publish)
 ├── .env.*                      # All env variants
-├── CLAUDE.md                   # Development instructions for Claude
-├── OVERVIEW.md                 # Development overview
-├── SETUP.md                    # Redundant setup doc
-├── USER_GUIDE_*.md             # User guides (consolidated in README)
-└── PUBLISHING.md               # This file (internal use only)
+├── docs/                       # Documentation (not needed at runtime)
+├── CLAUDE.md                   # Development instructions
+├── TASK.md                     # Development tasks
+├── files.md                    # Codebase overview
+├── changelog.md                # Version history
+└── *.md (except README.md)     # All other markdown files
 ```
 
 ### 2. Files INCLUDED in npm Package
@@ -33,13 +34,12 @@ The `package.json` `files` array specifies what gets published:
 
 ```json
 {
-  "files": [
-    "dist"
-  ]
+  "files": ["dist"]
 }
 ```
 
 Only the `dist/` folder is published. This includes:
+
 - Compiled JavaScript server code
 - Bundled UI applications (HTML/JS/CSS)
 
@@ -57,6 +57,7 @@ tar -tf convex-mcp-visual-*.tgz
 ```
 
 Expected contents:
+
 ```
 package/package.json
 package/README.md
@@ -76,6 +77,7 @@ package/dist/apps/
 ### Before Every Publish
 
 1. **No credentials in code**
+
    ```bash
    # Search for potential secrets
    grep -r "CONVEX_DEPLOY_KEY" src/
@@ -86,6 +88,7 @@ package/dist/apps/
    ```
 
 2. **No hardcoded URLs**
+
    ```bash
    # Check for hardcoded Convex URLs
    grep -r "convex.cloud" src/ --include="*.ts"
@@ -96,6 +99,7 @@ package/dist/apps/
    - Verify no test data with real user info
 
 4. **Dependencies audit**
+
    ```bash
    npm audit
    npm audit fix
@@ -110,6 +114,7 @@ package/dist/apps/
 ### Code Security Review
 
 The server only performs READ operations:
+
 - `listTables()` - Lists table names and counts
 - `getTableSchema()` - Gets field definitions
 - `queryDocuments()` - Reads documents (limited to 50)
@@ -207,9 +212,7 @@ npx convex-mcp-visual --test
   "bin": {
     "convex-mcp-visual": "dist/index.js"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "prepublishOnly": "npm run build"
   },
@@ -245,11 +248,11 @@ tsconfig*.json
 vite.config.ts
 
 # Documentation (except README)
+docs/
 CLAUDE.md
-OVERVIEW.md
-SETUP.md
-USER_GUIDE_*.md
-PUBLISHING.md
+TASK.md
+files.md
+changelog.md
 
 # Test files
 test-convex-project/
@@ -285,11 +288,11 @@ mnt/
 
 Follow semantic versioning (semver):
 
-| Change Type | Version Bump | Example |
-|-------------|--------------|---------|
-| Bug fixes | patch | 1.0.0 → 1.0.1 |
-| New features (backward compatible) | minor | 1.0.0 → 1.1.0 |
-| Breaking changes | major | 1.0.0 → 2.0.0 |
+| Change Type                        | Version Bump | Example       |
+| ---------------------------------- | ------------ | ------------- |
+| Bug fixes                          | patch        | 1.0.0 → 1.0.1 |
+| New features (backward compatible) | minor        | 1.0.0 → 1.1.0 |
+| Breaking changes                   | major        | 1.0.0 → 2.0.0 |
 
 ### What Constitutes Breaking Changes
 
@@ -338,8 +341,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
 
       - run: npm ci
       - run: npm run build
@@ -379,5 +382,6 @@ npm audit
 ## Contact
 
 For publishing issues or questions, check:
+
 - npm documentation: https://docs.npmjs.com/
 - npm support: https://www.npmjs.com/support

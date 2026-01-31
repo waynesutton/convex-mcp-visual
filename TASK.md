@@ -8,6 +8,16 @@ Current development tasks and progress.
 - [x] Remove test-convex-project sample folder
 - [x] Remove tracked build artifacts from git (node_modules, dist, .cursor, mnt)
 - [x] Close external PR #1 (handled cleanup internally)
+- [x] Consolidate two SETUP.md files into one at docs/setup.md
+- [x] Move user guides to docs/ folder
+- [x] Simplify docs/OVERVIEW.md (remove duplicate architecture content)
+- [x] Condense CLAUDE.md to development essentials
+- [x] Expand skills/convex-schema/SKILL.md with tool parameters
+- [x] Create docs/files-docs.md explaining each doc file
+- [x] Update README.md documentation links
+- [x] Update .npmignore patterns
+- [x] Update docs/PUBLISHING.md file references
+- [x] Verify TypeScript type safety (tsc --noEmit passes)
 
 ## Completed (v1.1.0)
 
