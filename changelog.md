@@ -7,13 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-01-31
+
 ### Added
 
+- CLI install commands for MCP clients: `--install`, `--install-cursor`, `--install-opencode`, `--install-claude`
+- CLI uninstall commands: `--uninstall`, `--uninstall-cursor`, `--uninstall-opencode`, `--uninstall-claude`
+- Auto-configuration of Cursor, OpenCode, and Claude Desktop MCP settings
+- OpenCode support with proper `mcp` config key format
+- `AGENTS.md` for AI coding agents following agents.md spec
 - `.gitignore` to prevent committing generated files
 - `docs/files-docs.md` explaining each documentation file
 
 ### Changed
 
+- Updated README with CLI install instructions
+- Updated docs/setup.md with MCP client install table
 - Consolidated two SETUP.md files into single `docs/setup.md`
 - Moved user guides to `docs/` folder (user-guide-dashboard.md, user-guide-schema-browser.md)
 - Simplified `docs/OVERVIEW.md` to remove duplicate architecture content

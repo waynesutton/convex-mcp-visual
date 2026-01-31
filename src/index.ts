@@ -55,6 +55,15 @@ async function main() {
       deployment: { type: "string" },
       version: { type: "boolean", short: "v", default: false },
       help: { type: "boolean", short: "h", default: false },
+      // CLI install options for MCP clients
+      install: { type: "boolean", default: false },
+      "install-cursor": { type: "boolean", default: false },
+      "install-opencode": { type: "boolean", default: false },
+      "install-claude": { type: "boolean", default: false },
+      uninstall: { type: "boolean", default: false },
+      "uninstall-cursor": { type: "boolean", default: false },
+      "uninstall-opencode": { type: "boolean", default: false },
+      "uninstall-claude": { type: "boolean", default: false },
     },
     allowPositionals: false,
   });
@@ -71,6 +80,27 @@ async function main() {
 
   if (values.config) {
     await showConfigSources();
+    return;
+  }
+
+  // Handle install/uninstall commands for MCP clients
+  if (
+    values.install ||
+    values["install-cursor"] ||
+    values["install-opencode"] ||
+    values["install-claude"]
+  ) {
+    await handleInstall(values);
+    return;
+  }
+
+  if (
+    values.uninstall ||
+    values["uninstall-cursor"] ||
+    values["uninstall-opencode"] ||
+    values["uninstall-claude"]
+  ) {
+    await handleUninstall(values);
     return;
   }
 
@@ -125,6 +155,16 @@ COMMANDS (Direct CLI):
   dashboard           Show metrics dashboard (opens browser + terminal output)
   diagram             Generate ER diagram (opens browser + terminal output)
 
+MCP CLIENT INSTALL (adds MCP config automatically):
+  --install           Install to all detected MCP clients
+  --install-cursor    Install to Cursor only
+  --install-opencode  Install to OpenCode only
+  --install-claude    Install to Claude Desktop only
+  --uninstall         Remove from all MCP clients
+  --uninstall-cursor  Remove from Cursor only
+  --uninstall-opencode Remove from OpenCode only
+  --uninstall-claude  Remove from Claude Desktop only
+
 MCP SERVER OPTIONS:
   --stdio             Run as MCP server in stdio mode (default)
   --http              Run as MCP server in HTTP mode
@@ -139,6 +179,12 @@ CONFIGURATION:
 OTHER:
   -v, --version       Show version number
   -h, --help          Show this help message
+
+INSTALL EXAMPLES:
+  npx convex-mcp-visual --install             # Install to all MCP clients
+  npx convex-mcp-visual --install-cursor      # Install to Cursor only
+  npx convex-mcp-visual --install-opencode    # Install to OpenCode only
+  npx convex-mcp-visual --setup               # Then configure deploy key
 
 DIRECT CLI EXAMPLES:
   convex-mcp-visual schema                    # Browse schema in browser
@@ -686,6 +732,234 @@ async function runConnectionTest() {
       `  Error: ${error instanceof Error ? error.message : String(error)}`,
     );
     process.exit(1);
+  }
+}
+
+// MCP client config file paths
+const MCP_CLIENT_PATHS = {
+  cursor: {
+    mac: join(homedir(), ".cursor", "mcp.json"),
+    linux: join(homedir(), ".cursor", "mcp.json"),
+    win: join(
+      process.env.APPDATA || join(homedir(), "AppData", "Roaming"),
+      "Cursor",
+      "mcp.json",
+    ),
+  },
+  opencode: {
+    mac: join(homedir(), ".config", "opencode", "opencode.json"),
+    linux: join(homedir(), ".config", "opencode", "opencode.json"),
+    win: join(
+      process.env.APPDATA || join(homedir(), "AppData", "Roaming"),
+      "opencode",
+      "opencode.json",
+    ),
+  },
+  claude: {
+    mac: join(
+      homedir(),
+      "Library",
+      "Application Support",
+      "Claude",
+      "claude_desktop_config.json",
+    ),
+    linux: join(homedir(), ".config", "claude", "claude_desktop_config.json"),
+    win: join(
+      process.env.APPDATA || join(homedir(), "AppData", "Roaming"),
+      "Claude",
+      "claude_desktop_config.json",
+    ),
+  },
+};
+
+// Get the config path for the current platform
+function getConfigPath(client: "cursor" | "opencode" | "claude"): string {
+  const platform = process.platform;
+  const paths = MCP_CLIENT_PATHS[client];
+  if (platform === "darwin") return paths.mac;
+  if (platform === "win32") return paths.win;
+  return paths.linux;
+}
+
+// MCP server config for convex-visual
+const MCP_SERVER_CONFIG = {
+  command: "npx",
+  args: ["convex-mcp-visual", "--stdio"],
+};
+
+/**
+ * Handle MCP client install commands
+ */
+async function handleInstall(values: Record<string, unknown>): Promise<void> {
+  const targets: Array<"cursor" | "opencode" | "claude"> = [];
+
+  if (values.install) {
+    // Install to all detected clients
+    targets.push("cursor", "opencode", "claude");
+  } else {
+    if (values["install-cursor"]) targets.push("cursor");
+    if (values["install-opencode"]) targets.push("opencode");
+    if (values["install-claude"]) targets.push("claude");
+  }
+
+  console.log("\nConvex MCP Visual Installer\n");
+
+  for (const client of targets) {
+    await installToClient(client);
+  }
+
+  console.log("\nNext steps:");
+  console.log(
+    "  1. Run: npx convex-mcp-visual --setup  (configure deploy key)",
+  );
+  console.log("  2. Restart your MCP client to load the new config");
+  console.log("  3. Test: npx convex-mcp-visual --test\n");
+}
+
+/**
+ * Install MCP server config to a specific client
+ */
+async function installToClient(
+  client: "cursor" | "opencode" | "claude",
+): Promise<void> {
+  const configPath = getConfigPath(client);
+  const clientName =
+    client === "cursor"
+      ? "Cursor"
+      : client === "opencode"
+        ? "OpenCode"
+        : "Claude Desktop";
+
+  console.log(`Installing to ${clientName}...`);
+  console.log(`  Config: ${configPath}`);
+
+  try {
+    // Ensure parent directory exists
+    const parentDir = dirname(configPath);
+    const { mkdirSync } = await import("fs");
+    if (!existsSync(parentDir)) {
+      mkdirSync(parentDir, { recursive: true });
+    }
+
+    // Read existing config or create new one
+    let config: Record<string, unknown> = {};
+    if (existsSync(configPath)) {
+      try {
+        const content = readFileSync(configPath, "utf-8");
+        config = JSON.parse(content);
+      } catch {
+        console.log(`  Warning: Could not parse existing config, creating new`);
+      }
+    }
+
+    // Add MCP server config based on client type
+    if (client === "opencode") {
+      // OpenCode uses "mcp" key
+      if (!config.mcp) {
+        config.mcp = {};
+      }
+      (config.mcp as Record<string, unknown>)["convex-visual"] =
+        MCP_SERVER_CONFIG;
+    } else {
+      // Cursor and Claude Desktop use "mcpServers" key
+      if (!config.mcpServers) {
+        config.mcpServers = {};
+      }
+      (config.mcpServers as Record<string, unknown>)["convex-visual"] =
+        MCP_SERVER_CONFIG;
+    }
+
+    // Write updated config
+    writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
+    console.log(`  [OK] Installed convex-visual to ${clientName}\n`);
+  } catch (error) {
+    console.log(
+      `  [SKIP] Could not install to ${clientName}: ${error instanceof Error ? error.message : String(error)}\n`,
+    );
+  }
+}
+
+/**
+ * Handle MCP client uninstall commands
+ */
+async function handleUninstall(values: Record<string, unknown>): Promise<void> {
+  const targets: Array<"cursor" | "opencode" | "claude"> = [];
+
+  if (values.uninstall) {
+    targets.push("cursor", "opencode", "claude");
+  } else {
+    if (values["uninstall-cursor"]) targets.push("cursor");
+    if (values["uninstall-opencode"]) targets.push("opencode");
+    if (values["uninstall-claude"]) targets.push("claude");
+  }
+
+  console.log("\nConvex MCP Visual Uninstaller\n");
+
+  for (const client of targets) {
+    await uninstallFromClient(client);
+  }
+
+  console.log("\nRestart your MCP client to apply changes.\n");
+}
+
+/**
+ * Remove MCP server config from a specific client
+ */
+async function uninstallFromClient(
+  client: "cursor" | "opencode" | "claude",
+): Promise<void> {
+  const configPath = getConfigPath(client);
+  const clientName =
+    client === "cursor"
+      ? "Cursor"
+      : client === "opencode"
+        ? "OpenCode"
+        : "Claude Desktop";
+
+  console.log(`Removing from ${clientName}...`);
+  console.log(`  Config: ${configPath}`);
+
+  try {
+    if (!existsSync(configPath)) {
+      console.log(`  [SKIP] Config file not found\n`);
+      return;
+    }
+
+    const content = readFileSync(configPath, "utf-8");
+    const config = JSON.parse(content) as Record<string, unknown>;
+
+    // Remove MCP server config based on client type
+    let removed = false;
+    if (client === "opencode") {
+      if (
+        config.mcp &&
+        typeof config.mcp === "object" &&
+        "convex-visual" in (config.mcp as Record<string, unknown>)
+      ) {
+        delete (config.mcp as Record<string, unknown>)["convex-visual"];
+        removed = true;
+      }
+    } else {
+      if (
+        config.mcpServers &&
+        typeof config.mcpServers === "object" &&
+        "convex-visual" in (config.mcpServers as Record<string, unknown>)
+      ) {
+        delete (config.mcpServers as Record<string, unknown>)["convex-visual"];
+        removed = true;
+      }
+    }
+
+    if (removed) {
+      writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
+      console.log(`  [OK] Removed convex-visual from ${clientName}\n`);
+    } else {
+      console.log(`  [SKIP] convex-visual not found in config\n`);
+    }
+  } catch (error) {
+    console.log(
+      `  [SKIP] Could not uninstall from ${clientName}: ${error instanceof Error ? error.message : String(error)}\n`,
+    );
   }
 }
 

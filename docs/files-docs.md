@@ -8,6 +8,7 @@ Overview of all documentation files in this project and their purpose.
 | -------------- | ------------------------------------------------- | ----------------------- |
 | `README.md`    | Project overview, quick start, and usage examples | All users               |
 | `CLAUDE.md`    | Development guidance for Claude Code              | Developers using Claude |
+| `AGENTS.md`    | Instructions for AI coding agents (agents.md)     | All AI coding agents    |
 | `changelog.md` | Version history and release notes                 | All users               |
 | `files.md`     | Codebase file descriptions                        | Developers              |
 

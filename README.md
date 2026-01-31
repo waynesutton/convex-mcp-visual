@@ -41,10 +41,18 @@ convex-mcp-visual dashboard   # View metrics
 convex-mcp-visual diagram     # Generate ER diagram
 ```
 
-### Option B: MCP Server (Claude/Cursor)
+### Option B: MCP Server (Claude/Cursor/OpenCode)
 
 ```bash
-# Claude Code
+# Auto-install to all MCP clients (Cursor, OpenCode, Claude Desktop)
+npx convex-mcp-visual --install
+
+# Or install to specific clients
+npx convex-mcp-visual --install-cursor
+npx convex-mcp-visual --install-opencode
+npx convex-mcp-visual --install-claude
+
+# Claude Code CLI (alternative)
 claude mcp add convex-visual -- npx convex-mcp-visual --stdio
 
 # Setup deploy key
@@ -142,7 +150,23 @@ All tools open an interactive browser UI and return output to the terminal.
 
 ## Configuration
 
-### Claude Desktop
+### CLI Install (Recommended)
+
+The fastest way to configure any MCP client:
+
+```bash
+# Install to all detected MCP clients
+npx convex-mcp-visual --install
+
+# Or target specific clients
+npx convex-mcp-visual --install-cursor
+npx convex-mcp-visual --install-opencode
+npx convex-mcp-visual --install-claude
+```
+
+This automatically updates the config files for each client.
+
+### Claude Desktop (Manual)
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
@@ -160,13 +184,28 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
-### Cursor / VS Code
+### Cursor / VS Code (Manual)
 
-Add to MCP settings:
+Add to `~/.cursor/mcp.json`:
 
 ```json
 {
-  "mcp.servers": {
+  "mcpServers": {
+    "convex-visual": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"]
+    }
+  }
+}
+```
+
+### OpenCode (Manual)
+
+Add to `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "mcp": {
     "convex-visual": {
       "command": "npx",
       "args": ["convex-mcp-visual", "--stdio"]
@@ -176,6 +215,20 @@ Add to MCP settings:
 ```
 
 ## CLI Reference
+
+### MCP Client Install Commands
+
+```bash
+# Install to MCP clients (updates config files automatically)
+npx convex-mcp-visual --install           # All detected clients
+npx convex-mcp-visual --install-cursor    # Cursor only
+npx convex-mcp-visual --install-opencode  # OpenCode only
+npx convex-mcp-visual --install-claude    # Claude Desktop only
+
+# Uninstall from MCP clients
+npx convex-mcp-visual --uninstall         # All clients
+npx convex-mcp-visual --uninstall-cursor  # Cursor only
+```
 
 ### Direct CLI Commands
 
@@ -196,7 +249,14 @@ convex-mcp-visual diagram --ascii     # ASCII output for terminal
 ```
 convex-mcp-visual [options]
 
-Options:
+MCP Client Install:
+  --install            Install to all MCP clients
+  --install-cursor     Install to Cursor
+  --install-opencode   Install to OpenCode
+  --install-claude     Install to Claude Desktop
+  --uninstall          Remove from all MCP clients
+
+Server Options:
   --stdio              Run in stdio mode (default for MCP)
   --http               Run in HTTP mode
   --port <num>         Port for HTTP mode (default: 3001)
@@ -224,7 +284,15 @@ npm update -g convex-mcp-visual
 ## Uninstalling
 
 ```bash
-# Remove from Claude Code
+# Remove from all MCP clients
+npx convex-mcp-visual --uninstall
+
+# Or remove from specific clients
+npx convex-mcp-visual --uninstall-cursor
+npx convex-mcp-visual --uninstall-opencode
+npx convex-mcp-visual --uninstall-claude
+
+# Remove from Claude Code (alternative)
 claude mcp remove convex-visual
 
 # Remove global package

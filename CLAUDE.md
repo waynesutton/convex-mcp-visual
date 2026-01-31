@@ -21,7 +21,10 @@ Development guidance for Claude Code when working with this repository.
 npm install && npm run build
 npx convex-mcp-visual --test
 
-# Add to Claude Code
+# Install to MCP clients (auto-configures Cursor, OpenCode, Claude Desktop)
+npx convex-mcp-visual --install
+
+# Or add to Claude Code CLI
 claude mcp add convex-visual -- npx convex-mcp-visual --stdio
 ```
 

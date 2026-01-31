@@ -299,7 +299,41 @@ For more help, see [Troubleshooting](./troubleshooting.md).
 
 ## MCP Client Configuration
 
-### Claude Code
+### CLI Install (Recommended)
+
+The fastest way to configure any MCP client:
+
+```bash
+# Install to all detected MCP clients (Cursor, OpenCode, Claude Desktop)
+npx convex-mcp-visual --install
+
+# Or target specific clients
+npx convex-mcp-visual --install-cursor
+npx convex-mcp-visual --install-opencode
+npx convex-mcp-visual --install-claude
+```
+
+This automatically updates the config files:
+
+| Client         | Config Path                                                       |
+| -------------- | ----------------------------------------------------------------- |
+| Cursor         | `~/.cursor/mcp.json`                                              |
+| OpenCode       | `~/.config/opencode/opencode.json`                                |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+
+### Uninstall from MCP Clients
+
+```bash
+# Remove from all clients
+npx convex-mcp-visual --uninstall
+
+# Or remove from specific clients
+npx convex-mcp-visual --uninstall-cursor
+npx convex-mcp-visual --uninstall-opencode
+npx convex-mcp-visual --uninstall-claude
+```
+
+### Claude Code (CLI)
 
 ```bash
 claude mcp add convex-visual -- npx convex-mcp-visual --stdio
@@ -311,7 +345,7 @@ Verify installation:
 claude mcp list
 ```
 
-### Claude Desktop
+### Claude Desktop (Manual)
 
 Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 
@@ -331,7 +365,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
 
 Restart Claude Desktop after saving.
 
-### Cursor
+### Cursor (Manual)
 
 Add to `~/.cursor/mcp.json`:
 
@@ -346,7 +380,22 @@ Add to `~/.cursor/mcp.json`:
 }
 ```
 
-### VS Code
+### OpenCode (Manual)
+
+Add to `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "mcp": {
+    "convex-visual": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"]
+    }
+  }
+}
+```
+
+### VS Code (Manual)
 
 Add to settings or `.vscode/mcp.json`:
 

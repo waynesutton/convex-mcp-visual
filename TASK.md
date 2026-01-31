@@ -2,6 +2,23 @@
 
 Current development tasks and progress.
 
+## Completed (v1.2.0)
+
+- [x] Add CLI install commands: `--install`, `--install-cursor`, `--install-opencode`, `--install-claude`
+- [x] Add CLI uninstall commands: `--uninstall`, `--uninstall-cursor`, `--uninstall-opencode`, `--uninstall-claude`
+- [x] Auto-configure MCP settings for Cursor (`~/.cursor/mcp.json`)
+- [x] Auto-configure MCP settings for OpenCode (`~/.config/opencode/opencode.json`)
+- [x] Auto-configure MCP settings for Claude Desktop (`~/Library/Application Support/Claude/claude_desktop_config.json`)
+- [x] Support OpenCode `mcp` config key format (different from `mcpServers`)
+- [x] Update README.md with CLI install section
+- [x] Update docs/setup.md with MCP client install table
+- [x] Update CLAUDE.md with install command
+- [x] Update help text with install examples
+- [x] Add "opencode" keyword to package.json
+- [x] Bump version to 1.2.0
+- [x] Create AGENTS.md for AI coding agents (agents.md spec)
+- [x] Verify TypeScript type safety (tsc --noEmit passes)
+
 ## Completed (v1.1.1)
 
 - [x] Add .gitignore to prevent committing generated files
@@ -118,4 +135,3 @@ Current development tasks and progress.
 - [ ] Add collaborative viewing (share schema views)
 - [ ] Investigate Claude.ai web integration options
 - [ ] Add flowchart diagram type for data flows
-- [ ] Add opencode CLI integration guide
