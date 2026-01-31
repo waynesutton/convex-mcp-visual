@@ -17,6 +17,7 @@ Current development tasks and progress.
 - [x] Add "opencode" keyword to package.json
 - [x] Bump version to 1.2.0
 - [x] Create AGENTS.md for AI coding agents (agents.md spec)
+- [x] Fix setup wizard messaging (removed cryptic deployment names)
 - [x] Verify TypeScript type safety (tsc --noEmit passes)
 
 ## Completed (v1.1.1)

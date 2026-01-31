@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Improved setup wizard instructions (removed cryptic deployment names)
 - Updated README with CLI install instructions
 - Updated docs/setup.md with MCP client install table
 - Consolidated two SETUP.md files into single `docs/setup.md`

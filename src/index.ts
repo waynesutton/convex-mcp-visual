@@ -477,7 +477,6 @@ async function runSetupWizard() {
 
   if (detectedProject) {
     console.log("[DETECTED] Found Convex project in current directory");
-    console.log(`  Deployment: ${detectedProject.name}`);
     console.log(`  URL: ${detectedProject.url}\n`);
   }
 
@@ -542,22 +541,13 @@ async function runSetupWizard() {
   // We open the main dashboard and guide the user to their project
   const dashboardUrl = "https://dashboard.convex.dev";
 
-  if (detectedProject) {
-    console.log("Steps to get your deploy key:");
-    console.log(
-      `1. Open dashboard and select project: ${detectedProject.name}`,
-    );
-    console.log("2. Go to Settings > Deploy Keys");
-    console.log('3. Click "Generate Deploy Key"');
-    console.log("4. Copy the full key (format: prod:deployment-name|key...)\n");
-  } else {
-    console.log("Steps to get your deploy key:");
-    console.log("1. Go to https://dashboard.convex.dev");
-    console.log("2. Select your project");
-    console.log("3. Go to Settings > Deploy Keys");
-    console.log('4. Click "Generate Deploy Key"');
-    console.log("5. Copy the full key (format: prod:deployment-name|key...)\n");
-  }
+  console.log("Steps to get your deploy key:");
+  console.log("1. Go to dashboard.convex.dev");
+  console.log("2. Select your Convex project");
+  console.log("3. Click Settings (gear icon)");
+  console.log("4. Click Deploy Keys in the sidebar");
+  console.log('5. Click "Generate Deploy Key" or copy an existing one');
+  console.log("6. Paste the full key below (format: prod:name|key...)\n");
 
   // Ask if user wants to open the dashboard
   const openDashboard = await question(
@@ -575,13 +565,9 @@ async function runSetupWizard() {
       exec(`xdg-open "${dashboardUrl}"`);
     }
 
-    if (detectedProject) {
-      console.log(
-        `\nOpened dashboard. Select project "${detectedProject.name}" then go to Settings > Deploy Keys\n`,
-      );
-    } else {
-      console.log("\nOpened dashboard in browser.\n");
-    }
+    console.log(
+      "\nOpened dashboard. Select your project, then go to Settings > Deploy Keys\n",
+    );
   }
 
   // Prompt for deploy key
@@ -615,7 +601,7 @@ async function runSetupWizard() {
     // Use detected project URL if available
     if (detectedProject) {
       deploymentUrl = detectedProject.url;
-      console.log(`\nUsing detected deployment: ${detectedProject.name}`);
+      console.log(`\nUsing detected deployment URL: ${detectedProject.url}`);
     } else {
       console.log(
         "\nWarning: Deploy key format not recognized. Expected format: prod:name|key",
