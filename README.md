@@ -26,7 +26,7 @@ Schema visualizer and dashboard tools for exploring Convex databases. Opens inte
 
 ## Quick Start
 
-### Option A: Direct CLI (any terminal)
+### Option A: Direct CLI (any terminal):
 
 ```bash
 # Install globally

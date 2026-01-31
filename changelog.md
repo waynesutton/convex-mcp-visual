@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `.gitignore` to prevent committing generated files
+
+### Removed
+
+- `test-convex-project/` sample project (no longer needed)
+- Tracked build artifacts from git (node_modules, dist, .cursor, mnt)
+
 ## [1.1.0] - 2026-01-31
 
 ### Added

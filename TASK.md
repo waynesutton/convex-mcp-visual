@@ -2,6 +2,13 @@
 
 Current development tasks and progress.
 
+## Completed (v1.1.1)
+
+- [x] Add .gitignore to prevent committing generated files
+- [x] Remove test-convex-project sample folder
+- [x] Remove tracked build artifacts from git (node_modules, dist, .cursor, mnt)
+- [x] Close external PR #1 (handled cleanup internally)
+
 ## Completed (v1.1.0)
 
 - [x] Add direct CLI subcommands (schema, dashboard, diagram)

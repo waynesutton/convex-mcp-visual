@@ -75,6 +75,7 @@ Each app contains:
 | `tsconfig.json`        | TypeScript compiler configuration      |
 | `tsconfig.server.json` | Server-specific TypeScript config      |
 | `vite.config.ts`       | Vite bundler configuration for UI apps |
+| `.gitignore`           | Files to exclude from git tracking     |
 | `.npmignore`           | Files to exclude from npm package      |
 
 ## Build Output (`dist/`)

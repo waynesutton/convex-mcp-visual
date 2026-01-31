@@ -32,7 +32,7 @@ npx convex-mcp-visual diagram         # Generate ER diagram
 
 ### 2. MCP Server (Claude/Cursor)
 
-Start as MCP server for AI assistants:
+Start as MCP server for AI assistants
 
 ```bash
 npx convex-mcp-visual --stdio         # For Claude Code/Desktop
