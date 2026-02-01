@@ -15,10 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Table names display on the left with bars extending right, sorted by document count
 - Tables Overview section is scrollable when there are many tables
 - Added total document count in section header
+- Recent Activity section now spans full width with improved table styling
+- Added table name badges and sticky header in Recent Activity
 
 ### Fixed
 
 - Table names no longer overlap when there are many tables in the database
+- Recent Activity section now responsive and consistent with dashboard layout
 
 ## [1.2.5] - 2026-01-31
 

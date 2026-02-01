@@ -10,6 +10,9 @@ Current development tasks and progress.
 - [x] Add total documents count in section header
 - [x] Style horizontal bars with gradient fill and hover states
 - [x] Add responsive adjustments for mobile
+- [x] Make Recent Activity section full width to match layout
+- [x] Add table name badges and sticky header in Recent Activity
+- [x] Add scrollable container for Recent Activity
 - [x] Verify TypeScript type safety (tsc --noEmit passes)
 
 ## Completed (v1.2.5)

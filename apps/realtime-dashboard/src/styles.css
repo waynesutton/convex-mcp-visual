@@ -499,6 +499,116 @@ body {
   }
 }
 
+/* Recent Activity Card - Full Width */
+.recent-activity-card {
+  grid-column: 1 / -1;
+}
+
+.recent-activity-container {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.activity-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.activity-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.activity-table th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--border);
+  color: var(--text-primary);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.activity-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.activity-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.activity-table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.table-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--bg-hover);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.id-cell {
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.time-cell {
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Scrollbar styling for recent activity */
+.recent-activity-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.recent-activity-container::-webkit-scrollbar-track {
+  background: var(--bg-hover);
+  border-radius: 3px;
+}
+
+.recent-activity-container::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.recent-activity-container::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Responsive for Recent Activity */
+@media (max-width: 600px) {
+  .activity-table th,
+  .activity-table td {
+    padding: 10px 12px;
+  }
+
+  .table-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .id-cell,
+  .time-cell {
+    font-size: 11px;
+  }
+}
+
 /* Simple Line Chart */
 .line-chart {
   width: 100%;

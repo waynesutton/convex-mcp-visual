@@ -484,7 +484,7 @@ class RealtimeDashboardApp {
 
     if (allDocs.length === 0) {
       return `
-        <div class="chart-card">
+        <div class="chart-card recent-activity-card">
           <div class="chart-header">
             <span class="chart-title">Recent Activity</span>
           </div>
@@ -496,37 +496,34 @@ class RealtimeDashboardApp {
     }
 
     return `
-      <div class="chart-card">
+      <div class="chart-card recent-activity-card">
         <div class="chart-header">
           <span class="chart-title">Recent Activity</span>
+          <span class="chart-subtitle">${allDocs.length} recent documents</span>
         </div>
-        <div class="chart-container">
-          <div class="table-chart">
-            <table>
-              <thead>
+        <div class="recent-activity-container">
+          <table class="activity-table">
+            <thead>
+              <tr>
+                <th>Table</th>
+                <th>ID</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${allDocs
+                .map(
+                  (doc) => `
                 <tr>
-                  <th>Table</th>
-                  <th>ID</th>
-                  <th>Created</th>
+                  <td><span class="table-badge">${doc.table}</span></td>
+                  <td class="id-cell">${String(doc._id || "").slice(0, 12)}...</td>
+                  <td class="time-cell">${this.formatTimeAgo(doc._creationTime)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                ${allDocs
-                  .map(
-                    (doc) => `
-                  <tr>
-                    <td>${doc.table}</td>
-                    <td style="font-family: var(--font-mono); color: var(--accent);">
-                      ${String(doc._id || "").slice(0, 12)}...
-                    </td>
-                    <td>${this.formatTimeAgo(doc._creationTime)}</td>
-                  </tr>
-                `,
-                  )
-                  .join("")}
-              </tbody>
-            </table>
-          </div>
+              `,
+                )
+                .join("")}
+            </tbody>
+          </table>
         </div>
       </div>
     `;
