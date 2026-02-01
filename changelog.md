@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.7] - 2026-02-01
+
+### Changed
+
+- Dashboard Tables Overview now uses horizontal bar chart layout for better readability
+- Table names display on the left with bars extending right, sorted by document count
+- Tables Overview section is scrollable when there are many tables
+- Added total document count in section header
+
+### Fixed
+
+- Table names no longer overlap when there are many tables in the database
+
 ## [1.2.5] - 2026-01-31
 
 ### Added

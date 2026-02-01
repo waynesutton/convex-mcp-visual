@@ -285,20 +285,30 @@ class RealtimeDashboardApp {
       return "";
     }
 
-    const maxCount = Math.max(...tables.map((t) => t.documentCount), 1);
+    // Sort tables by document count descending for better visualization
+    const sortedTables = [...tables].sort(
+      (a, b) => b.documentCount - a.documentCount,
+    );
+    const maxCount = Math.max(...sortedTables.map((t) => t.documentCount), 1);
+    const totalDocs = sortedTables.reduce((sum, t) => sum + t.documentCount, 0);
 
     return `
-      <div class="chart-card">
+      <div class="chart-card tables-overview-card">
         <div class="chart-header">
           <span class="chart-title" title="Document count per table in your Convex database">Tables Overview</span>
+          <span class="chart-subtitle">${tables.length} tables / ${totalDocs.toLocaleString()} total documents</span>
         </div>
-        <div class="chart-container">
-          <div class="bar-chart">
-            ${tables
+        <div class="tables-overview-container">
+          <div class="horizontal-bar-chart">
+            ${sortedTables
               .map(
                 (t) => `
-              <div class="bar" style="height: ${(t.documentCount / maxCount) * 100}%" data-value="${t.documentCount}" title="${t.name}: ${t.documentCount.toLocaleString()} documents">
-                <span class="bar-label">${t.name}</span>
+              <div class="h-bar-row" title="${t.name}: ${t.documentCount.toLocaleString()} documents">
+                <span class="h-bar-label">${t.name}</span>
+                <div class="h-bar-track">
+                  <div class="h-bar-fill" style="width: ${(t.documentCount / maxCount) * 100}%"></div>
+                </div>
+                <span class="h-bar-value">${this.formatNumber(t.documentCount)}</span>
               </div>
             `,
               )

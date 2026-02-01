@@ -43,8 +43,8 @@ Overview of the codebase structure.
 Each app contains:
 
 - `index.html` - Entry HTML file
-- `src/app.ts` - Main application logic
-- `src/styles.css` - Component styles
+- `src/app.ts` - Main application logic (includes Tables Overview horizontal bar chart)
+- `src/styles.css` - Component styles (includes horizontal bar chart CSS)
 
 ## Documentation (`docs/`)
 

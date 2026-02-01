@@ -2,6 +2,16 @@
 
 Current development tasks and progress.
 
+## Completed (v1.2.7)
+
+- [x] Redesign Tables Overview to use horizontal bar chart layout
+- [x] Sort tables by document count descending
+- [x] Add scrollable container for many tables (max-height: 400px)
+- [x] Add total documents count in section header
+- [x] Style horizontal bars with gradient fill and hover states
+- [x] Add responsive adjustments for mobile
+- [x] Verify TypeScript type safety (tsc --noEmit passes)
+
 ## Completed (v1.2.5)
 
 - [x] Add npm version badge/shield to README.md (links to npmjs.com)
