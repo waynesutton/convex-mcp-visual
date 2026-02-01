@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.4] - 2026-01-31
+
+### Added
+
+- `.claude-plugin/marketplace.json` for Claude Code marketplace distribution
+- `docs/files-claude-plugin.md` documenting plugin and marketplace file structure
+- Official marketplace requirements table in documentation
+
+### Changed
+
+- README plugin install instructions now use correct marketplace name
+- `package.json` files array includes both `plugin.json` and `marketplace.json`
+- Updated `files.md` and `docs/files-docs.md` with new plugin files
+
+### Fixed
+
+- `/plugin marketplace add` now works (was missing marketplace.json)
+
 ## [1.2.3] - 2026-01-31
 
 ### Fixed

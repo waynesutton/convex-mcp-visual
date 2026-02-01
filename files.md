@@ -18,9 +18,10 @@ Overview of the codebase structure.
 
 ## Claude Code Plugin (`.claude-plugin/`)
 
-| File          | Description                               |
-| ------------- | ----------------------------------------- |
-| `plugin.json` | Plugin manifest with metadata and version |
+| File               | Description                                       |
+| ------------------ | ------------------------------------------------- |
+| `plugin.json`      | Plugin manifest with metadata and version         |
+| `marketplace.json` | Marketplace catalog for `/plugin marketplace add` |
 
 | File        | Description              |
 | ----------- | ------------------------ |
@@ -61,6 +62,7 @@ Each app contains:
 | `user-guide-schema-browser.md` | How to use the schema browser                |
 | `user-guide-dashboard.md`      | How to use the dashboard                     |
 | `files-docs.md`                | Documentation file descriptions              |
+| `files-claude-plugin.md`       | Claude plugin and marketplace structure      |
 
 ## Root Files
 

@@ -1,0 +1,37 @@
+{
+  "name": "convex-visual-marketplace",
+  "owner": {
+    "name": "Wayne Sutton",
+    "email": "wayne@convex.dev"
+  },
+  "metadata": {
+    "description": "Visual tools for exploring Convex databases. Schema browser, dashboard, and ER diagrams.",
+    "version": "1.0.0",
+    "pluginRoot": "./"
+  },
+  "plugins": [
+    {
+      "name": "convex-visual",
+      "source": "./",
+      "description": "Schema browser, dashboard, and ER diagrams for Convex databases",
+      "version": "1.2.4",
+      "author": {
+        "name": "Wayne Sutton",
+        "email": "wayne@convex.dev"
+      },
+      "homepage": "https://github.com/waynesutton/convex-mcp-visual",
+      "repository": "https://github.com/waynesutton/convex-mcp-visual",
+      "license": "MIT",
+      "keywords": [
+        "convex",
+        "database",
+        "schema",
+        "visualization",
+        "mermaid",
+        "dashboard"
+      ],
+      "category": "database",
+      "tags": ["convex", "schema", "visualization", "mcp"]
+    }
+  ]
+}

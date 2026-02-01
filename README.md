@@ -24,6 +24,8 @@ Schema visualizer and dashboard tools for exploring Convex databases. Opens inte
 - [Management API](https://docs.convex.dev/management-api) - Programmatic project management
 - [Platform APIs](https://docs.convex.dev/platform-apis) - Building on Convex
 
+![Schema Graph View](assets/schema-graph-demo.png)
+
 ## Quick Start
 
 ### Option A: Direct CLI (any terminal):
@@ -61,10 +63,15 @@ npx convex-mcp-visual --setup
 
 ### Option C: Claude Code Plugin
 
-```shell
+```bash
+# Add the marketplace
 /plugin marketplace add waynesutton/convex-mcp-visual
-/plugin install convex-visual@waynesutton-convex-mcp-visual
+
+# Install the plugin
+/plugin install convex-visual@convex-visual-marketplace
 ```
+
+See [Claude plugin docs](docs/files-claude-plugin.md) for details on plugin structure.
 
 ### 2. Setup Deploy Key
 
@@ -145,6 +152,7 @@ All tools open an interactive browser UI and return output to the terminal. The 
 - [Troubleshooting](docs/troubleshooting.md) - Common issues and fixes
 - [Limitations](docs/limitations.md) - Known limitations
 - [Plugin Distribution](docs/deployplugin.md) - Claude Code marketplace
+- [Claude Plugin Structure](docs/files-claude-plugin.md) - Plugin and marketplace files
 - [User Guide: Schema Browser](docs/user-guide-schema-browser.md) - Using the schema browser
 - [User Guide: Dashboard](docs/user-guide-dashboard.md) - Using the dashboard
 

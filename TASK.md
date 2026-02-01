@@ -2,6 +2,16 @@
 
 Current development tasks and progress.
 
+## Completed (v1.2.4)
+
+- [x] Add `.claude-plugin/marketplace.json` for Claude Code marketplace support
+- [x] Create `docs/files-claude-plugin.md` documenting plugin structure
+- [x] Add official marketplace requirements table to documentation
+- [x] Fix README plugin install command (marketplace name correction)
+- [x] Update `package.json` files array with marketplace.json
+- [x] Update `files.md` and `docs/files-docs.md` with new files
+- [x] Verify TypeScript type safety (tsc --noEmit passes)
+
 ## Completed (v1.2.3)
 
 - [x] Fix OpenCode MCP config format in `--install-opencode` command

@@ -10,7 +10,8 @@
   "files": [
     "dist",
     "README.md",
-    ".claude-plugin",
+    ".claude-plugin/plugin.json",
+    ".claude-plugin/marketplace.json",
     ".mcp.json",
     "skills"
   ],

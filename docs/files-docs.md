@@ -38,20 +38,22 @@ Overview of all documentation files in this project and their purpose.
 
 ### Publishing
 
-| File              | Purpose                                                    |
-| ----------------- | ---------------------------------------------------------- |
-| `OVERVIEW.md`     | Project summary for plugin marketplace and GitHub          |
-| `deployplugin.md` | Claude Code plugin marketplace distribution guide          |
-| `PUBLISHING.md`   | npm publishing checklist and security guidelines           |
-| `101-guide.md`    | Internal guide explaining how the tool works and data flow |
+| File                     | Purpose                                                    |
+| ------------------------ | ---------------------------------------------------------- |
+| `OVERVIEW.md`            | Project summary for plugin marketplace and GitHub          |
+| `deployplugin.md`        | Claude Code plugin marketplace distribution guide          |
+| `PUBLISHING.md`          | npm publishing checklist and security guidelines           |
+| `101-guide.md`           | Internal guide explaining how the tool works and data flow |
+| `files-claude-plugin.md` | Claude plugin and marketplace file structure guide         |
 
 ## Plugin Files
 
-| File                            | Purpose                                                         |
-| ------------------------------- | --------------------------------------------------------------- |
-| `.claude-plugin/plugin.json`    | Plugin manifest for Claude Code marketplace                     |
-| `.mcp.json`                     | MCP server configuration                                        |
-| `skills/convex-schema/SKILL.md` | Skill definition for Claude to understand when to use the tools |
+| File                              | Purpose                                                         |
+| --------------------------------- | --------------------------------------------------------------- |
+| `.claude-plugin/plugin.json`      | Plugin manifest for Claude Code                                 |
+| `.claude-plugin/marketplace.json` | Marketplace catalog for `/plugin marketplace add`               |
+| `.mcp.json`                       | MCP server configuration                                        |
+| `skills/convex-schema/SKILL.md`   | Skill definition for Claude to understand when to use the tools |
 
 ## Which Files Are Needed Where
 
@@ -63,10 +65,13 @@ Only `dist/` folder is published. No docs needed.
 
 Required:
 
-- `.claude-plugin/plugin.json`
-- `.mcp.json`
-- `skills/` directory
+- `.claude-plugin/plugin.json` (plugin manifest)
+- `.claude-plugin/marketplace.json` (marketplace catalog)
+- `.mcp.json` (MCP server config)
+- `skills/` directory (agent skills)
 - `README.md`
+
+See `docs/files-claude-plugin.md` for detailed structure.
 
 ### For GitHub Repository
 
