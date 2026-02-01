@@ -2,6 +2,10 @@
 
 Current development tasks and progress.
 
+## Completed (v1.2.5)
+
+- [x] Add npm version badge/shield to README.md (links to npmjs.com)
+
 ## Completed (v1.2.4)
 
 - [x] Add `.claude-plugin/marketplace.json` for Claude Code marketplace support

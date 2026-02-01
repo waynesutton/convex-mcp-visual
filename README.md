@@ -1,5 +1,7 @@
 # Convex MCP Visual
 
+[![npm version](https://img.shields.io/npm/v/convex-mcp-visual.svg)](https://www.npmjs.com/package/convex-mcp-visual)
+
 Schema visualizer and dashboard tools for exploring Convex databases. Opens interactive browser UIs alongside terminal output.
 
 **Features:**

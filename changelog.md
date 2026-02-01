@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.5] - 2026-01-31
+
+### Added
+
+- npm version badge/shield in README.md linking to npmjs.com package page
+
 ## [1.2.4] - 2026-01-31
 
 ### Added

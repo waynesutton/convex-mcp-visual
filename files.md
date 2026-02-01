@@ -66,14 +66,14 @@ Each app contains:
 
 ## Root Files
 
-| File           | Description                       |
-| -------------- | --------------------------------- |
-| `README.md`    | Quick start and overview          |
-| `CLAUDE.md`    | Development guidance for Claude   |
-| `AGENTS.md`    | Instructions for AI coding agents |
-| `changelog.md` | Version history                   |
-| `files.md`     | This file: codebase structure     |
-| `TASK.md`      | Development task tracker          |
+| File           | Description                                   |
+| -------------- | --------------------------------------------- |
+| `README.md`    | Quick start and overview (includes npm badge) |
+| `CLAUDE.md`    | Development guidance for Claude               |
+| `AGENTS.md`    | Instructions for AI coding agents             |
+| `changelog.md` | Version history                               |
+| `files.md`     | This file: codebase structure                 |
+| `TASK.md`      | Development task tracker                      |
 
 ## Configuration Files
 
