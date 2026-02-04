@@ -29,6 +29,9 @@ Current development tasks and progress.
 - [x] Redesign subway map to look like actual NYC subway map (not tree diagram)
 - [x] Replace Mermaid flowchart with custom SVG rendering for subway map
 - [x] Add colored lines per folder, station dots, transfer indicators
+- [x] Add drag-and-drop for subway map stations (like schema graph view)
+- [x] Line paths and connections update in real-time during drag
+- [x] Touch support for mobile drag interactions
 
 ## Completed (v1.2.7)
 

@@ -36,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Each folder is now a colored line with files as stations along the route
 - Transfer stations show connections between folders/modules
 - Removed Mermaid dependency from subway map in favor of custom SVG
+- Subway map stations are now draggable (click and drag to reposition)
+- Line paths and transfer connections update in real-time when dragging stations
+- Touch support for mobile drag interactions
 
 ## [1.2.7] - 2026-02-01
 

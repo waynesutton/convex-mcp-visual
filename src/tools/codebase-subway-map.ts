@@ -548,7 +548,7 @@ function buildSubwayLayout(
   return { lines, transfers };
 }
 
-// Build SVG subway map
+// Build SVG subway map with draggable stations
 function buildSubwaySvg(
   lines: Line[],
   transfers: Map<string, string[]>,
@@ -557,7 +557,7 @@ function buildSubwaySvg(
     return '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="400"><text x="50%" y="200" text-anchor="middle" fill="#999" font-size="18">No files to map</text></svg>';
   }
 
-  // Much larger spacing for better visibility
+  // Layout constants
   const STATION_SPACING = 160;
   const LINE_SPACING = 120;
   const MARGIN_LEFT = 200;
@@ -567,7 +567,7 @@ function buildSubwaySvg(
   const LINE_WIDTH = 10;
   const FONT_SIZE = 12;
 
-  // Calculate dimensions based on content
+  // Calculate dimensions
   const maxStations = Math.max(...lines.map((l) => l.stations.length), 1);
   const width = Math.max(
     1200,
@@ -575,7 +575,7 @@ function buildSubwaySvg(
   );
   const height = Math.max(500, MARGIN_TOP + lines.length * LINE_SPACING + 80);
 
-  // Recalculate station positions with new spacing
+  // Set station positions
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
     const line = lines[lineIndex];
     for (
@@ -589,7 +589,7 @@ function buildSubwaySvg(
     }
   }
 
-  // Build station lookup
+  // Build station lookup for connections
   const stationMap = new Map<string, Station>();
   for (const line of lines) {
     for (const station of line.stations) {
@@ -597,11 +597,31 @@ function buildSubwaySvg(
     }
   }
 
+  // Build connection data for JavaScript
+  const connectionData: Array<{ from: string; to: string }> = [];
+  const drawnConnections = new Set<string>();
+  for (const [nodeId, otherLines] of transfers) {
+    const station = stationMap.get(nodeId);
+    if (!station) continue;
+    for (const otherLine of otherLines) {
+      const connectedStations = station.connections
+        .map((id) => stationMap.get(id))
+        .filter((s) => s && s.line === otherLine);
+      for (const connStation of connectedStations) {
+        if (!connStation) continue;
+        const connKey = [nodeId, connStation.id].sort().join("-");
+        if (drawnConnections.has(connKey)) continue;
+        drawnConnections.add(connKey);
+        connectionData.push({ from: nodeId, to: connStation.id });
+      }
+    }
+  }
+
   const svgParts: string[] = [];
 
-  // SVG header with fixed width/height for scrolling
+  // SVG header
   svgParts.push(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" class="subway-map" style="min-width: ${width}px;">`,
+    `<svg id="subway-svg" xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" class="subway-map" style="min-width: ${width}px;">`,
   );
 
   // Background
@@ -609,7 +629,7 @@ function buildSubwaySvg(
     `<rect width="100%" height="100%" fill="var(--subway-bg, #f8f6f3)"/>`,
   );
 
-  // Subtle grid pattern
+  // Grid pattern
   svgParts.push(`<defs>
     <pattern id="subway-grid" width="40" height="40" patternUnits="userSpaceOnUse">
       <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--subway-grid, rgba(0,0,0,0.04))" stroke-width="1"/>
@@ -617,74 +637,71 @@ function buildSubwaySvg(
   </defs>
   <rect width="100%" height="100%" fill="url(#subway-grid)"/>`);
 
-  // Draw inter-line connections (transfers) first as curved paths
-  const drawnConnections = new Set<string>();
-  for (const [nodeId, otherLines] of transfers) {
-    const station = stationMap.get(nodeId);
-    if (!station) continue;
-
-    for (const otherLine of otherLines) {
-      const connectedStations = station.connections
-        .map((id) => stationMap.get(id))
-        .filter((s) => s && s.line === otherLine);
-
-      for (const connStation of connectedStations) {
-        if (!connStation) continue;
-        const connKey = [nodeId, connStation.id].sort().join("-");
-        if (drawnConnections.has(connKey)) continue;
-        drawnConnections.add(connKey);
-
-        // Draw curved connection line
-        const midY = (station.y + connStation.y) / 2;
-        svgParts.push(
-          `<path d="M${station.x},${station.y} Q${station.x},${midY} ${(station.x + connStation.x) / 2},${midY} Q${connStation.x},${midY} ${connStation.x},${connStation.y}" fill="none" stroke="var(--subway-connection, #bbb)" stroke-width="3" stroke-dasharray="8,6" opacity="0.7"/>`,
-        );
-      }
-    }
+  // Group for transfer connections (will be updated on drag)
+  svgParts.push(`<g id="transfer-connections">`);
+  for (const conn of connectionData) {
+    const s1 = stationMap.get(conn.from);
+    const s2 = stationMap.get(conn.to);
+    if (!s1 || !s2) continue;
+    const midY = (s1.y + s2.y) / 2;
+    svgParts.push(
+      `<path id="conn-${conn.from}-${conn.to}" class="transfer-path" data-from="${conn.from}" data-to="${conn.to}" d="M${s1.x},${s1.y} Q${s1.x},${midY} ${(s1.x + s2.x) / 2},${midY} Q${s2.x},${midY} ${s2.x},${s2.y}" fill="none" stroke="var(--subway-connection, #bbb)" stroke-width="3" stroke-dasharray="8,6" opacity="0.7"/>`,
+    );
   }
+  svgParts.push(`</g>`);
 
-  // Draw line routes with glow effect
+  // Group for line routes (will be updated on drag)
+  svgParts.push(`<g id="line-routes">`);
   for (const line of lines) {
     if (line.stations.length === 0) continue;
-
+    const stationIds = line.stations.map((s) => s.id).join(",");
     const pathPoints = line.stations.map((s) => `${s.x},${s.y}`).join(" L");
 
-    // Glow/shadow effect
+    // Glow
     svgParts.push(
-      `<path d="M${pathPoints}" fill="none" stroke="${line.color}" stroke-width="${LINE_WIDTH + 8}" stroke-linecap="round" stroke-linejoin="round" opacity="0.15"/>`,
+      `<path id="glow-${line.id}" class="line-glow" data-line="${line.id}" data-stations="${stationIds}" d="M${pathPoints}" fill="none" stroke="${line.color}" stroke-width="${LINE_WIDTH + 8}" stroke-linecap="round" stroke-linejoin="round" opacity="0.15"/>`,
     );
-
     // Main line
     svgParts.push(
-      `<path d="M${pathPoints}" fill="none" stroke="${line.color}" stroke-width="${LINE_WIDTH}" stroke-linecap="round" stroke-linejoin="round"/>`,
+      `<path id="path-${line.id}" class="line-path" data-line="${line.id}" data-stations="${stationIds}" d="M${pathPoints}" fill="none" stroke="${line.color}" stroke-width="${LINE_WIDTH}" stroke-linecap="round" stroke-linejoin="round"/>`,
     );
+  }
+  svgParts.push(`</g>`);
 
-    // Draw stations
+  // Group for stations (draggable)
+  svgParts.push(`<g id="stations">`);
+  for (const line of lines) {
     for (const station of line.stations) {
+      const r = station.isTransfer ? TRANSFER_RADIUS : STATION_RADIUS;
+      svgParts.push(
+        `<g id="station-${station.id}" class="station-group" data-id="${station.id}" data-line="${line.id}" data-x="${station.x}" data-y="${station.y}" style="cursor: grab;">`,
+      );
+
       if (station.isTransfer) {
-        // Transfer station: larger white circle with thick colored ring
         svgParts.push(
-          `<circle cx="${station.x}" cy="${station.y}" r="${TRANSFER_RADIUS}" fill="var(--subway-station, #fff)" stroke="${line.color}" stroke-width="5"/>`,
+          `<circle class="station-outer" cx="${station.x}" cy="${station.y}" r="${TRANSFER_RADIUS}" fill="var(--subway-station, #fff)" stroke="${line.color}" stroke-width="5"/>`,
         );
         svgParts.push(
-          `<circle cx="${station.x}" cy="${station.y}" r="${TRANSFER_RADIUS - 7}" fill="${line.color}"/>`,
+          `<circle class="station-inner" cx="${station.x}" cy="${station.y}" r="${TRANSFER_RADIUS - 7}" fill="${line.color}"/>`,
         );
       } else {
-        // Regular station: clean white dot with colored border
         svgParts.push(
-          `<circle cx="${station.x}" cy="${station.y}" r="${STATION_RADIUS}" fill="var(--subway-station, #fff)" stroke="${line.color}" stroke-width="4"/>`,
+          `<circle class="station-dot" cx="${station.x}" cy="${station.y}" r="${STATION_RADIUS}" fill="var(--subway-station, #fff)" stroke="${line.color}" stroke-width="4"/>`,
         );
       }
 
-      // Station label
-      const labelY = station.y - STATION_RADIUS - 12;
+      // Label
       svgParts.push(
-        `<text x="${station.x}" y="${labelY}" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="${FONT_SIZE}" fill="var(--subway-text, #333)" font-weight="500">${escapeHtml(station.shortLabel)}</text>`,
+        `<text class="station-label" x="${station.x}" y="${station.y - r - 8}" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="${FONT_SIZE}" fill="var(--subway-text, #333)" font-weight="500">${escapeHtml(station.shortLabel)}</text>`,
       );
+
+      svgParts.push(`</g>`);
     }
   }
+  svgParts.push(`</g>`);
 
-  // Draw line labels at the start with modern pill style
+  // Line badges
+  svgParts.push(`<g id="line-badges">`);
   for (const line of lines) {
     if (line.stations.length === 0) continue;
     const firstStation = line.stations[0];
@@ -693,19 +710,21 @@ function buildSubwaySvg(
     const labelWidth = 170;
     const labelHeight = 36;
 
-    // Shadow
     svgParts.push(
-      `<rect x="${labelX + 2}" y="${labelY - labelHeight / 2 + 2}" width="${labelWidth}" height="${labelHeight}" rx="${labelHeight / 2}" fill="rgba(0,0,0,0.1)"/>`,
+      `<g id="badge-${line.id}" class="line-badge" data-line="${line.id}" data-first-station="${firstStation.id}">`,
     );
-    // Pill background
     svgParts.push(
-      `<rect x="${labelX}" y="${labelY - labelHeight / 2}" width="${labelWidth}" height="${labelHeight}" rx="${labelHeight / 2}" fill="${line.color}"/>`,
+      `<rect class="badge-shadow" x="${labelX + 2}" y="${labelY - labelHeight / 2 + 2}" width="${labelWidth}" height="${labelHeight}" rx="${labelHeight / 2}" fill="rgba(0,0,0,0.1)"/>`,
     );
-    // Label text
     svgParts.push(
-      `<text x="${labelX + labelWidth / 2}" y="${labelY + 5}" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#fff" font-weight="600">${escapeHtml(line.name)}</text>`,
+      `<rect class="badge-bg" x="${labelX}" y="${labelY - labelHeight / 2}" width="${labelWidth}" height="${labelHeight}" rx="${labelHeight / 2}" fill="${line.color}"/>`,
     );
+    svgParts.push(
+      `<text class="badge-text" x="${labelX + labelWidth / 2}" y="${labelY + 5}" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#fff" font-weight="600">${escapeHtml(line.name)}</text>`,
+    );
+    svgParts.push(`</g>`);
   }
+  svgParts.push(`</g>`);
 
   svgParts.push("</svg>");
   return svgParts.join("\n");
@@ -964,6 +983,200 @@ function buildMapHtml(
 
   <script>
     ${getThemeToggleScript()}
+    
+    // Drag and drop functionality for stations
+    (function() {
+      const svg = document.getElementById('subway-svg');
+      if (!svg) return;
+      
+      let isDragging = false;
+      let dragTarget = null;
+      let dragStartX = 0;
+      let dragStartY = 0;
+      let originalX = 0;
+      let originalY = 0;
+      
+      // Store station positions
+      const stationPositions = new Map();
+      document.querySelectorAll('.station-group').forEach(g => {
+        const id = g.dataset.id;
+        const x = parseFloat(g.dataset.x);
+        const y = parseFloat(g.dataset.y);
+        stationPositions.set(id, { x, y, lineId: g.dataset.line });
+      });
+      
+      // Get SVG coordinates from mouse event
+      function getSvgPoint(e) {
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        return pt.matrixTransform(svg.getScreenCTM().inverse());
+      }
+      
+      // Update a station's visual position
+      function updateStationPosition(stationId, x, y) {
+        const group = document.getElementById('station-' + stationId);
+        if (!group) return;
+        
+        // Update data attributes
+        group.dataset.x = x;
+        group.dataset.y = y;
+        stationPositions.set(stationId, { ...stationPositions.get(stationId), x, y });
+        
+        // Update circles
+        group.querySelectorAll('circle').forEach(c => {
+          c.setAttribute('cx', x);
+          c.setAttribute('cy', y);
+        });
+        
+        // Update label
+        const label = group.querySelector('.station-label');
+        if (label) {
+          const r = group.querySelector('.station-outer') ? 18 : 12;
+          label.setAttribute('x', x);
+          label.setAttribute('y', y - r - 8);
+        }
+      }
+      
+      // Update line paths that include a station
+      function updateLinePaths(stationId) {
+        const pos = stationPositions.get(stationId);
+        if (!pos) return;
+        
+        // Find and update line paths
+        document.querySelectorAll('.line-path, .line-glow').forEach(path => {
+          const stationIds = path.dataset.stations.split(',');
+          if (!stationIds.includes(stationId)) return;
+          
+          // Rebuild path
+          const points = stationIds.map(id => {
+            const p = stationPositions.get(id);
+            return p ? p.x + ',' + p.y : null;
+          }).filter(Boolean);
+          
+          path.setAttribute('d', 'M' + points.join(' L'));
+        });
+        
+        // Update transfer connections
+        document.querySelectorAll('.transfer-path').forEach(path => {
+          const fromId = path.dataset.from;
+          const toId = path.dataset.to;
+          if (fromId !== stationId && toId !== stationId) return;
+          
+          const p1 = stationPositions.get(fromId);
+          const p2 = stationPositions.get(toId);
+          if (!p1 || !p2) return;
+          
+          const midY = (p1.y + p2.y) / 2;
+          const midX = (p1.x + p2.x) / 2;
+          path.setAttribute('d', 'M' + p1.x + ',' + p1.y + ' Q' + p1.x + ',' + midY + ' ' + midX + ',' + midY + ' Q' + p2.x + ',' + midY + ' ' + p2.x + ',' + p2.y);
+        });
+        
+        // Update line badge if this is the first station
+        document.querySelectorAll('.line-badge').forEach(badge => {
+          if (badge.dataset.firstStation !== stationId) return;
+          const labelY = pos.y;
+          const labelHeight = 36;
+          badge.querySelector('.badge-shadow').setAttribute('y', labelY - labelHeight/2 + 2);
+          badge.querySelector('.badge-bg').setAttribute('y', labelY - labelHeight/2);
+          badge.querySelector('.badge-text').setAttribute('y', labelY + 5);
+        });
+      }
+      
+      // Mouse down - start drag
+      svg.addEventListener('mousedown', function(e) {
+        const target = e.target.closest('.station-group');
+        if (!target) return;
+        
+        isDragging = true;
+        dragTarget = target;
+        dragTarget.style.cursor = 'grabbing';
+        
+        const pt = getSvgPoint(e);
+        dragStartX = pt.x;
+        dragStartY = pt.y;
+        originalX = parseFloat(dragTarget.dataset.x);
+        originalY = parseFloat(dragTarget.dataset.y);
+        
+        e.preventDefault();
+      });
+      
+      // Mouse move - drag
+      svg.addEventListener('mousemove', function(e) {
+        if (!isDragging || !dragTarget) return;
+        
+        const pt = getSvgPoint(e);
+        const dx = pt.x - dragStartX;
+        const dy = pt.y - dragStartY;
+        
+        const newX = originalX + dx;
+        const newY = originalY + dy;
+        const stationId = dragTarget.dataset.id;
+        
+        updateStationPosition(stationId, newX, newY);
+        updateLinePaths(stationId);
+      });
+      
+      // Mouse up - end drag
+      svg.addEventListener('mouseup', function() {
+        if (dragTarget) {
+          dragTarget.style.cursor = 'grab';
+        }
+        isDragging = false;
+        dragTarget = null;
+      });
+      
+      // Mouse leave SVG
+      svg.addEventListener('mouseleave', function() {
+        if (dragTarget) {
+          dragTarget.style.cursor = 'grab';
+        }
+        isDragging = false;
+        dragTarget = null;
+      });
+      
+      // Touch support for mobile
+      svg.addEventListener('touchstart', function(e) {
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const group = target?.closest('.station-group');
+        if (!group) return;
+        
+        isDragging = true;
+        dragTarget = group;
+        
+        const pt = getSvgPoint(touch);
+        dragStartX = pt.x;
+        dragStartY = pt.y;
+        originalX = parseFloat(dragTarget.dataset.x);
+        originalY = parseFloat(dragTarget.dataset.y);
+        
+        e.preventDefault();
+      }, { passive: false });
+      
+      svg.addEventListener('touchmove', function(e) {
+        if (!isDragging || !dragTarget) return;
+        
+        const touch = e.touches[0];
+        const pt = getSvgPoint(touch);
+        const dx = pt.x - dragStartX;
+        const dy = pt.y - dragStartY;
+        
+        const newX = originalX + dx;
+        const newY = originalY + dy;
+        const stationId = dragTarget.dataset.id;
+        
+        updateStationPosition(stationId, newX, newY);
+        updateLinePaths(stationId);
+        
+        e.preventDefault();
+      }, { passive: false });
+      
+      svg.addEventListener('touchend', function() {
+        isDragging = false;
+        dragTarget = null;
+      });
+    })();
   </script>
 </body>
 </html>`;
