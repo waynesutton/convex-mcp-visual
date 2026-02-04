@@ -554,13 +554,40 @@ function buildSubwaySvg(
   transfers: Map<string, string[]>,
 ): string {
   if (lines.length === 0) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><text x="200" y="100" text-anchor="middle" fill="#999">No files to map</text></svg>';
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="400"><text x="50%" y="200" text-anchor="middle" fill="#999" font-size="18">No files to map</text></svg>';
   }
 
-  // Calculate dimensions
+  // Much larger spacing for better visibility
+  const STATION_SPACING = 160;
+  const LINE_SPACING = 120;
+  const MARGIN_LEFT = 200;
+  const MARGIN_TOP = 80;
+  const STATION_RADIUS = 12;
+  const TRANSFER_RADIUS = 18;
+  const LINE_WIDTH = 10;
+  const FONT_SIZE = 12;
+
+  // Calculate dimensions based on content
   const maxStations = Math.max(...lines.map((l) => l.stations.length), 1);
-  const width = Math.max(800, 200 + maxStations * 120 + 100);
-  const height = Math.max(400, 80 + lines.length * 100 + 100);
+  const width = Math.max(
+    1200,
+    MARGIN_LEFT + maxStations * STATION_SPACING + 80,
+  );
+  const height = Math.max(500, MARGIN_TOP + lines.length * LINE_SPACING + 80);
+
+  // Recalculate station positions with new spacing
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    const line = lines[lineIndex];
+    for (
+      let stationIndex = 0;
+      stationIndex < line.stations.length;
+      stationIndex++
+    ) {
+      line.stations[stationIndex].x =
+        MARGIN_LEFT + stationIndex * STATION_SPACING;
+      line.stations[stationIndex].y = MARGIN_TOP + lineIndex * LINE_SPACING;
+    }
+  }
 
   // Build station lookup
   const stationMap = new Map<string, Station>();
@@ -572,15 +599,23 @@ function buildSubwaySvg(
 
   const svgParts: string[] = [];
 
-  // SVG header
+  // SVG header with fixed width/height for scrolling
   svgParts.push(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" class="subway-map">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" class="subway-map" style="min-width: ${width}px;">`,
   );
 
   // Background
   svgParts.push(
-    `<rect width="100%" height="100%" fill="var(--bg-primary, #faf8f5)"/>`,
+    `<rect width="100%" height="100%" fill="var(--subway-bg, #f8f6f3)"/>`,
   );
+
+  // Subtle grid pattern
+  svgParts.push(`<defs>
+    <pattern id="subway-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--subway-grid, rgba(0,0,0,0.04))" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#subway-grid)"/>`);
 
   // Draw inter-line connections (transfers) first as curved paths
   const drawnConnections = new Set<string>();
@@ -589,7 +624,6 @@ function buildSubwaySvg(
     if (!station) continue;
 
     for (const otherLine of otherLines) {
-      // Find connected station on the other line
       const connectedStations = station.connections
         .map((id) => stationMap.get(id))
         .filter((s) => s && s.line === otherLine);
@@ -603,60 +637,73 @@ function buildSubwaySvg(
         // Draw curved connection line
         const midY = (station.y + connStation.y) / 2;
         svgParts.push(
-          `<path d="M${station.x},${station.y} Q${station.x},${midY} ${(station.x + connStation.x) / 2},${midY} Q${connStation.x},${midY} ${connStation.x},${connStation.y}" fill="none" stroke="var(--text-muted, #999)" stroke-width="2" stroke-dasharray="4,4" opacity="0.5"/>`,
+          `<path d="M${station.x},${station.y} Q${station.x},${midY} ${(station.x + connStation.x) / 2},${midY} Q${connStation.x},${midY} ${connStation.x},${connStation.y}" fill="none" stroke="var(--subway-connection, #bbb)" stroke-width="3" stroke-dasharray="8,6" opacity="0.7"/>`,
         );
       }
     }
   }
 
-  // Draw line routes
+  // Draw line routes with glow effect
   for (const line of lines) {
     if (line.stations.length === 0) continue;
 
-    // Draw the main line
     const pathPoints = line.stations.map((s) => `${s.x},${s.y}`).join(" L");
+
+    // Glow/shadow effect
     svgParts.push(
-      `<path d="M${pathPoints}" fill="none" stroke="${line.color}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>`,
+      `<path d="M${pathPoints}" fill="none" stroke="${line.color}" stroke-width="${LINE_WIDTH + 8}" stroke-linecap="round" stroke-linejoin="round" opacity="0.15"/>`,
+    );
+
+    // Main line
+    svgParts.push(
+      `<path d="M${pathPoints}" fill="none" stroke="${line.color}" stroke-width="${LINE_WIDTH}" stroke-linecap="round" stroke-linejoin="round"/>`,
     );
 
     // Draw stations
     for (const station of line.stations) {
       if (station.isTransfer) {
-        // Transfer station: larger white circle with colored ring
+        // Transfer station: larger white circle with thick colored ring
         svgParts.push(
-          `<circle cx="${station.x}" cy="${station.y}" r="12" fill="var(--bg-primary, #fff)" stroke="${line.color}" stroke-width="4"/>`,
+          `<circle cx="${station.x}" cy="${station.y}" r="${TRANSFER_RADIUS}" fill="var(--subway-station, #fff)" stroke="${line.color}" stroke-width="5"/>`,
         );
         svgParts.push(
-          `<circle cx="${station.x}" cy="${station.y}" r="6" fill="${line.color}"/>`,
+          `<circle cx="${station.x}" cy="${station.y}" r="${TRANSFER_RADIUS - 7}" fill="${line.color}"/>`,
         );
       } else {
-        // Regular station: small dot
+        // Regular station: clean white dot with colored border
         svgParts.push(
-          `<circle cx="${station.x}" cy="${station.y}" r="6" fill="var(--bg-primary, #fff)" stroke="${line.color}" stroke-width="3"/>`,
+          `<circle cx="${station.x}" cy="${station.y}" r="${STATION_RADIUS}" fill="var(--subway-station, #fff)" stroke="${line.color}" stroke-width="4"/>`,
         );
       }
 
       // Station label
-      const labelY = station.y - 18;
+      const labelY = station.y - STATION_RADIUS - 12;
       svgParts.push(
-        `<text x="${station.x}" y="${labelY}" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="var(--text-primary, #1a1a1a)" font-weight="500">${escapeHtml(station.shortLabel)}</text>`,
+        `<text x="${station.x}" y="${labelY}" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="${FONT_SIZE}" fill="var(--subway-text, #333)" font-weight="500">${escapeHtml(station.shortLabel)}</text>`,
       );
     }
   }
 
-  // Draw line labels at the start
+  // Draw line labels at the start with modern pill style
   for (const line of lines) {
     if (line.stations.length === 0) continue;
     const firstStation = line.stations[0];
-    const labelX = 20;
+    const labelX = 12;
     const labelY = firstStation.y;
+    const labelWidth = 170;
+    const labelHeight = 36;
 
-    // Line badge
+    // Shadow
     svgParts.push(
-      `<rect x="${labelX}" y="${labelY - 12}" width="160" height="24" rx="12" fill="${line.color}"/>`,
+      `<rect x="${labelX + 2}" y="${labelY - labelHeight / 2 + 2}" width="${labelWidth}" height="${labelHeight}" rx="${labelHeight / 2}" fill="rgba(0,0,0,0.1)"/>`,
     );
+    // Pill background
     svgParts.push(
-      `<text x="${labelX + 80}" y="${labelY + 4}" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#fff" font-weight="600">${escapeHtml(line.name)}</text>`,
+      `<rect x="${labelX}" y="${labelY - labelHeight / 2}" width="${labelWidth}" height="${labelHeight}" rx="${labelHeight / 2}" fill="${line.color}"/>`,
+    );
+    // Label text
+    svgParts.push(
+      `<text x="${labelX + labelWidth / 2}" y="${labelY + 5}" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#fff" font-weight="600">${escapeHtml(line.name)}</text>`,
     );
   }
 
@@ -725,20 +772,24 @@ function buildMapHtml(
   svg: string,
   lines: Line[],
   root: string,
-  fileCount: number,
+  _fileCount: number,
 ): string {
   const legendItems = lines
     .map(
       (line) =>
         `<div class="legend-item">
-          <span class="legend-line" style="background:${line.color}"></span>
+          <span class="legend-dot" style="background:${line.color}"></span>
           <span class="legend-name">${escapeHtml(line.name)}</span>
-          <span class="legend-count">${line.stations.length} files</span>
+          <span class="legend-count">${line.stations.length}</span>
         </div>`,
     )
     .join("");
 
   const totalStations = lines.reduce((sum, l) => sum + l.stations.length, 0);
+  const totalTransfers = lines.reduce(
+    (sum, l) => sum + l.stations.filter((s) => s.isTransfer).length,
+    0,
+  );
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -749,40 +800,102 @@ function buildMapHtml(
   <style>
     ${getSharedStyles()}
     
-    .subway-container {
+    :root {
+      --subway-bg: #f8f6f3;
+      --subway-grid: rgba(0,0,0,0.04);
+      --subway-station: #fff;
+      --subway-text: #333;
+    }
+    
+    [data-theme="dark"] {
+      --subway-bg: #1e1e1e;
+      --subway-grid: rgba(255,255,255,0.04);
+      --subway-station: #2d2d2d;
+      --subway-text: #ccc;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: var(--bg-primary);
+    }
+    
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-subtle, #e5e5e5);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    
+    .top-bar h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-primary);
+    }
+    
+    .top-bar .status-dot {
+      width: 10px;
+      height: 10px;
+      background: #22c55e;
+      border-radius: 50%;
+    }
+    
+    .stats-row {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    
+    .stat-item {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    
+    .stat-item .value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .stat-item .label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    
+    .legend-bar {
       background: var(--bg-secondary);
-      border-radius: 12px;
-      padding: 24px;
-      overflow: auto;
-      max-height: calc(100vh - 280px);
-    }
-    
-    .subway-map {
-      display: block;
-      min-width: 100%;
-      height: auto;
-    }
-    
-    .legend {
+      padding: 12px 24px;
       display: flex;
       flex-wrap: wrap;
       gap: 16px;
-      padding: 16px;
-      background: var(--bg-secondary);
-      border-radius: 8px;
-      margin-bottom: 16px;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle, #e5e5e5);
     }
     
     .legend-item {
       display: flex;
       align-items: center;
       gap: 8px;
+      font-size: 13px;
     }
     
-    .legend-line {
-      width: 24px;
-      height: 6px;
-      border-radius: 3px;
+    .legend-dot {
+      width: 20px;
+      height: 8px;
+      border-radius: 4px;
     }
     
     .legend-name {
@@ -791,85 +904,63 @@ function buildMapHtml(
     }
     
     .legend-count {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
-    }
-    
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    
-    .stat-box {
-      background: var(--bg-secondary);
-      padding: 16px;
-      border-radius: 8px;
-      text-align: center;
-    }
-    
-    .stat-value {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-    
-    .stat-label {
-      font-size: 12px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .root-path {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--text-muted);
-      padding: 8px 12px;
       background: var(--bg-tertiary);
-      border-radius: 6px;
-      margin-bottom: 16px;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+    
+    .map-container {
+      overflow: auto;
+      padding: 24px;
+      min-height: calc(100vh - 160px);
+      background: var(--subway-bg);
+    }
+    
+    .subway-map {
+      display: block;
+    }
+    
+    .path-bar {
+      padding: 8px 24px;
+      background: var(--bg-tertiary);
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
     }
   </style>
 </head>
 <body>
-  <header class="header">
-    <div class="header-left">
-      <h1><span class="status-dot"></span> Codebase Subway Map</h1>
-    </div>
-    <div class="header-actions">
-      ${getThemeToggleHtml()}
-    </div>
-  </header>
-
-  <main class="main-content">
-    <div class="stats">
-      <div class="stat-box">
-        <div class="stat-value">${totalStations}</div>
-        <div class="stat-label">Files</div>
+  <div class="top-bar">
+    <h1><span class="status-dot"></span> Codebase Subway Map</h1>
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="value">${totalStations}</span>
+        <span class="label">files</span>
       </div>
-      <div class="stat-box">
-        <div class="stat-value">${lines.length}</div>
-        <div class="stat-label">Lines</div>
+      <div class="stat-item">
+        <span class="value">${lines.length}</span>
+        <span class="label">lines</span>
       </div>
-      <div class="stat-box">
-        <div class="stat-value">${lines.reduce((sum, l) => sum + l.stations.filter((s) => s.isTransfer).length, 0)}</div>
-        <div class="stat-label">Transfers</div>
+      <div class="stat-item">
+        <span class="value">${totalTransfers}</span>
+        <span class="label">transfers</span>
       </div>
     </div>
-    
-    <div class="root-path">${escapeHtml(root)}</div>
-    
-    <div class="legend">${legendItems}</div>
-    
-    <div class="subway-container">
-      ${svg}
-    </div>
-  </main>
+    ${getThemeToggleHtml()}
+  </div>
+  
+  <div class="path-bar">${escapeHtml(root)}</div>
+  
+  <div class="legend-bar">${legendItems}</div>
+  
+  <div class="map-container">
+    ${svg}
+  </div>
 
   <script>
     ${getThemeToggleScript()}
