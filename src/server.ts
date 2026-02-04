@@ -25,6 +25,10 @@ import {
   schemaDiagramTool,
   handleSchemaDiagram,
 } from "./tools/schema-diagram.js";
+import {
+  codebaseSubwayMapTool,
+  handleCodebaseSubwayMap,
+} from "./tools/codebase-subway-map.js";
 import { getSchemaResourceContent } from "./resources/schema-browser.js";
 import { getDashboardResourceContent } from "./resources/dashboard.js";
 import { ConvexClient } from "./convex-client.js";
@@ -63,7 +67,12 @@ export async function createServer(): Promise<ConvexMcpServer> {
   // List available tools
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     return {
-      tools: [schemaBrowserTool, dashboardTool, schemaDiagramTool],
+      tools: [
+        schemaBrowserTool,
+        dashboardTool,
+        schemaDiagramTool,
+        codebaseSubwayMapTool,
+      ],
     };
   });
 
@@ -81,6 +90,9 @@ export async function createServer(): Promise<ConvexMcpServer> {
         break;
       case "schema_diagram":
         result = await handleSchemaDiagram(convexClient, args);
+        break;
+      case "codebase_subway_map":
+        result = await handleCodebaseSubwayMap(args);
         break;
       default:
         throw new Error(`Unknown tool: ${name}`);

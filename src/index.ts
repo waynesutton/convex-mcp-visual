@@ -10,6 +10,7 @@
  */
 
 import { createServer } from "./server.js";
+import type { ConvexClient } from "./convex-client.js";
 import { parseArgs } from "util";
 import { writeFileSync, existsSync, readFileSync } from "fs";
 import { join, dirname } from "path";
@@ -27,7 +28,7 @@ const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
 const VERSION = packageJson.version as string;
 
 // Subcommand type for direct CLI usage
-type Subcommand = "schema" | "dashboard" | "diagram";
+type Subcommand = "schema" | "dashboard" | "diagram" | "subway";
 
 async function main() {
   // Check for subcommands first (schema, dashboard, diagram)
@@ -38,7 +39,8 @@ async function main() {
   if (
     subcommand === "schema" ||
     subcommand === "dashboard" ||
-    subcommand === "diagram"
+    subcommand === "diagram" ||
+    subcommand === "subway"
   ) {
     await handleDirectCLI(subcommand, args.slice(1));
     return;
@@ -60,10 +62,12 @@ async function main() {
       "install-cursor": { type: "boolean", default: false },
       "install-opencode": { type: "boolean", default: false },
       "install-claude": { type: "boolean", default: false },
+      "install-codex": { type: "boolean", default: false },
       uninstall: { type: "boolean", default: false },
       "uninstall-cursor": { type: "boolean", default: false },
       "uninstall-opencode": { type: "boolean", default: false },
       "uninstall-claude": { type: "boolean", default: false },
+      "uninstall-codex": { type: "boolean", default: false },
     },
     allowPositionals: false,
   });
@@ -88,7 +92,8 @@ async function main() {
     values.install ||
     values["install-cursor"] ||
     values["install-opencode"] ||
-    values["install-claude"]
+    values["install-claude"] ||
+    values["install-codex"]
   ) {
     await handleInstall(values);
     return;
@@ -98,7 +103,8 @@ async function main() {
     values.uninstall ||
     values["uninstall-cursor"] ||
     values["uninstall-opencode"] ||
-    values["uninstall-claude"]
+    values["uninstall-claude"] ||
+    values["uninstall-codex"]
   ) {
     await handleUninstall(values);
     return;
@@ -154,16 +160,19 @@ COMMANDS (Direct CLI):
   schema              Show database schema (opens browser + terminal output)
   dashboard           Show metrics dashboard (opens browser + terminal output)
   diagram             Generate ER diagram (opens browser + terminal output)
+  subway              Generate codebase subway map (opens browser + terminal output)
 
 MCP CLIENT INSTALL (adds MCP config automatically):
   --install           Install to all detected MCP clients
   --install-cursor    Install to Cursor only
   --install-opencode  Install to OpenCode only
   --install-claude    Install to Claude Desktop only
+  --install-codex     Install to Codex CLI only
   --uninstall         Remove from all MCP clients
   --uninstall-cursor  Remove from Cursor only
   --uninstall-opencode Remove from OpenCode only
   --uninstall-claude  Remove from Claude Desktop only
+  --uninstall-codex   Remove from Codex CLI only
 
 MCP SERVER OPTIONS:
   --stdio             Run as MCP server in stdio mode (default)
@@ -184,6 +193,7 @@ INSTALL EXAMPLES:
   npx convex-mcp-visual --install             # Install to all MCP clients
   npx convex-mcp-visual --install-cursor      # Install to Cursor only
   npx convex-mcp-visual --install-opencode    # Install to OpenCode only
+  npx convex-mcp-visual --install-codex       # Install to Codex CLI only
   npx convex-mcp-visual --setup               # Then configure deploy key
 
 DIRECT CLI EXAMPLES:
@@ -195,6 +205,9 @@ DIRECT CLI EXAMPLES:
   convex-mcp-visual dashboard                 # Open metrics dashboard
   convex-mcp-visual diagram                   # Generate Mermaid ER diagram
   convex-mcp-visual diagram --theme dracula   # Use dracula theme
+  convex-mcp-visual subway                    # Generate codebase subway map
+  convex-mcp-visual subway --root ./apps      # Focus on a subfolder
+  convex-mcp-visual subway --max-nodes 80     # Limit map size
 
 MCP SERVER EXAMPLES:
   convex-mcp-visual --stdio                   # For Claude Code/Desktop/Cursor
@@ -238,6 +251,12 @@ async function handleDirectCLI(
       options.graph = true;
     } else if (arg === "--list") {
       options.list = true;
+    } else if (arg === "--root" && args[i + 1]) {
+      options.root = args[++i];
+    } else if (arg === "--max-depth" && args[i + 1]) {
+      options.maxDepth = args[++i];
+    } else if (arg === "--max-nodes" && args[i + 1]) {
+      options.maxNodes = args[++i];
     } else if (arg === "--deployment" && args[i + 1]) {
       const deploymentName = args[++i];
       process.env.CONVEX_URL = `https://${deploymentName}.convex.cloud`;
@@ -248,25 +267,28 @@ async function handleDirectCLI(
   }
 
   // Import tool handlers
-  const { ConvexClient } = await import("./convex-client.js");
-  const client = new ConvexClient();
+  let client: ConvexClient | null = null;
+  if (subcommand !== "subway") {
+    const { ConvexClient } = await import("./convex-client.js");
+    client = new ConvexClient();
 
-  // Check connection
-  if (!client.isConnected()) {
-    console.error("Error: No Convex deployment configured.\n");
-    console.error("To connect:");
-    console.error("  1. Run: npx convex-mcp-visual --setup");
-    console.error("  2. Or set CONVEX_DEPLOY_KEY environment variable\n");
-    process.exit(1);
+    // Check connection
+    if (!client.isConnected()) {
+      console.error("Error: No Convex deployment configured.\n");
+      console.error("To connect:");
+      console.error("  1. Run: npx convex-mcp-visual --setup");
+      console.error("  2. Or set CONVEX_DEPLOY_KEY environment variable\n");
+      process.exit(1);
+    }
+
+    console.log(`Connected to: ${client.getDeploymentUrl()}\n`);
   }
-
-  console.log(`Connected to: ${client.getDeploymentUrl()}\n`);
 
   // Execute the appropriate tool
   switch (subcommand) {
     case "schema": {
       const { handleSchemaBrowser } = await import("./tools/schema-browser.js");
-      const result = await handleSchemaBrowser(client, {
+      const result = await handleSchemaBrowser(client!, {
         table: options.table,
         showInferred: true,
         pageSize: 50,
@@ -285,7 +307,7 @@ async function handleDirectCLI(
 
     case "dashboard": {
       const { handleDashboard } = await import("./tools/dashboard.js");
-      const result = await handleDashboard(client, {
+      const result = await handleDashboard(client!, {
         metrics: [],
         charts: [],
         refreshInterval: 5,
@@ -302,9 +324,30 @@ async function handleDirectCLI(
 
     case "diagram": {
       const { handleSchemaDiagram } = await import("./tools/schema-diagram.js");
-      const result = await handleSchemaDiagram(client, {
+      const result = await handleSchemaDiagram(client!, {
         theme: options.theme || "github-dark",
         ascii: options.ascii || false,
+      });
+      if (options.json) {
+        console.log(
+          JSON.stringify({ output: result.content[0].text }, null, 2),
+        );
+      } else {
+        console.log(result.content[0].text);
+      }
+      break;
+    }
+
+    case "subway": {
+      const { handleCodebaseSubwayMap } =
+        await import("./tools/codebase-subway-map.js");
+      const result = await handleCodebaseSubwayMap({
+        root: options.root,
+        maxDepth: options.maxDepth,
+        maxNodes: options.maxNodes,
+        theme: options.theme,
+        ascii: options.ascii,
+        noBrowser: options.noBrowser,
       });
       if (options.json) {
         console.log(
@@ -384,6 +427,30 @@ EXAMPLES:
   convex-mcp-visual diagram
   convex-mcp-visual diagram --theme dracula
   convex-mcp-visual diagram --ascii
+`);
+      break;
+
+    case "subway":
+      console.log(`
+convex-mcp-visual subway
+
+Generate a subway map style diagram for your codebase.
+Focuses on files and local imports to build the map.
+
+OPTIONS:
+  --root <path>       Root folder to scan (default: current directory)
+  --max-depth <num>   Max folder depth to scan (default: 6)
+  --max-nodes <num>   Max nodes to render (default: 120)
+  --theme <name>      Color theme: github-dark, github-light, dracula, nord, tokyo-night
+  --ascii             Use ASCII characters for terminal output
+  --json              Output JSON only (no browser)
+  --no-browser        Terminal output only
+  -h, --help          Show this help
+
+EXAMPLES:
+  convex-mcp-visual subway
+  convex-mcp-visual subway --root ./apps
+  convex-mcp-visual subway --max-nodes 80
 `);
       break;
   }
@@ -768,10 +835,17 @@ const MCP_CLIENT_PATHS = {
       "claude_desktop_config.json",
     ),
   },
+  codex: {
+    mac: join(homedir(), ".codex", "config.toml"),
+    linux: join(homedir(), ".codex", "config.toml"),
+    win: join(homedir(), ".codex", "config.toml"),
+  },
 };
 
 // Get the config path for the current platform
-function getConfigPath(client: "cursor" | "opencode" | "claude"): string {
+function getConfigPath(
+  client: "cursor" | "opencode" | "claude" | "codex",
+): string {
   const platform = process.platform;
   const paths = MCP_CLIENT_PATHS[client];
   if (platform === "darwin") return paths.mac;
@@ -792,19 +866,86 @@ const MCP_SERVER_CONFIG_OPENCODE = {
   enabled: true,
 };
 
+// MCP server config for Codex CLI (TOML format)
+const MCP_SERVER_CONFIG_CODEX_TOML = `[mcp_servers.convex-visual]
+command = "npx"
+args = ["-y", "convex-mcp-visual", "--stdio"]
+`;
+
+/**
+ * Simple TOML parser/writer for Codex config
+ * Only handles the mcp_servers section we need
+ */
+function readCodexConfig(configPath: string): string {
+  if (existsSync(configPath)) {
+    return readFileSync(configPath, "utf-8");
+  }
+  return "";
+}
+
+function writeCodexConfig(configPath: string, content: string): void {
+  writeFileSync(configPath, content);
+}
+
+function addConvexVisualToCodexConfig(existingContent: string): string {
+  // Check if convex-visual already exists
+  if (existingContent.includes("[mcp_servers.convex-visual]")) {
+    // Already configured, return as-is
+    return existingContent;
+  }
+
+  // Append our config section
+  const trimmedContent = existingContent.trimEnd();
+  if (trimmedContent.length > 0) {
+    return trimmedContent + "\n\n" + MCP_SERVER_CONFIG_CODEX_TOML;
+  }
+  return MCP_SERVER_CONFIG_CODEX_TOML;
+}
+
+function removeConvexVisualFromCodexConfig(existingContent: string): string {
+  // Remove the [mcp_servers.convex-visual] section and its contents
+  // Match the section header and all following lines until next section or end
+  const lines = existingContent.split("\n");
+  const result: string[] = [];
+  let inConvexVisualSection = false;
+
+  for (const line of lines) {
+    if (line.trim() === "[mcp_servers.convex-visual]") {
+      inConvexVisualSection = true;
+      continue;
+    }
+    // If we hit a new section header, we're done skipping
+    if (inConvexVisualSection && line.trim().startsWith("[")) {
+      inConvexVisualSection = false;
+    }
+    if (!inConvexVisualSection) {
+      result.push(line);
+    }
+  }
+
+  // Clean up extra blank lines
+  return (
+    result
+      .join("\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim() + "\n"
+  );
+}
+
 /**
  * Handle MCP client install commands
  */
 async function handleInstall(values: Record<string, unknown>): Promise<void> {
-  const targets: Array<"cursor" | "opencode" | "claude"> = [];
+  const targets: Array<"cursor" | "opencode" | "claude" | "codex"> = [];
 
   if (values.install) {
     // Install to all detected clients
-    targets.push("cursor", "opencode", "claude");
+    targets.push("cursor", "opencode", "claude", "codex");
   } else {
     if (values["install-cursor"]) targets.push("cursor");
     if (values["install-opencode"]) targets.push("opencode");
     if (values["install-claude"]) targets.push("claude");
+    if (values["install-codex"]) targets.push("codex");
   }
 
   console.log("\nConvex MCP Visual Installer\n");
@@ -825,7 +966,7 @@ async function handleInstall(values: Record<string, unknown>): Promise<void> {
  * Install MCP server config to a specific client
  */
 async function installToClient(
-  client: "cursor" | "opencode" | "claude",
+  client: "cursor" | "opencode" | "claude" | "codex",
 ): Promise<void> {
   const configPath = getConfigPath(client);
   const clientName =
@@ -833,7 +974,9 @@ async function installToClient(
       ? "Cursor"
       : client === "opencode"
         ? "OpenCode"
-        : "Claude Desktop";
+        : client === "codex"
+          ? "Codex CLI"
+          : "Claude Desktop";
 
   console.log(`Installing to ${clientName}...`);
   console.log(`  Config: ${configPath}`);
@@ -846,7 +989,16 @@ async function installToClient(
       mkdirSync(parentDir, { recursive: true });
     }
 
-    // Read existing config or create new one
+    // Handle Codex separately (uses TOML format)
+    if (client === "codex") {
+      const existingContent = readCodexConfig(configPath);
+      const updatedContent = addConvexVisualToCodexConfig(existingContent);
+      writeCodexConfig(configPath, updatedContent);
+      console.log(`  [OK] Installed convex-visual to ${clientName}\n`);
+      return;
+    }
+
+    // Read existing config or create new one (JSON clients)
     let config: Record<string, unknown> = {};
     if (existsSync(configPath)) {
       try {
@@ -888,14 +1040,15 @@ async function installToClient(
  * Handle MCP client uninstall commands
  */
 async function handleUninstall(values: Record<string, unknown>): Promise<void> {
-  const targets: Array<"cursor" | "opencode" | "claude"> = [];
+  const targets: Array<"cursor" | "opencode" | "claude" | "codex"> = [];
 
   if (values.uninstall) {
-    targets.push("cursor", "opencode", "claude");
+    targets.push("cursor", "opencode", "claude", "codex");
   } else {
     if (values["uninstall-cursor"]) targets.push("cursor");
     if (values["uninstall-opencode"]) targets.push("opencode");
     if (values["uninstall-claude"]) targets.push("claude");
+    if (values["uninstall-codex"]) targets.push("codex");
   }
 
   console.log("\nConvex MCP Visual Uninstaller\n");
@@ -911,7 +1064,7 @@ async function handleUninstall(values: Record<string, unknown>): Promise<void> {
  * Remove MCP server config from a specific client
  */
 async function uninstallFromClient(
-  client: "cursor" | "opencode" | "claude",
+  client: "cursor" | "opencode" | "claude" | "codex",
 ): Promise<void> {
   const configPath = getConfigPath(client);
   const clientName =
@@ -919,7 +1072,9 @@ async function uninstallFromClient(
       ? "Cursor"
       : client === "opencode"
         ? "OpenCode"
-        : "Claude Desktop";
+        : client === "codex"
+          ? "Codex CLI"
+          : "Claude Desktop";
 
   console.log(`Removing from ${clientName}...`);
   console.log(`  Config: ${configPath}`);
@@ -927,6 +1082,20 @@ async function uninstallFromClient(
   try {
     if (!existsSync(configPath)) {
       console.log(`  [SKIP] Config file not found\n`);
+      return;
+    }
+
+    // Handle Codex separately (uses TOML format)
+    if (client === "codex") {
+      const existingContent = readCodexConfig(configPath);
+      if (existingContent.includes("[mcp_servers.convex-visual]")) {
+        const updatedContent =
+          removeConvexVisualFromCodexConfig(existingContent);
+        writeCodexConfig(configPath, updatedContent);
+        console.log(`  [OK] Removed convex-visual from ${clientName}\n`);
+      } else {
+        console.log(`  [SKIP] convex-visual not found in config\n`);
+      }
       return;
     }
 

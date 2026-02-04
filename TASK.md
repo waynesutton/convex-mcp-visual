@@ -2,6 +2,19 @@
 
 Current development tasks and progress.
 
+## Completed (Unreleased)
+
+- [x] Add `--install-codex` and `--uninstall-codex` flags for Codex CLI support
+- [x] Add Codex to MCP_CLIENT_PATHS with TOML config path (`~/.codex/config.toml`)
+- [x] Create TOML config reader/writer functions for Codex
+- [x] Update handleInstall/handleUninstall to support Codex client
+- [x] Update printHelp() with Codex install options
+- [x] Update README.md with Codex documentation and manual config example
+- [x] Update docs/setup.md with Codex CLI section and config paths table
+- [x] Add `codex` keyword to package.json
+- [x] Update changelog.md with Codex support
+- [x] Verify TypeScript type safety (tsc --noEmit passes)
+
 ## Completed (v1.2.7)
 
 - [x] Redesign Tables Overview to use horizontal bar chart layout

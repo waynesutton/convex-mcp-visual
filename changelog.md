@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Codex CLI support with `--install-codex` and `--uninstall-codex` flags
+- TOML config writer for Codex at `~/.codex/config.toml`
+- Codex documentation in README.md and docs/setup.md
+- `codex` keyword in package.json
+
 ## [1.2.7] - 2026-02-01
 
 ### Changed

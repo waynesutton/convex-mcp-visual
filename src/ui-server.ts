@@ -86,7 +86,11 @@ function getAppHtmlPath(appName: string): string {
 }
 
 export interface UIServerConfig {
-  appName: "schema-browser" | "realtime-dashboard" | "schema-diagram";
+  appName:
+    | "schema-browser"
+    | "realtime-dashboard"
+    | "schema-diagram"
+    | "codebase-subway-map";
   config: Record<string, unknown>;
   port?: number;
   autoClose?: number; // Auto-close after N milliseconds (0 = never)

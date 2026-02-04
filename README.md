@@ -14,11 +14,11 @@ Schema visualizer and dashboard tools for exploring Convex databases. Opens inte
 
 **Three ways to use:**
 
-| Method            | Use case                             |
-| ----------------- | ------------------------------------ |
-| **Direct CLI**    | Run from any terminal without MCP    |
-| **MCP Server**    | Claude Code, Claude Desktop, Cursor  |
-| **Claude Plugin** | Install from Claude Code marketplace |
+| Method            | Use case                                   |
+| ----------------- | ------------------------------------------ |
+| **Direct CLI**    | Run from any terminal without MCP          |
+| **MCP Server**    | Claude Code, Claude Desktop, Cursor, Codex |
+| **Claude Plugin** | Install from Claude Code marketplace       |
 
 **Convex References:**
 
@@ -45,19 +45,23 @@ convex-mcp-visual dashboard   # View metrics
 convex-mcp-visual diagram     # Generate ER diagram
 ```
 
-### Option B: MCP Server (Claude/Cursor/OpenCode)
+### Option B: MCP Server (Claude/Cursor/OpenCode/Codex)
 
 ```bash
-# Auto-install to all MCP clients (Cursor, OpenCode, Claude Desktop)
+# Auto-install to all MCP clients (Cursor, OpenCode, Claude Desktop, Codex)
 npx convex-mcp-visual --install
 
 # Or install to specific clients
 npx convex-mcp-visual --install-cursor
 npx convex-mcp-visual --install-opencode
 npx convex-mcp-visual --install-claude
+npx convex-mcp-visual --install-codex
 
 # Claude Code CLI (alternative)
 claude mcp add convex-visual -- npx convex-mcp-visual --stdio
+
+# Codex CLI (alternative)
+codex mcp add convex-visual -- npx convex-mcp-visual --stdio
 
 # Setup deploy key
 npx convex-mcp-visual --setup
@@ -224,6 +228,24 @@ Add to `~/.config/opencode/opencode.json`:
 }
 ```
 
+### Codex CLI (Manual)
+
+Add to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.convex-visual]
+command = "npx"
+args = ["-y", "convex-mcp-visual", "--stdio"]
+```
+
+Or use the CLI command:
+
+```bash
+codex mcp add convex-visual -- npx convex-mcp-visual --stdio
+```
+
+See [Codex MCP docs](https://developers.openai.com/codex/mcp/) for more details.
+
 ## CLI Reference
 
 ### MCP Client Install Commands
@@ -234,10 +256,12 @@ npx convex-mcp-visual --install           # All detected clients
 npx convex-mcp-visual --install-cursor    # Cursor only
 npx convex-mcp-visual --install-opencode  # OpenCode only
 npx convex-mcp-visual --install-claude    # Claude Desktop only
+npx convex-mcp-visual --install-codex     # Codex CLI only
 
 # Uninstall from MCP clients
 npx convex-mcp-visual --uninstall         # All clients
 npx convex-mcp-visual --uninstall-cursor  # Cursor only
+npx convex-mcp-visual --uninstall-codex   # Codex CLI only
 ```
 
 ### Direct CLI Commands
@@ -266,6 +290,7 @@ MCP Client Install:
   --install-cursor     Install to Cursor
   --install-opencode   Install to OpenCode
   --install-claude     Install to Claude Desktop
+  --install-codex      Install to Codex CLI
   --uninstall          Remove from all MCP clients
 
 Server Options:
@@ -303,9 +328,13 @@ npx convex-mcp-visual --uninstall
 npx convex-mcp-visual --uninstall-cursor
 npx convex-mcp-visual --uninstall-opencode
 npx convex-mcp-visual --uninstall-claude
+npx convex-mcp-visual --uninstall-codex
 
 # Remove from Claude Code (alternative)
 claude mcp remove convex-visual
+
+# Remove from Codex CLI (alternative)
+codex mcp remove convex-visual
 
 # Remove global package
 npm uninstall -g convex-mcp-visual

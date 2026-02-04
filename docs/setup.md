@@ -304,13 +304,14 @@ For more help, see [Troubleshooting](./troubleshooting.md).
 The fastest way to configure any MCP client:
 
 ```bash
-# Install to all detected MCP clients (Cursor, OpenCode, Claude Desktop)
+# Install to all detected MCP clients (Cursor, OpenCode, Claude Desktop, Codex)
 npx convex-mcp-visual --install
 
 # Or target specific clients
 npx convex-mcp-visual --install-cursor
 npx convex-mcp-visual --install-opencode
 npx convex-mcp-visual --install-claude
+npx convex-mcp-visual --install-codex
 ```
 
 This automatically updates the config files:
@@ -320,6 +321,7 @@ This automatically updates the config files:
 | Cursor         | `~/.cursor/mcp.json`                                              |
 | OpenCode       | `~/.config/opencode/opencode.json`                                |
 | Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Codex CLI      | `~/.codex/config.toml`                                            |
 
 ### Uninstall from MCP Clients
 
@@ -331,6 +333,7 @@ npx convex-mcp-visual --uninstall
 npx convex-mcp-visual --uninstall-cursor
 npx convex-mcp-visual --uninstall-opencode
 npx convex-mcp-visual --uninstall-claude
+npx convex-mcp-visual --uninstall-codex
 ```
 
 ### Claude Code (CLI)
@@ -344,6 +347,32 @@ Verify installation:
 ```bash
 claude mcp list
 ```
+
+### Codex CLI
+
+Add the server using the Codex CLI:
+
+```bash
+codex mcp add convex-visual -- npx convex-mcp-visual --stdio
+```
+
+Verify installation:
+
+```bash
+codex mcp list
+```
+
+Or add manually to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.convex-visual]
+command = "npx"
+args = ["-y", "convex-mcp-visual", "--stdio"]
+```
+
+For project-scoped config, create `.codex/config.toml` in your project root.
+
+See [Codex MCP docs](https://developers.openai.com/codex/mcp/) for more details.
 
 ### Claude Desktop (Manual)
 

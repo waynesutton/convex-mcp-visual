@@ -67,6 +67,19 @@ npm run clean
 3. Update `printHelp()` function
 4. Update README.md and docs/setup.md
 
+## MCP client install support
+
+The install commands support these clients:
+
+| Client         | Config Format | Config Path                             |
+| -------------- | ------------- | --------------------------------------- |
+| Cursor         | JSON          | `~/.cursor/mcp.json`                    |
+| OpenCode       | JSON          | `~/.config/opencode/opencode.json`      |
+| Claude Desktop | JSON          | `~/Library/Application Support/Claude/` |
+| Codex CLI      | TOML          | `~/.codex/config.toml`                  |
+
+Codex uses TOML format. The install logic in `src/index.ts` includes TOML reader/writer functions for Codex support.
+
 ## Testing
 
 ```bash
