@@ -26,6 +26,9 @@ Current development tasks and progress.
 - [x] Add summary stats cards to heatmap, drift, and conflict report views
 - [x] Update tool descriptions to clarify when each tool triggers
 - [x] Ensure schema_diagram only triggers for explicit Mermaid ER requests
+- [x] Redesign subway map to look like actual NYC subway map (not tree diagram)
+- [x] Replace Mermaid flowchart with custom SVG rendering for subway map
+- [x] Add colored lines per folder, station dots, transfer indicators
 
 ## Completed (v1.2.7)
 

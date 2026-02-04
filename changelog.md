@@ -32,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Subway map now uses its own viewer instead of schema diagram
+- Subway map completely redesigned to look like actual transit map (NYC subway style)
+- Each folder is now a colored line with files as stations along the route
+- Transfer stations show connections between folders/modules
+- Removed Mermaid dependency from subway map in favor of custom SVG
 
 ## [1.2.7] - 2026-02-01
 
