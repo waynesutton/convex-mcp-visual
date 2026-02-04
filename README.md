@@ -9,6 +9,10 @@ Schema visualizer and dashboard tools for exploring Convex databases. Opens inte
 - Schema browser with graph view, list view, and document browser
 - Real-time dashboard with metrics and charts
 - Mermaid ER diagrams with relationship detection
+- Codebase subway map for files and imports
+- Table heatmap for recent writes
+- Schema drift view for declared vs inferred fields
+- Write conflict report from logs
 - Dark mode support
 - Multi deployment support
 
@@ -43,6 +47,10 @@ convex-mcp-visual --setup
 convex-mcp-visual schema      # Browse schema
 convex-mcp-visual dashboard   # View metrics
 convex-mcp-visual diagram     # Generate ER diagram
+convex-mcp-visual subway      # Codebase subway map
+convex-mcp-visual table-heatmap # Table writes heatmap
+convex-mcp-visual schema-drift  # Declared vs inferred schema
+convex-mcp-visual write-conflicts --log-file logs.txt
 ```
 
 ### Option B: MCP Server (Claude/Cursor/OpenCode/Codex)
@@ -140,6 +148,10 @@ npx convex-mcp-visual --test
 | "Generate a diagram of my schema"     | `schema_diagram` (Mermaid ER)     |
 | "Show me a Mermaid ER diagram"        | `schema_diagram`                  |
 | "Visualize my database relationships" | `schema_diagram`                  |
+| "Show me a codebase subway map"       | `codebase_subway_map`             |
+| "Show table write heatmap"            | `table_heatmap`                   |
+| "Show schema drift"                   | `schema_drift`                    |
+| "Show write conflicts"                | `write_conflict_report`           |
 
 All tools open an interactive browser UI and return output to the terminal. The schema browser defaults to graph view (visual diagram with table relationships).
 
@@ -278,6 +290,10 @@ convex-mcp-visual dashboard            # View metrics dashboard
 convex-mcp-visual diagram              # Generate Mermaid ER diagram
 convex-mcp-visual diagram --theme dracula
 convex-mcp-visual diagram --ascii      # ASCII output for terminal
+convex-mcp-visual subway               # Codebase subway map
+convex-mcp-visual table-heatmap        # Table writes heatmap
+convex-mcp-visual schema-drift         # Declared vs inferred schema
+convex-mcp-visual write-conflicts --log-file logs.txt
 ```
 
 ### MCP Server Options

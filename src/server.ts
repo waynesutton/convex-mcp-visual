@@ -29,6 +29,12 @@ import {
   codebaseSubwayMapTool,
   handleCodebaseSubwayMap,
 } from "./tools/codebase-subway-map.js";
+import { tableHeatmapTool, handleTableHeatmap } from "./tools/table-heatmap.js";
+import { schemaDriftTool, handleSchemaDrift } from "./tools/schema-drift.js";
+import {
+  writeConflictReportTool,
+  handleWriteConflictReport,
+} from "./tools/write-conflict-report.js";
 import { getSchemaResourceContent } from "./resources/schema-browser.js";
 import { getDashboardResourceContent } from "./resources/dashboard.js";
 import { ConvexClient } from "./convex-client.js";
@@ -72,6 +78,9 @@ export async function createServer(): Promise<ConvexMcpServer> {
         dashboardTool,
         schemaDiagramTool,
         codebaseSubwayMapTool,
+        tableHeatmapTool,
+        schemaDriftTool,
+        writeConflictReportTool,
       ],
     };
   });
@@ -93,6 +102,15 @@ export async function createServer(): Promise<ConvexMcpServer> {
         break;
       case "codebase_subway_map":
         result = await handleCodebaseSubwayMap(args);
+        break;
+      case "table_heatmap":
+        result = await handleTableHeatmap(convexClient, args);
+        break;
+      case "schema_drift":
+        result = await handleSchemaDrift(convexClient, args);
+        break;
+      case "write_conflict_report":
+        result = await handleWriteConflictReport(args);
         break;
       default:
         throw new Error(`Unknown tool: ${name}`);

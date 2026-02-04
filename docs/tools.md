@@ -188,3 +188,123 @@ The tool auto detects relationships from field patterns:
 - Fields with `v.id("tableName")` type
 
 Relationships are shown as one to many (`||--o{`) by default.
+
+---
+
+## codebase_subway_map
+
+Generates a subway map style diagram for your codebase.
+
+### Usage
+
+In Claude, ask:
+
+- "Show me a codebase subway map"
+- "Map my codebase as a subway"
+
+### CLI Flags
+
+```bash
+convex-mcp-visual subway              # Codebase subway map
+convex-mcp-visual subway --root ./apps
+convex-mcp-visual subway --max-nodes 80
+```
+
+### Parameters
+
+| Parameter   | Type    | Default       | Description                        |
+| ----------- | ------- | ------------- | ---------------------------------- |
+| `root`      | string  | current dir   | Root folder to scan                |
+| `maxDepth`  | number  | 6             | Max folder depth to scan           |
+| `maxNodes`  | number  | 120           | Max nodes to render                |
+| `theme`     | string  | "github-dark" | Color theme for SVG output         |
+| `ascii`     | boolean | false         | Use ASCII instead of Unicode boxes |
+| `noBrowser` | boolean | false         | Skip browser UI output             |
+
+---
+
+## table_heatmap
+
+Shows a heatmap of recent writes per table.
+
+### Usage
+
+In Claude, ask:
+
+- "Show table write heatmap"
+- "Which tables are hottest"
+
+### CLI Flags
+
+```bash
+convex-mcp-visual table-heatmap
+convex-mcp-visual table-heatmap --window-minutes 5
+```
+
+### Parameters
+
+| Parameter         | Type    | Default       | Description                |
+| ----------------- | ------- | ------------- | -------------------------- |
+| `windowMinutes`   | number  | 1             | Lookback window in minutes |
+| `maxDocsPerTable` | number  | 1500          | Max docs to scan per table |
+| `maxTables`       | number  | 60            | Max tables to scan         |
+| `theme`           | string  | "github-dark" | Color theme for UI output  |
+| `noBrowser`       | boolean | false         | Skip browser UI output     |
+
+---
+
+## schema_drift
+
+Compares declared and inferred fields to detect schema drift.
+
+### Usage
+
+In Claude, ask:
+
+- "Show schema drift"
+- "Compare declared vs inferred schema"
+
+### CLI Flags
+
+```bash
+convex-mcp-visual schema-drift
+convex-mcp-visual schema-drift --max-tables 40
+```
+
+### Parameters
+
+| Parameter   | Type    | Default       | Description               |
+| ----------- | ------- | ------------- | ------------------------- |
+| `maxTables` | number  | 80            | Max tables to scan        |
+| `theme`     | string  | "github-dark" | Color theme for UI output |
+| `noBrowser` | boolean | false         | Skip browser UI output    |
+
+---
+
+## write_conflict_report
+
+Summarizes write conflicts from Convex logs.
+
+### Usage
+
+In Claude, ask:
+
+- "Show write conflicts"
+- "Summarize write conflicts from logs"
+
+### CLI Flags
+
+```bash
+npx convex logs --limit 1000 > logs.txt
+convex-mcp-visual write-conflicts --log-file logs.txt
+```
+
+### Parameters
+
+| Parameter      | Type    | Default       | Description                       |
+| -------------- | ------- | ------------- | --------------------------------- |
+| `logFile`      | string  | none          | Path to log file                  |
+| `sinceMinutes` | number  | 60            | Window size for rate calculations |
+| `maxLines`     | number  | 5000          | Max log lines to scan             |
+| `theme`        | string  | "github-dark" | Color theme for UI output         |
+| `noBrowser`    | boolean | false         | Skip browser UI output            |

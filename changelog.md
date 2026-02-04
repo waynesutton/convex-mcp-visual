@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TOML config writer for Codex at `~/.codex/config.toml`
 - Codex documentation in README.md and docs/setup.md
 - `codex` keyword in package.json
+- Codebase subway map CLI and MCP tool
+- Table heatmap CLI and MCP tool
+- Schema drift CLI and MCP tool
+- Write conflict report CLI and MCP tool
+- Tools reference entries for new CLI commands
+
+### Fixed
+
+- Subway map now uses its own viewer instead of schema diagram
 
 ## [1.2.7] - 2026-02-01
 

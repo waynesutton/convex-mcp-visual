@@ -28,10 +28,17 @@ const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
 const VERSION = packageJson.version as string;
 
 // Subcommand type for direct CLI usage
-type Subcommand = "schema" | "dashboard" | "diagram" | "subway";
+type Subcommand =
+  | "schema"
+  | "dashboard"
+  | "diagram"
+  | "subway"
+  | "table-heatmap"
+  | "schema-drift"
+  | "write-conflicts";
 
 async function main() {
-  // Check for subcommands first (schema, dashboard, diagram)
+  // Check for subcommands first (schema, dashboard, diagram, subway, heatmap)
   const args = process.argv.slice(2);
   const subcommand = args[0] as Subcommand | undefined;
 
@@ -40,7 +47,10 @@ async function main() {
     subcommand === "schema" ||
     subcommand === "dashboard" ||
     subcommand === "diagram" ||
-    subcommand === "subway"
+    subcommand === "subway" ||
+    subcommand === "table-heatmap" ||
+    subcommand === "schema-drift" ||
+    subcommand === "write-conflicts"
   ) {
     await handleDirectCLI(subcommand, args.slice(1));
     return;
@@ -161,6 +171,9 @@ COMMANDS (Direct CLI):
   dashboard           Show metrics dashboard (opens browser + terminal output)
   diagram             Generate ER diagram (opens browser + terminal output)
   subway              Generate codebase subway map (opens browser + terminal output)
+  table-heatmap       Show writes per minute heatmap (opens browser + terminal output)
+  schema-drift         Compare declared vs inferred schemas (opens browser + terminal output)
+  write-conflicts     Summarize write conflicts from logs (opens browser + terminal output)
 
 MCP CLIENT INSTALL (adds MCP config automatically):
   --install           Install to all detected MCP clients
@@ -208,6 +221,9 @@ DIRECT CLI EXAMPLES:
   convex-mcp-visual subway                    # Generate codebase subway map
   convex-mcp-visual subway --root ./apps      # Focus on a subfolder
   convex-mcp-visual subway --max-nodes 80     # Limit map size
+  convex-mcp-visual table-heatmap             # Heatmap of recent writes
+  convex-mcp-visual schema-drift              # Compare declared vs inferred schemas
+  convex-mcp-visual write-conflicts --log-file logs.txt
 
 MCP SERVER EXAMPLES:
   convex-mcp-visual --stdio                   # For Claude Code/Desktop/Cursor
@@ -226,7 +242,7 @@ Docs: https://github.com/waynesutton/convex-mcp-visual
 }
 
 /**
- * Handle direct CLI subcommands (schema, dashboard, diagram)
+ * Handle direct CLI subcommands (schema, dashboard, diagram, subway, heatmap)
  * These run the tools directly without MCP protocol
  */
 async function handleDirectCLI(
@@ -257,6 +273,18 @@ async function handleDirectCLI(
       options.maxDepth = args[++i];
     } else if (arg === "--max-nodes" && args[i + 1]) {
       options.maxNodes = args[++i];
+    } else if (arg === "--window-minutes" && args[i + 1]) {
+      options.windowMinutes = args[++i];
+    } else if (arg === "--max-docs" && args[i + 1]) {
+      options.maxDocs = args[++i];
+    } else if (arg === "--max-tables" && args[i + 1]) {
+      options.maxTables = args[++i];
+    } else if (arg === "--log-file" && args[i + 1]) {
+      options.logFile = args[++i];
+    } else if (arg === "--since-minutes" && args[i + 1]) {
+      options.sinceMinutes = args[++i];
+    } else if (arg === "--max-lines" && args[i + 1]) {
+      options.maxLines = args[++i];
     } else if (arg === "--deployment" && args[i + 1]) {
       const deploymentName = args[++i];
       process.env.CONVEX_URL = `https://${deploymentName}.convex.cloud`;
@@ -268,7 +296,7 @@ async function handleDirectCLI(
 
   // Import tool handlers
   let client: ConvexClient | null = null;
-  if (subcommand !== "subway") {
+  if (subcommand !== "subway" && subcommand !== "write-conflicts") {
     const { ConvexClient } = await import("./convex-client.js");
     client = new ConvexClient();
 
@@ -347,6 +375,62 @@ async function handleDirectCLI(
         maxNodes: options.maxNodes,
         theme: options.theme,
         ascii: options.ascii,
+        noBrowser: options.noBrowser,
+      });
+      if (options.json) {
+        console.log(
+          JSON.stringify({ output: result.content[0].text }, null, 2),
+        );
+      } else {
+        console.log(result.content[0].text);
+      }
+      break;
+    }
+
+    case "table-heatmap": {
+      const { handleTableHeatmap } = await import("./tools/table-heatmap.js");
+      const result = await handleTableHeatmap(client!, {
+        windowMinutes: options.windowMinutes,
+        maxDocsPerTable: options.maxDocs,
+        maxTables: options.maxTables,
+        theme: options.theme,
+        noBrowser: options.noBrowser,
+      });
+      if (options.json) {
+        console.log(
+          JSON.stringify({ output: result.content[0].text }, null, 2),
+        );
+      } else {
+        console.log(result.content[0].text);
+      }
+      break;
+    }
+
+    case "schema-drift": {
+      const { handleSchemaDrift } = await import("./tools/schema-drift.js");
+      const result = await handleSchemaDrift(client!, {
+        maxTables: options.maxTables,
+        theme: options.theme,
+        noBrowser: options.noBrowser,
+      });
+      if (options.json) {
+        console.log(
+          JSON.stringify({ output: result.content[0].text }, null, 2),
+        );
+      } else {
+        console.log(result.content[0].text);
+      }
+      break;
+    }
+
+    case "write-conflicts": {
+      const { handleWriteConflictReport } =
+        await import("./tools/write-conflict-report.js");
+      const result = await handleWriteConflictReport({
+        logFile: options.logFile,
+        sinceMinutes: options.sinceMinutes,
+        maxLines: options.maxLines,
+        theme: options.theme,
         noBrowser: options.noBrowser,
       });
       if (options.json) {
@@ -451,6 +535,71 @@ EXAMPLES:
   convex-mcp-visual subway
   convex-mcp-visual subway --root ./apps
   convex-mcp-visual subway --max-nodes 80
+`);
+      break;
+
+    case "table-heatmap":
+      console.log(`
+convex-mcp-visual table-heatmap
+
+Show a heatmap of recent writes per table.
+Uses document creation times to estimate writes per minute.
+
+OPTIONS:
+  --window-minutes <num>  Lookback window in minutes (default: 1)
+  --max-docs <num>        Max documents to scan per table (default: 1500)
+  --max-tables <num>      Max tables to scan (default: 60)
+  --theme <name>          Color theme: github-dark, github-light, dracula, nord, tokyo-night
+  --json                  Output JSON only (no browser)
+  --no-browser            Terminal output only
+  -h, --help              Show this help
+
+EXAMPLES:
+  convex-mcp-visual table-heatmap
+  convex-mcp-visual table-heatmap --window-minutes 5
+  convex-mcp-visual table-heatmap --max-tables 30
+`);
+      break;
+
+    case "schema-drift":
+      console.log(`
+convex-mcp-visual schema-drift
+
+Compare declared and inferred schema fields.
+Highlights missing fields and type mismatches.
+
+OPTIONS:
+  --max-tables <num>   Max tables to scan (default: 80)
+  --theme <name>       Color theme: github-dark, github-light, dracula, nord, tokyo-night
+  --json               Output JSON only (no browser)
+  --no-browser         Terminal output only
+  -h, --help           Show this help
+
+EXAMPLES:
+  convex-mcp-visual schema-drift
+  convex-mcp-visual schema-drift --max-tables 40
+`);
+      break;
+
+    case "write-conflicts":
+      console.log(`
+convex-mcp-visual write-conflicts
+
+Summarize write conflicts from Convex logs.
+Requires a log file exported from \`npx convex logs\`.
+
+OPTIONS:
+  --log-file <path>     Path to log file (required)
+  --since-minutes <n>   Window size for rate calculations (default: 60)
+  --max-lines <num>     Max log lines to scan (default: 5000)
+  --theme <name>        Color theme: github-dark, github-light, dracula, nord, tokyo-night
+  --json                Output JSON only (no browser)
+  --no-browser          Terminal output only
+  -h, --help            Show this help
+
+EXAMPLES:
+  npx convex logs --limit 1000 > logs.txt
+  convex-mcp-visual write-conflicts --log-file logs.txt
 `);
       break;
   }

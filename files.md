@@ -4,18 +4,21 @@ Overview of the codebase structure.
 
 ## Source Files (`src/`)
 
-| File                           | Description                                                          |
-| ------------------------------ | -------------------------------------------------------------------- |
-| `index.ts`                     | CLI entry point: subcommands, MCP modes, and client install commands |
-| `server.ts`                    | MCP server setup, tool registration, and request handlers            |
-| `convex-client.ts`             | Convex API client with system queries for schema and documents       |
-| `ui-server.ts`                 | Local HTTP server for browser UI (port 3456)                         |
-| `tools/schema-browser.ts`      | Schema browser tool (defaults to graph view) with real data          |
-| `tools/dashboard.ts`           | Dashboard tool with real metrics from Convex                         |
-| `tools/schema-diagram.ts`      | Schema diagram tool with Mermaid ER diagrams and ASCII output        |
-| `tools/codebase-subway-map.ts` | Codebase subway map tool for visualizing project structure           |
-| `resources/schema-browser.ts`  | Fallback HTML for schema browser                                     |
-| `resources/dashboard.ts`       | Fallback HTML for dashboard                                          |
+| File                             | Description                                                          |
+| -------------------------------- | -------------------------------------------------------------------- |
+| `index.ts`                       | CLI entry point: subcommands, MCP modes, and client install commands |
+| `server.ts`                      | MCP server setup, tool registration, and request handlers            |
+| `convex-client.ts`               | Convex API client with system queries for schema and documents       |
+| `ui-server.ts`                   | Local HTTP server for browser UI (port 3456)                         |
+| `tools/schema-browser.ts`        | Schema browser tool (defaults to graph view) with real data          |
+| `tools/dashboard.ts`             | Dashboard tool with real metrics from Convex                         |
+| `tools/schema-diagram.ts`        | Schema diagram tool with Mermaid ER diagrams and ASCII output        |
+| `tools/codebase-subway-map.ts`   | Codebase subway map tool for visualizing project structure           |
+| `tools/table-heatmap.ts`         | Table heatmap tool for recent writes per minute                      |
+| `tools/schema-drift.ts`          | Schema drift tool for declared vs inferred fields                    |
+| `tools/write-conflict-report.ts` | Write conflict report tool for log-based analysis                    |
+| `resources/schema-browser.ts`    | Fallback HTML for schema browser                                     |
+| `resources/dashboard.ts`         | Fallback HTML for dashboard                                          |
 
 **MCP client install support:**
 

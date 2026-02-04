@@ -90,7 +90,10 @@ export interface UIServerConfig {
     | "schema-browser"
     | "realtime-dashboard"
     | "schema-diagram"
-    | "codebase-subway-map";
+    | "codebase-subway-map"
+    | "table-heatmap"
+    | "schema-drift"
+    | "write-conflicts";
   config: Record<string, unknown>;
   port?: number;
   autoClose?: number; // Auto-close after N milliseconds (0 = never)

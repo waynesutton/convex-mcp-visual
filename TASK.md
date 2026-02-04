@@ -14,6 +14,13 @@ Current development tasks and progress.
 - [x] Add `codex` keyword to package.json
 - [x] Update changelog.md with Codex support
 - [x] Verify TypeScript type safety (tsc --noEmit passes)
+- [x] Add codebase subway map CLI and MCP tool
+- [x] Fix subway map to use its own viewer
+- [x] Add table heatmap CLI and MCP tool
+- [x] Add schema drift CLI and MCP tool
+- [x] Add write conflict report CLI and MCP tool
+- [x] Update README.md with new direct CLI commands
+- [x] Update docs/tools.md with new command entries
 
 ## Completed (v1.2.7)
 
