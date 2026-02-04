@@ -7,12 +7,24 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { ConvexClient, SchemaField } from "../convex-client.js";
 import { launchUIApp } from "../ui-server.js";
+import {
+  getSharedStyles,
+  getThemeToggleHtml,
+  getThemeToggleScript,
+  escapeHtml,
+} from "./shared-styles.js";
 
 export const schemaDriftTool: Tool = {
   name: "schema_drift",
-  description: `Compare declared and inferred schema fields to find drift.
+  description: `Compare declared vs inferred schema to detect drift.
 
-Shows missing fields and type mismatches by table.`,
+Use this when the user asks:
+- "check schema drift" or "schema drift view"
+- "compare declared vs inferred schema"
+- "find missing schema fields"
+
+Shows which fields exist in data but not in schema (and vice versa).
+Also shows type mismatches between declared and inferred fields.`,
   inputSchema: {
     type: "object",
     properties: {
@@ -284,53 +296,56 @@ function buildTerminalOutput(
   return lines.join("\n");
 }
 
-function buildDriftHtml(rows: DriftRow[], theme: string): string {
-  const isDark =
-    theme.includes("dark") ||
-    theme === "tokyo-night" ||
-    theme === "dracula" ||
-    theme === "nord";
+function buildDriftHtml(rows: DriftRow[], _theme: string): string {
+  const cleanCount = rows.filter((r) => totalDrift(r) === 0).length;
+  const driftCount = rows.length - cleanCount;
 
   const list = rows
     .map((row) => {
       const total = totalDrift(row);
-      const badge =
-        total === 0
-          ? `<span class="badge ok">Clean</span>`
-          : `<span class="badge warn">${total} drift</span>`;
+      const badgeClass = total === 0 ? "badge-success" : "badge-warning";
+      const badgeText = total === 0 ? "Clean" : `${total} drift`;
       const missingDeclared = row.missingDeclared
-        .map((f) => `<li>${f}</li>`)
+        .map((f) => `<li><code>${escapeHtml(f)}</code></li>`)
         .join("");
       const missingInferred = row.missingInferred
-        .map((f) => `<li>${f}</li>`)
+        .map((f) => `<li><code>${escapeHtml(f)}</code></li>`)
         .join("");
       const mismatched = row.mismatched
         .map(
           (m) =>
-            `<tr><td>${m.field}</td><td>${m.declared}</td><td>${m.inferred}</td></tr>`,
+            `<tr><td class="mono">${escapeHtml(m.field)}</td><td class="mono">${escapeHtml(m.declared)}</td><td class="mono">${escapeHtml(m.inferred)}</td></tr>`,
         )
         .join("");
       return `<div class="card">
         <div class="card-header">
-          <div class="card-title">${row.table}</div>
-          ${badge}
+          <div class="card-title">${escapeHtml(row.table)}</div>
+          <span class="badge ${badgeClass}">${badgeText}</span>
         </div>
         <div class="card-body">
-          <div class="section">
-            <div class="section-title">Missing in declared</div>
-            <ul>${missingDeclared || "<li>None</li>"}</ul>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+              <div class="section-title">Missing in declared schema</div>
+              <ul style="font-size: 13px;">${missingDeclared || "<li style='color: var(--text-muted);'>None</li>"}</ul>
+            </div>
+            <div>
+              <div class="section-title">Missing in inferred (from data)</div>
+              <ul style="font-size: 13px;">${missingInferred || "<li style='color: var(--text-muted);'>None</li>"}</ul>
+            </div>
           </div>
-          <div class="section">
-            <div class="section-title">Missing in inferred</div>
-            <ul>${missingInferred || "<li>None</li>"}</ul>
-          </div>
-          <div class="section">
+          ${
+            row.mismatched.length > 0
+              ? `
+          <div style="margin-top: 16px;">
             <div class="section-title">Type mismatches</div>
-            <table>
+            <table style="margin-top: 8px;">
               <thead><tr><th>Field</th><th>Declared</th><th>Inferred</th></tr></thead>
-              <tbody>${mismatched || "<tr><td colspan='3'>None</td></tr>"}</tbody>
+              <tbody>${mismatched}</tbody>
             </table>
           </div>
+          `
+              : ""
+          }
         </div>
       </div>`;
     })
@@ -342,92 +357,47 @@ function buildDriftHtml(rows: DriftRow[], theme: string): string {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Schema Drift</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: ${isDark ? "#1e1e1e" : "#faf8f5"};
-      color: ${isDark ? "#e6e6e6" : "#1a1a1a"};
-      padding: 20px;
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #4a8c5c;
-    }
-    .card {
-      border: 1px solid ${isDark ? "#2f2f2f" : "#e3e1de"};
-      border-radius: 12px;
-      padding: 16px;
-      background: ${isDark ? "#252526" : "#ffffff"};
-      margin-bottom: 12px;
-    }
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    .card-title {
-      font-weight: 600;
-      font-size: 16px;
-    }
-    .badge {
-      font-size: 12px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid transparent;
-    }
-    .badge.ok {
-      background: ${isDark ? "#1f2f25" : "#e7f5ed"};
-      color: ${isDark ? "#9ae6b4" : "#246b3d"};
-      border-color: ${isDark ? "#2f513a" : "#bfe3cc"};
-    }
-    .badge.warn {
-      background: ${isDark ? "#33241c" : "#fff1e6"};
-      color: ${isDark ? "#f6ad55" : "#8b4b1f"};
-      border-color: ${isDark ? "#4a3628" : "#f0c9a8"};
-    }
-    .section {
-      margin-top: 12px;
-    }
-    .section-title {
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    ul {
-      padding-left: 16px;
-      font-size: 13px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-    th, td {
-      text-align: left;
-      padding: 6px 8px;
-      border-bottom: 1px solid ${isDark ? "#323232" : "#e6e4e1"};
-    }
-    th {
-      font-weight: 600;
-    }
-  </style>
+  <style>${getSharedStyles()}</style>
 </head>
 <body>
-  <div class="header">
-    <span class="status-dot"></span>
-    <h1>Schema drift</h1>
-  </div>
-  ${list}
+  <header class="header">
+    <div class="header-left">
+      <h1><span class="status-dot ${driftCount > 0 ? "warning" : ""}"></span> Schema Drift</h1>
+      <span class="header-info">${rows.length} tables analyzed</span>
+    </div>
+    <div class="header-actions">
+      ${getThemeToggleHtml()}
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+      <div class="card">
+        <div class="card-body" style="text-align: center;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">Tables with Drift</div>
+          <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: ${driftCount > 0 ? "var(--warning)" : "var(--success)"};">${driftCount}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" style="text-align: center;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">Clean Tables</div>
+          <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: var(--success);">${cleanCount}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" style="text-align: center;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">Total Analyzed</div>
+          <div style="font-size: 28px; font-weight: 700; margin-top: 4px;">${rows.length}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      ${list}
+    </div>
+  </main>
+
+  <script>${getThemeToggleScript()}</script>
 </body>
 </html>`;
 }

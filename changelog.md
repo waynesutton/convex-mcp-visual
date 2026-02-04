@@ -18,6 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Schema drift CLI and MCP tool
 - Write conflict report CLI and MCP tool
 - Tools reference entries for new CLI commands
+- Shared CSS styling utility for consistent tan/dark mode across all tool UIs
+- Theme toggle button (sun/moon icon) in all tool browser views
+- Summary stats cards in heatmap, drift, and conflict report views
+
+### Changed
+
+- All tool UIs now use consistent tan (light) and dark mode matching schema_browser
+- Tool descriptions updated to clarify when each tool should be used
+- schema_diagram now only triggers for explicit Mermaid ER diagram requests
+- Theme toggle persists via localStorage across all tool views
 
 ### Fixed
 

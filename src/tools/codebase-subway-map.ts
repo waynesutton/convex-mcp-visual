@@ -11,13 +11,24 @@ import type { Dirent } from "fs";
 import { readdir, readFile } from "fs/promises";
 import { existsSync } from "fs";
 import { basename, dirname, extname, join, relative, resolve, sep } from "path";
+import {
+  getSharedStyles,
+  getThemeToggleHtml,
+  getThemeToggleScript,
+  escapeHtml,
+} from "./shared-styles.js";
 
 export const codebaseSubwayMapTool: Tool = {
   name: "codebase_subway_map",
-  description: `Generate a subway map style diagram of your codebase.
+  description: `Generate a subway-style map of your codebase file dependencies.
 
-The map is built from local imports and file relationships.
-Use this to get a quick visual overview of structure and dependencies.`,
+Use this when the user asks:
+- "show my codebase as a subway map"
+- "visualize file dependencies"
+- "map my imports and file structure"
+
+Shows local imports and file relationships as colored lines connecting files.
+Does NOT show database relationships - use schema_diagram for that.`,
   inputSchema: {
     type: "object",
     properties: {
@@ -511,22 +522,19 @@ function buildMermaid(nodes: GraphNode[], edges: GraphEdge[]): string {
 function buildMapHtml(
   svg: string,
   mermaidCode: string,
-  theme: string,
+  _theme: string,
   nodes: GraphNode[],
 ): string {
-  const isDark =
-    theme.includes("dark") ||
-    theme === "tokyo-night" ||
-    theme === "dracula" ||
-    theme === "nord";
-
   const groupList = Array.from(new Set(nodes.map((node) => node.group))).sort();
   const legendItems = groupList
     .map((group, index) => {
       const color = GROUP_COLORS[index % GROUP_COLORS.length];
-      return `<div class="legend-item"><span class="legend-dot" style="background:${color}"></span>${group}</div>`;
+      return `<div class="legend-item"><span class="legend-dot" style="background:${color}; border-radius: 50%;"></span>${escapeHtml(group)}</div>`;
     })
     .join("");
+
+  const fileCount = nodes.length;
+  const folderCount = groupList.length;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -534,127 +542,46 @@ function buildMapHtml(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Codebase Subway Map</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: ${isDark ? "#1e1e1e" : "#faf8f5"};
-      color: ${isDark ? "#cccccc" : "#1a1a1a"};
-      min-height: 100vh;
-      padding: 20px;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid ${isDark ? "#3c3c3c" : "#e6e4e1"};
-    }
-    h1 {
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #4a8c5c;
-    }
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 12px 0 20px;
-      font-size: 12px;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-    .diagram-container {
-      background: ${isDark ? "#252526" : "#ffffff"};
-      border: 1px solid ${isDark ? "#3c3c3c" : "#e6e4e1"};
-      border-radius: 12px;
-      padding: 20px;
-      overflow: auto;
-      max-width: 100%;
-    }
-    .diagram-container svg {
-      max-width: 100%;
-      height: auto;
-    }
-    .code-section {
-      margin-top: 20px;
-    }
-    .code-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .code-title {
-      font-size: 14px;
-      font-weight: 600;
-    }
-    .copy-btn {
-      background: ${isDark ? "#37373d" : "#f5f3f0"};
-      border: 1px solid ${isDark ? "#3c3c3c" : "#e6e4e1"};
-      color: ${isDark ? "#cccccc" : "#1a1a1a"};
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-    .copy-btn:hover {
-      background: ${isDark ? "#4a4a4f" : "#ebe9e6"};
-    }
-    pre {
-      background: ${isDark ? "#1e1e1e" : "#f5f3f0"};
-      border: 1px solid ${isDark ? "#3c3c3c" : "#e6e4e1"};
-      border-radius: 8px;
-      padding: 16px;
-      overflow-x: auto;
-      font-family: "SF Mono", Monaco, monospace;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-  </style>
+  <style>${getSharedStyles()}</style>
 </head>
 <body>
-  <div class="header">
-    <h1><span class="status-dot"></span> Codebase Subway Map</h1>
-    <span style="font-size: 12px; color: ${isDark ? "#8b8b8b" : "#6b6b6b"};">Theme: ${theme}</span>
-  </div>
-
-  <div class="legend">${legendItems}</div>
-
-  <div class="diagram-container">
-    ${svg}
-  </div>
-
-  <div class="code-section">
-    <div class="code-header">
-      <span class="code-title">Mermaid Code</span>
-      <button class="copy-btn" onclick="copyCode()">Copy</button>
+  <header class="header">
+    <div class="header-left">
+      <h1><span class="status-dot"></span> Codebase Subway Map</h1>
+      <span class="header-info">${fileCount} files &middot; ${folderCount} folders</span>
     </div>
-    <pre id="mermaid-code">${escapeHtml(mermaidCode)}</pre>
-  </div>
+    <div class="header-actions">
+      ${getThemeToggleHtml()}
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="legend">${legendItems}</div>
+
+    <div class="diagram-container">
+      ${svg}
+    </div>
+
+    <div style="margin-top: 24px;">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Mermaid Code</div>
+          <button class="btn" onclick="copyCode()">Copy</button>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <pre id="mermaid-code" style="border: none; border-radius: 0; margin: 0;">${escapeHtml(mermaidCode)}</pre>
+        </div>
+      </div>
+    </div>
+  </main>
 
   <script>
+    ${getThemeToggleScript()}
+
     function copyCode() {
       const code = document.getElementById("mermaid-code").textContent;
       navigator.clipboard.writeText(code).then(() => {
-        const btn = document.querySelector(".copy-btn");
+        const btn = document.querySelector(".btn");
         btn.textContent = "Copied!";
         setTimeout(() => { btn.textContent = "Copy"; }, 2000);
       });
@@ -662,14 +589,6 @@ function buildMapHtml(
   </script>
 </body>
 </html>`;
-}
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 function toNumber(value: unknown, fallback: number): number {

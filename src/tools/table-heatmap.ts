@@ -7,13 +7,24 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { ConvexClient } from "../convex-client.js";
 import { launchUIApp } from "../ui-server.js";
+import {
+  getSharedStyles,
+  getThemeToggleHtml,
+  getThemeToggleScript,
+  getHeatClass,
+} from "./shared-styles.js";
 
 export const tableHeatmapTool: Tool = {
   name: "table_heatmap",
-  description: `Generate a heatmap of recent writes per table.
+  description: `Generate a heatmap showing table write activity.
 
-Uses document creation times to estimate writes per minute.
-Requires admin access for table data.`,
+Use this when the user asks:
+- "show table heatmap" or "table writes heatmap"
+- "which tables have the most writes"
+- "hot tables" or "table activity"
+
+Shows writes per minute for each table with color intensity.
+Requires admin access (CONVEX_DEPLOY_KEY).`,
   inputSchema: {
     type: "object",
     properties: {
@@ -288,26 +299,24 @@ function buildBar(value: number, max: number, width: number): string {
 function buildHeatmapHtml(
   rows: HeatmapRow[],
   windowMinutes: number,
-  theme: string,
+  _theme: string,
 ): string {
-  const isDark =
-    theme.includes("dark") ||
-    theme === "tokyo-night" ||
-    theme === "dracula" ||
-    theme === "nord";
   const maxRate = Math.max(...rows.map((r) => r.writesPerMinute), 1);
 
   const cards = rows
     .map((row) => {
       const intensity = maxRate > 0 ? row.writesPerMinute / maxRate : 0;
-      const bg = heatColor(intensity, isDark);
-      return `<div class="cell" style="background:${bg}">
-        <div class="cell-title">${row.table}</div>
-        <div class="cell-value">${formatNumber(row.writesPerMinute)} / min</div>
-        <div class="cell-sub">${row.writes} writes · ${row.scanned} scanned</div>
+      const heatClass = getHeatClass(intensity);
+      return `<div class="stat-card ${heatClass}">
+        <div class="stat-card-label">${row.table}</div>
+        <div class="stat-card-value">${formatNumber(row.writesPerMinute)}<span style="font-size: 14px; font-weight: 400;"> / min</span></div>
+        <div class="stat-card-sub">${row.writes} writes &middot; ${row.scanned} scanned</div>
       </div>`;
     })
     .join("");
+
+  const totalWrites = rows.reduce((sum, r) => sum + r.writes, 0);
+  const hotTable = rows[0]?.table || "None";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -315,82 +324,54 @@ function buildHeatmapHtml(
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Table Heatmap</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: ${isDark ? "#1e1e1e" : "#faf8f5"};
-      color: ${isDark ? "#e6e6e6" : "#1a1a1a"};
-      padding: 20px;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .title {
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #4a8c5c;
-    }
-    .subtitle {
-      font-size: 12px;
-      color: ${isDark ? "#9a9a9a" : "#6b6b6b"};
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 12px;
-    }
-    .cell {
-      border-radius: 12px;
-      padding: 14px;
-      border: 1px solid ${isDark ? "#2f2f2f" : "#e3e1de"};
-      min-height: 100px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .cell-title {
-      font-weight: 600;
-      font-size: 14px;
-    }
-    .cell-value {
-      font-size: 18px;
-      font-weight: 700;
-    }
-    .cell-sub {
-      font-size: 12px;
-      color: ${isDark ? "#bdbdbd" : "#5a5a5a"};
-    }
-  </style>
+  <style>${getSharedStyles()}</style>
 </head>
 <body>
-  <div class="header">
-    <div class="title"><span class="status-dot"></span> Table heatmap</div>
-    <div class="subtitle">Last ${windowMinutes} minute${windowMinutes === 1 ? "" : "s"}</div>
-  </div>
-  <div class="grid">${cards}</div>
+  <header class="header">
+    <div class="header-left">
+      <h1><span class="status-dot"></span> Table Heatmap</h1>
+      <span class="header-info">Last ${windowMinutes} minute${windowMinutes === 1 ? "" : "s"}</span>
+    </div>
+    <div class="header-actions">
+      ${getThemeToggleHtml()}
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="legend">
+      <div class="legend-item"><span class="legend-dot heat-cold"></span> Low activity</div>
+      <div class="legend-item"><span class="legend-dot heat-warm"></span> Moderate</div>
+      <div class="legend-item"><span class="legend-dot heat-hot"></span> High</div>
+      <div class="legend-item"><span class="legend-dot heat-fire"></span> Very high</div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+      <div class="card">
+        <div class="card-body" style="text-align: center;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">Total Writes</div>
+          <div style="font-size: 28px; font-weight: 700; margin-top: 4px;">${formatNumber(totalWrites)}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" style="text-align: center;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">Hottest Table</div>
+          <div style="font-size: 18px; font-weight: 600; margin-top: 8px; color: var(--accent-interactive);">${hotTable}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" style="text-align: center;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">Tables Scanned</div>
+          <div style="font-size: 28px; font-weight: 700; margin-top: 4px;">${rows.length}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-auto">${cards}</div>
+  </main>
+
+  <script>${getThemeToggleScript()}</script>
 </body>
 </html>`;
-}
-
-function heatColor(intensity: number, isDark: boolean): string {
-  const clamped = Math.max(0, Math.min(1, intensity));
-  const base = isDark ? [34, 34, 34] : [250, 248, 245];
-  const hot = isDark ? [210, 120, 60] : [235, 126, 52];
-  const r = Math.round(base[0] + (hot[0] - base[0]) * clamped);
-  const g = Math.round(base[1] + (hot[1] - base[1]) * clamped);
-  const b = Math.round(base[2] + (hot[2] - base[2]) * clamped);
-  return `rgb(${r}, ${g}, ${b})`;
 }
 
 function formatNumber(num: number): string {

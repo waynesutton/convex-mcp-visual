@@ -21,6 +21,11 @@ Current development tasks and progress.
 - [x] Add write conflict report CLI and MCP tool
 - [x] Update README.md with new direct CLI commands
 - [x] Update docs/tools.md with new command entries
+- [x] Add shared CSS styling utility (tools/shared-styles.ts)
+- [x] Add tan/dark mode with theme toggle to all new tool UIs
+- [x] Add summary stats cards to heatmap, drift, and conflict report views
+- [x] Update tool descriptions to clarify when each tool triggers
+- [x] Ensure schema_diagram only triggers for explicit Mermaid ER requests
 
 ## Completed (v1.2.7)
 

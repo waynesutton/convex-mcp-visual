@@ -12,15 +12,16 @@ import { launchUIApp } from "../ui-server.js";
 
 export const schemaDiagramTool: Tool = {
   name: "schema_diagram",
-  description: `Generates a visual Mermaid ER diagram of your Convex database schema.
+  description: `Generates a Mermaid ER diagram showing database table relationships.
 
-Features:
-- Auto-detects table relationships from foreign key patterns
-- ASCII/Unicode output for terminal
-- Interactive SVG diagram in browser
-- Multiple theme options
+ONLY use this tool when the user explicitly requests:
+- "diagram" or "ER diagram"
+- "Mermaid diagram"
+- "visualize database relationships"
+- "show table relationships as a diagram"
 
-Use this to visualize your database structure and relationships.`,
+For interactive schema exploration, use schema_browser instead.
+For file dependency maps, use codebase_subway_map instead.`,
   inputSchema: {
     type: "object",
     properties: {

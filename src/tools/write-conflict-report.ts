@@ -7,12 +7,24 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { launchUIApp } from "../ui-server.js";
 import { readFile } from "fs/promises";
+import {
+  getSharedStyles,
+  getThemeToggleHtml,
+  getThemeToggleScript,
+  escapeHtml,
+} from "./shared-styles.js";
 
 export const writeConflictReportTool: Tool = {
   name: "write_conflict_report",
-  description: `Summarize write conflicts by function and table using Convex logs.
+  description: `Analyze Convex logs for write conflicts.
 
-Provide a log file exported from \`npx convex logs\` for analysis.`,
+Use this when the user asks:
+- "analyze write conflicts" or "write conflict report"
+- "check for write conflicts in logs"
+- "summarize conflicts by function"
+
+Requires a log file exported via: npx convex logs > logs.txt
+Shows conflicts grouped by function and table.`,
   inputSchema: {
     type: "object",
     properties: {
@@ -298,18 +310,20 @@ function buildTerminalOutput(
 function buildReportHtml(
   rows: ConflictRow[],
   windowMinutes: number,
-  theme: string,
+  _theme: string,
 ): string {
-  const isDark =
-    theme.includes("dark") ||
-    theme === "tokyo-night" ||
-    theme === "dracula" ||
-    theme === "nord";
+  const totalConflicts = rows.reduce((sum, r) => sum + r.count, 0);
+  const uniqueFunctions = new Set(rows.map((r) => r.functionName)).size;
+  const uniqueTables = new Set(rows.map((r) => r.table)).size;
 
   const bodyRows = rows
     .map(
       (row) =>
-        `<tr><td>${row.functionName}</td><td>${row.table}</td><td>${row.count}</td></tr>`,
+        `<tr>
+          <td class="mono" style="color: var(--accent-interactive);">${escapeHtml(row.functionName)}</td>
+          <td class="mono">${escapeHtml(row.table)}</td>
+          <td><span class="badge badge-error">${row.count}</span></td>
+        </tr>`,
     )
     .join("");
 
@@ -318,59 +332,59 @@ function buildReportHtml(
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Write conflicts</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: ${isDark ? "#1e1e1e" : "#faf8f5"};
-      color: ${isDark ? "#e6e6e6" : "#1a1a1a"};
-      padding: 20px;
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #b45309;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      background: ${isDark ? "#252526" : "#ffffff"};
-      border: 1px solid ${isDark ? "#2f2f2f" : "#e3e1de"};
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    th, td {
-      padding: 10px 12px;
-      text-align: left;
-      border-bottom: 1px solid ${isDark ? "#323232" : "#e6e4e1"};
-    }
-    th {
-      font-weight: 600;
-      background: ${isDark ? "#1f1f1f" : "#f3f1ee"};
-    }
-  </style>
+  <title>Write Conflict Report</title>
+  <style>${getSharedStyles()}</style>
 </head>
 <body>
-  <div class="header">
-    <span class="status-dot"></span>
-    <h1>Write conflicts</h1>
-    <span style="font-size: 12px; color: ${isDark ? "#9a9a9a" : "#6b6b6b"};">${windowMinutes} min window</span>
-  </div>
-  <table>
-    <thead>
-      <tr><th>Function</th><th>Table</th><th>Conflicts</th></tr>
-    </thead>
-    <tbody>${bodyRows}</tbody>
-  </table>
+  <header class="header">
+    <div class="header-left">
+      <h1><span class="status-dot error"></span> Write Conflict Report</h1>
+      <span class="header-info">${windowMinutes} min window</span>
+    </div>
+    <div class="header-actions">
+      ${getThemeToggleHtml()}
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+      <div class="card">
+        <div class="card-body" style="text-align: center;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">Total Conflicts</div>
+          <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: var(--error);">${totalConflicts}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" style="text-align: center;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">Functions Affected</div>
+          <div style="font-size: 28px; font-weight: 700; margin-top: 4px;">${uniqueFunctions}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" style="text-align: center;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">Tables Affected</div>
+          <div style="font-size: 28px; font-weight: 700; margin-top: 4px;">${uniqueTables}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Conflicts by Function and Table</div>
+        <span class="badge badge-neutral">${rows.length} entries</span>
+      </div>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr><th>Function</th><th>Table</th><th>Conflicts</th></tr>
+          </thead>
+          <tbody>${bodyRows || "<tr><td colspan='3' style='text-align: center; color: var(--text-muted);'>No conflicts found</td></tr>"}</tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>${getThemeToggleScript()}</script>
 </body>
 </html>`;
 }
