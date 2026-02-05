@@ -50,6 +50,7 @@ convex-mcp-visual diagram     # Generate ER diagram
 convex-mcp-visual subway      # Codebase subway map
 convex-mcp-visual table-heatmap # Table writes heatmap
 convex-mcp-visual schema-drift  # Declared vs inferred schema
+convex-mcp-visual kanban      # Kanban board of jobs/agents
 convex-mcp-visual write-conflicts --log-file logs.txt
 ```
 
@@ -152,6 +153,9 @@ npx convex-mcp-visual --test
 | "Show table write heatmap"            | `table_heatmap`                   |
 | "Show schema drift"                   | `schema_drift`                    |
 | "Show write conflicts"                | `write_conflict_report`           |
+| "Show kanban board of jobs"           | `kanban_board` (scheduled jobs)   |
+| "Show scheduled functions"            | `kanban_board` (jobs mode)        |
+| "Show AI agent threads"               | `kanban_board` (agents mode)      |
 
 All tools open an interactive browser UI and return output to the terminal. The schema browser defaults to graph view (visual diagram with table relationships).
 
@@ -198,15 +202,15 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
-"mcpServers": {
-  "convex-visual": {
-    "command": "npx",
-    "args": ["convex-mcp-visual", "--stdio"],
-    "env": {
-      "CONVEX_DEPLOY_KEY": "prod:your-deployment|your-key"
+  "mcpServers": {
+    "convex-visual": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"],
+      "env": {
+        "CONVEX_DEPLOY_KEY": "prod:your-deployment|your-key"
+      }
     }
   }
-}
 }
 ```
 
@@ -216,12 +220,12 @@ Add to `~/.cursor/mcp.json`:
 
 ```json
 {
-"mcpServers": {
-  "convex-visual": {
-    "command": "npx",
-    "args": ["convex-mcp-visual", "--stdio"]
+  "mcpServers": {
+    "convex-visual": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"]
+    }
   }
-}
 }
 ```
 
@@ -231,12 +235,12 @@ Add to `~/.config/opencode/opencode.json`:
 
 ```json
 {
-"mcp": {
-  "convex-visual": {
-    "command": "npx",
-    "args": ["convex-mcp-visual", "--stdio"]
+  "mcp": {
+    "convex-visual": {
+      "command": "npx",
+      "args": ["convex-mcp-visual", "--stdio"]
+    }
   }
-}
 }
 ```
 
@@ -294,6 +298,10 @@ convex-mcp-visual subway               # Codebase subway map
 convex-mcp-visual table-heatmap        # Table writes heatmap
 convex-mcp-visual schema-drift         # Declared vs inferred schema
 convex-mcp-visual write-conflicts --log-file logs.txt
+
+convex-mcp-visual kanban               # Kanban board (auto-detect)
+convex-mcp-visual kanban --jobs        # Scheduled functions and crons
+convex-mcp-visual kanban --agents      # AI agent threads
 ```
 
 ### MCP Server Options

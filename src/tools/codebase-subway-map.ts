@@ -458,12 +458,12 @@ function pruneGraph(
   return { nodes: prunedNodes, edges: prunedEdges };
 }
 
-// Convert graph to subway layout
+// Convert graph to subway layout (VERTICAL layout like NYC subway map)
 function buildSubwayLayout(
   nodes: GraphNode[],
   edges: GraphEdge[],
 ): { lines: Line[]; transfers: Map<string, string[]> } {
-  // Group nodes by folder (each folder = one line)
+  // Group nodes by folder (each folder = one vertical line)
   const groups = new Map<string, GraphNode[]>();
   for (const node of nodes) {
     if (!groups.has(node.group)) groups.set(node.group, []);
@@ -508,12 +508,12 @@ function buildSubwayLayout(
     }
   }
 
-  // Build lines with station positions
+  // Build lines with VERTICAL station positions
   const lines: Line[] = [];
-  const STATION_SPACING = 120;
-  const LINE_SPACING = 100;
-  const MARGIN_LEFT = 200;
-  const MARGIN_TOP = 80;
+  const STATION_SPACING_Y = 70; // Vertical spacing between stations
+  const LINE_SPACING_X = 180; // Horizontal spacing between lines
+  const MARGIN_LEFT = 60;
+  const MARGIN_TOP = 100;
 
   groupEntries.forEach(([group, groupNodes], lineIndex) => {
     const color = LINE_COLORS[lineIndex % LINE_COLORS.length];
@@ -526,12 +526,13 @@ function buildSubwayLayout(
       return a.shortLabel.localeCompare(b.shortLabel);
     });
 
+    // Vertical layout: x is fixed per line, y increases per station
     const stations: Station[] = sortedNodes.map((node, stationIndex) => ({
       id: node.id,
       label: node.label,
       shortLabel: node.shortLabel,
-      x: MARGIN_LEFT + stationIndex * STATION_SPACING,
-      y: MARGIN_TOP + lineIndex * LINE_SPACING,
+      x: MARGIN_LEFT + lineIndex * LINE_SPACING_X,
+      y: MARGIN_TOP + stationIndex * STATION_SPACING_Y,
       line: group,
       isTransfer: transfers.has(node.id),
       connections: Array.from(connections.get(node.id) || []),
@@ -548,7 +549,7 @@ function buildSubwayLayout(
   return { lines, transfers };
 }
 
-// Build SVG subway map with draggable stations
+// Build SVG subway map with VERTICAL layout (lines go down, connections go across)
 function buildSubwaySvg(
   lines: Line[],
   transfers: Map<string, string[]>,
@@ -557,25 +558,29 @@ function buildSubwaySvg(
     return '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="400"><text x="50%" y="200" text-anchor="middle" fill="#999" font-size="18">No files to map</text></svg>';
   }
 
-  // Layout constants
-  const STATION_SPACING = 160;
-  const LINE_SPACING = 120;
-  const MARGIN_LEFT = 200;
-  const MARGIN_TOP = 80;
-  const STATION_RADIUS = 12;
-  const TRANSFER_RADIUS = 18;
-  const LINE_WIDTH = 10;
+  // Vertical layout constants
+  const STATION_SPACING_Y = 70;
+  const LINE_SPACING_X = 180;
+  const MARGIN_LEFT = 60;
+  const MARGIN_TOP = 100;
+  const STATION_RADIUS = 10;
+  const TRANSFER_RADIUS = 14;
+  const LINE_WIDTH = 8;
   const FONT_SIZE = 12;
+  const LABEL_OFFSET_X = 20;
 
-  // Calculate dimensions
+  // Calculate dimensions based on vertical layout
   const maxStations = Math.max(...lines.map((l) => l.stations.length), 1);
   const width = Math.max(
-    1200,
-    MARGIN_LEFT + maxStations * STATION_SPACING + 80,
+    1000,
+    MARGIN_LEFT + lines.length * LINE_SPACING_X + 200,
   );
-  const height = Math.max(500, MARGIN_TOP + lines.length * LINE_SPACING + 80);
+  const height = Math.max(
+    600,
+    MARGIN_TOP + maxStations * STATION_SPACING_Y + 80,
+  );
 
-  // Set station positions
+  // Set station positions (vertical layout)
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
     const line = lines[lineIndex];
     for (
@@ -583,9 +588,9 @@ function buildSubwaySvg(
       stationIndex < line.stations.length;
       stationIndex++
     ) {
-      line.stations[stationIndex].x =
-        MARGIN_LEFT + stationIndex * STATION_SPACING;
-      line.stations[stationIndex].y = MARGIN_TOP + lineIndex * LINE_SPACING;
+      line.stations[stationIndex].x = MARGIN_LEFT + lineIndex * LINE_SPACING_X;
+      line.stations[stationIndex].y =
+        MARGIN_TOP + stationIndex * STATION_SPACING_Y;
     }
   }
 
@@ -597,7 +602,7 @@ function buildSubwaySvg(
     }
   }
 
-  // Build connection data for JavaScript
+  // Build connection data for horizontal cross-line connections
   const connectionData: Array<{ from: string; to: string }> = [];
   const drawnConnections = new Set<string>();
   for (const [nodeId, otherLines] of transfers) {
@@ -621,45 +626,57 @@ function buildSubwaySvg(
 
   // SVG header
   svgParts.push(
-    `<svg id="subway-svg" xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" class="subway-map" style="min-width: ${width}px;">`,
+    `<svg id="subway-svg" xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" class="subway-map" style="min-width: ${width}px; min-height: ${height}px;">`,
   );
 
   // Background
   svgParts.push(
-    `<rect width="100%" height="100%" fill="var(--subway-bg, #f8f6f3)"/>`,
+    `<rect width="100%" height="100%" fill="var(--subway-bg, #f5f3ef)"/>`,
   );
 
-  // Grid pattern
+  // Subtle grid pattern
   svgParts.push(`<defs>
     <pattern id="subway-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--subway-grid, rgba(0,0,0,0.04))" stroke-width="1"/>
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--subway-grid, rgba(0,0,0,0.03))" stroke-width="1"/>
     </pattern>
   </defs>
   <rect width="100%" height="100%" fill="url(#subway-grid)"/>`);
 
-  // Group for transfer connections (will be updated on drag)
+  // Title at top
+  const totalStations = lines.reduce((sum, l) => sum + l.stations.length, 0);
+  const totalConnections = connectionData.length;
+  svgParts.push(
+    `<text x="${width / 2}" y="36" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="var(--subway-text, #1a1a1a)">Codebase Metro Map</text>`,
+  );
+  svgParts.push(
+    `<text x="${width / 2}" y="56" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="var(--subway-text-muted, #666)">${totalStations} stations  ·  ${totalConnections} connections</text>`,
+  );
+
+  // Group for horizontal transfer connections (dashed lines across)
   svgParts.push(`<g id="transfer-connections">`);
   for (const conn of connectionData) {
     const s1 = stationMap.get(conn.from);
     const s2 = stationMap.get(conn.to);
     if (!s1 || !s2) continue;
-    const midY = (s1.y + s2.y) / 2;
+
+    // Horizontal bezier curve connection
+    const midX = (s1.x + s2.x) / 2;
     svgParts.push(
-      `<path id="conn-${conn.from}-${conn.to}" class="transfer-path" data-from="${conn.from}" data-to="${conn.to}" d="M${s1.x},${s1.y} Q${s1.x},${midY} ${(s1.x + s2.x) / 2},${midY} Q${s2.x},${midY} ${s2.x},${s2.y}" fill="none" stroke="var(--subway-connection, #bbb)" stroke-width="3" stroke-dasharray="8,6" opacity="0.7"/>`,
+      `<path id="conn-${conn.from}-${conn.to}" class="transfer-path" data-from="${conn.from}" data-to="${conn.to}" d="M${s1.x},${s1.y} C${midX},${s1.y} ${midX},${s2.y} ${s2.x},${s2.y}" fill="none" stroke="var(--subway-connection, #9d8ec9)" stroke-width="2.5" stroke-dasharray="6,4" opacity="0.7"/>`,
     );
   }
   svgParts.push(`</g>`);
 
-  // Group for line routes (will be updated on drag)
+  // Group for vertical line routes
   svgParts.push(`<g id="line-routes">`);
   for (const line of lines) {
     if (line.stations.length === 0) continue;
     const stationIds = line.stations.map((s) => s.id).join(",");
     const pathPoints = line.stations.map((s) => `${s.x},${s.y}`).join(" L");
 
-    // Glow
+    // Glow effect
     svgParts.push(
-      `<path id="glow-${line.id}" class="line-glow" data-line="${line.id}" data-stations="${stationIds}" d="M${pathPoints}" fill="none" stroke="${line.color}" stroke-width="${LINE_WIDTH + 8}" stroke-linecap="round" stroke-linejoin="round" opacity="0.15"/>`,
+      `<path id="glow-${line.id}" class="line-glow" data-line="${line.id}" data-stations="${stationIds}" d="M${pathPoints}" fill="none" stroke="${line.color}" stroke-width="${LINE_WIDTH + 6}" stroke-linecap="round" stroke-linejoin="round" opacity="0.12"/>`,
     );
     // Main line
     svgParts.push(
@@ -668,7 +685,7 @@ function buildSubwaySvg(
   }
   svgParts.push(`</g>`);
 
-  // Group for stations (draggable)
+  // Group for stations
   svgParts.push(`<g id="stations">`);
   for (const line of lines) {
     for (const station of line.stations) {
@@ -678,21 +695,23 @@ function buildSubwaySvg(
       );
 
       if (station.isTransfer) {
+        // Transfer station: larger circle with inner dot
         svgParts.push(
-          `<circle class="station-outer" cx="${station.x}" cy="${station.y}" r="${TRANSFER_RADIUS}" fill="var(--subway-station, #fff)" stroke="${line.color}" stroke-width="5"/>`,
+          `<circle class="station-outer" cx="${station.x}" cy="${station.y}" r="${TRANSFER_RADIUS}" fill="var(--subway-station, #fff)" stroke="${line.color}" stroke-width="4"/>`,
         );
         svgParts.push(
-          `<circle class="station-inner" cx="${station.x}" cy="${station.y}" r="${TRANSFER_RADIUS - 7}" fill="${line.color}"/>`,
+          `<circle class="station-inner" cx="${station.x}" cy="${station.y}" r="${TRANSFER_RADIUS - 6}" fill="${line.color}"/>`,
         );
       } else {
+        // Regular station: simple dot
         svgParts.push(
-          `<circle class="station-dot" cx="${station.x}" cy="${station.y}" r="${STATION_RADIUS}" fill="var(--subway-station, #fff)" stroke="${line.color}" stroke-width="4"/>`,
+          `<circle class="station-dot" cx="${station.x}" cy="${station.y}" r="${STATION_RADIUS}" fill="var(--subway-station, #fff)" stroke="${line.color}" stroke-width="3"/>`,
         );
       }
 
-      // Label
+      // Label to the right of station
       svgParts.push(
-        `<text class="station-label" x="${station.x}" y="${station.y - r - 8}" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="${FONT_SIZE}" fill="var(--subway-text, #333)" font-weight="500">${escapeHtml(station.shortLabel)}</text>`,
+        `<text class="station-label" x="${station.x + r + LABEL_OFFSET_X}" y="${station.y + 4}" text-anchor="start" font-family="system-ui, -apple-system, sans-serif" font-size="${FONT_SIZE}" fill="var(--subway-text, #333)" font-weight="500">${escapeHtml(station.shortLabel)}</text>`,
       );
 
       svgParts.push(`</g>`);
@@ -700,30 +719,50 @@ function buildSubwaySvg(
   }
   svgParts.push(`</g>`);
 
-  // Line badges
-  svgParts.push(`<g id="line-badges">`);
+  // Line labels at top of each vertical line
+  svgParts.push(`<g id="line-labels">`);
   for (const line of lines) {
     if (line.stations.length === 0) continue;
     const firstStation = line.stations[0];
-    const labelX = 12;
-    const labelY = firstStation.y;
-    const labelWidth = 170;
-    const labelHeight = 36;
+    const labelX = firstStation.x;
+    const labelY = MARGIN_TOP - 30;
 
     svgParts.push(
-      `<g id="badge-${line.id}" class="line-badge" data-line="${line.id}" data-first-station="${firstStation.id}">`,
+      `<g id="label-${line.id}" class="line-label" data-line="${line.id}">`,
     );
+    // Colored dot indicator
     svgParts.push(
-      `<rect class="badge-shadow" x="${labelX + 2}" y="${labelY - labelHeight / 2 + 2}" width="${labelWidth}" height="${labelHeight}" rx="${labelHeight / 2}" fill="rgba(0,0,0,0.1)"/>`,
+      `<circle cx="${labelX}" cy="${labelY}" r="8" fill="${line.color}"/>`,
     );
+    // Label text below dot
     svgParts.push(
-      `<rect class="badge-bg" x="${labelX}" y="${labelY - labelHeight / 2}" width="${labelWidth}" height="${labelHeight}" rx="${labelHeight / 2}" fill="${line.color}"/>`,
-    );
-    svgParts.push(
-      `<text class="badge-text" x="${labelX + labelWidth / 2}" y="${labelY + 5}" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#fff" font-weight="600">${escapeHtml(line.name)}</text>`,
+      `<text x="${labelX}" y="${labelY + 22}" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="var(--subway-text, #333)" font-weight="600">${escapeHtml(line.name)}</text>`,
     );
     svgParts.push(`</g>`);
   }
+  svgParts.push(`</g>`);
+
+  // Legend in bottom right
+  const legendX = width - 200;
+  const legendY = height - (lines.length * 22 + 50);
+  svgParts.push(
+    `<g id="legend" transform="translate(${legendX}, ${legendY})">`,
+  );
+  svgParts.push(
+    `<rect x="0" y="0" width="180" height="${lines.length * 22 + 40}" rx="8" fill="var(--subway-legend-bg, rgba(255,255,255,0.9))" stroke="var(--subway-border, #ddd)" stroke-width="1"/>`,
+  );
+  svgParts.push(
+    `<text x="16" y="24" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="var(--subway-text, #333)">Legend</text>`,
+  );
+  lines.forEach((line, i) => {
+    const y = 44 + i * 22;
+    svgParts.push(
+      `<rect x="16" y="${y}" width="20" height="6" rx="3" fill="${line.color}"/>`,
+    );
+    svgParts.push(
+      `<text x="44" y="${y + 5}" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="var(--subway-text, #333)">${escapeHtml(line.name)}</text>`,
+    );
+  });
   svgParts.push(`</g>`);
 
   svgParts.push("</svg>");

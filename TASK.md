@@ -45,6 +45,12 @@ Current development tasks and progress.
 - [x] Add drag-and-drop for subway map stations (like schema graph view)
 - [x] Line paths and connections update in real-time during drag
 - [x] Touch support for mobile drag interactions
+- [x] Redesign subway map from horizontal to vertical layout
+- [x] Vertical lines with stations stacked top to bottom
+- [x] Station labels positioned to the right of stations
+- [x] Horizontal bezier curve connections between lines
+- [x] Added title and stats header to subway map SVG
+- [x] Added legend showing line colors and names
 
 ## Completed (v1.2.7)
 

@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tool descriptions updated to clarify when each tool should be used
 - schema_diagram now only triggers for explicit Mermaid ER diagram requests
 - Theme toggle persists via localStorage across all tool views
+- Codebase subway map redesigned from horizontal to vertical layout for better readability
+- Subway map lines now run vertically with stations stacked top to bottom
+- Station labels now appear to the right of stations instead of above
+- Cross-line connections now use horizontal bezier curves
+- Added title and stats header to subway map SVG
+- Added legend box showing all line colors and names
 
 ### Fixed
 
