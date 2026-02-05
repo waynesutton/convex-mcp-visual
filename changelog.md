@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- MCP Apps support (SEP-1865) for embedded UI rendering in ChatGPT, Claude web, VS Code, and other compatible hosts
+- Tool metadata with `_meta.ui.resourceUri` linking each tool to its HTML resource
+- 8 UI resources registered with `text/html;profile=mcp-app` MIME type for MCP Apps compatibility
+- In-memory store for dynamically generated HTML resources (diagrams, heatmaps, etc.)
+- HTTP mode with CORS headers for cross-origin MCP Apps requests
+- Direct HTTP endpoints for UI resources at `/ui/*.html`
+- `docs/mcp-apps.md` usage guide for MCP Apps integration
+- `src/resources/kanban-board.ts` fallback HTML resource
 - Kanban board CLI and MCP tool for visualizing scheduled functions, cron jobs, and AI agent threads
 - New CLI command: `convex-mcp-visual kanban` with `--jobs` and `--agents` flags
 - Kanban board browser UI at `apps/kanban-board/` with interactive columns

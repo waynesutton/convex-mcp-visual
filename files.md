@@ -21,6 +21,7 @@ Overview of the codebase structure.
 | `tools/shared-styles.ts`         | Shared CSS and HTML utilities for tan/dark mode and theme toggle     |
 | `resources/schema-browser.ts`    | Fallback HTML for schema browser                                     |
 | `resources/dashboard.ts`         | Fallback HTML for dashboard                                          |
+| `resources/kanban-board.ts`      | Fallback HTML for kanban board                                       |
 
 **MCP client install support:**
 
@@ -87,6 +88,7 @@ Each app contains:
 | `user-guide-dashboard.md`      | How to use the dashboard                     |
 | `files-docs.md`                | Documentation file descriptions              |
 | `files-claude-plugin.md`       | Claude plugin and marketplace structure      |
+| `mcp-apps.md`                  | MCP Apps embedded UI support guide           |
 
 ## Root Files
 

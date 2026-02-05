@@ -66,9 +66,15 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
-  padding: 16px 20px;
-  padding-bottom: 40px;
+  padding: 0;
   margin: 0;
+}
+
+#app {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 16px 24px 40px;
 }
 
 /* Header */
@@ -708,8 +714,8 @@ body {
 
 /* Responsive */
 @media (max-width: 600px) {
-  body {
-    padding: 12px;
+  #app {
+    padding: 12px 16px 32px;
   }
 
   .header {

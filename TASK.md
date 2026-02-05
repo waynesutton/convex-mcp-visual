@@ -4,6 +4,15 @@ Current development tasks and progress.
 
 ## Completed (Unreleased)
 
+- [x] Add MCP Apps support (SEP-1865) for embedded UI rendering in ChatGPT, Claude web, VS Code
+- [x] Add `_meta.ui.resourceUri` to all 8 tool definitions for MCP Apps compatibility
+- [x] Register 8 UI resources with `text/html;profile=mcp-app` MIME type
+- [x] Create in-memory store for dynamically generated HTML resources
+- [x] Add CORS headers to HTTP mode for cross-origin MCP Apps requests
+- [x] Add HTTP endpoints for UI resources at `/ui/*.html`
+- [x] Create `docs/mcp-apps.md` usage guide for MCP Apps integration
+- [x] Create `src/resources/kanban-board.ts` fallback HTML resource
+- [x] Verify TypeScript type safety (tsc --noEmit passes)
 - [x] Add kanban board CLI command (`convex-mcp-visual kanban`)
 - [x] Add `--jobs` flag for scheduled functions and cron jobs only
 - [x] Add `--agents` flag for AI agent threads only (requires @convex-dev/agent)
