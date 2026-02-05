@@ -60,9 +60,9 @@ Each app contains:
 
 **Theme management:**
 
-- All UI apps share the same localStorage key: `convex-mcp-theme`
-- Theme preference (light/dark) syncs across schema browser, dashboard, and diagram views
-- Default theme is light (tan background)
+- All UI apps default to tan (light) mode on page load
+- Theme toggle available in all views (no persistence between sessions)
+- Kanban board has separate theme management
 
 **Dashboard app features:**
 

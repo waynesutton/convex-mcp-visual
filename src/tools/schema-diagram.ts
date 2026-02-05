@@ -540,9 +540,12 @@ function generateDiagramHtml(
     function toggleTheme() {
       const html = document.documentElement;
       const currentTheme = html.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', newTheme);
-      localStorage.setItem('convex-mcp-theme', newTheme);
+      // Toggle between dark and light (no persistence)
+      if (currentTheme === 'dark') {
+        html.removeAttribute('data-theme');
+      } else {
+        html.setAttribute('data-theme', 'dark');
+      }
     }
     
     function copyCode() {
@@ -553,15 +556,7 @@ function generateDiagramHtml(
         setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
       });
     }
-    
-    // Initialize theme from localStorage or default to light
-    (function() {
-      const stored = localStorage.getItem('convex-mcp-theme');
-      if (stored === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      }
-      // Default is light (no data-theme attribute needed)
-    })();
+    // Always start in tan (light) mode - no initialization needed
   </script>
 </body>
 </html>`;

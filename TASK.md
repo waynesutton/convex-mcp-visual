@@ -60,8 +60,9 @@ Current development tasks and progress.
 - [x] Kanban board theme toggle uses sun/moon icons (removed text label)
 - [x] Fix graph node headers in schema browser (flat colors instead of gradients)
 - [x] Add theme toggle to schema diagram view with CSS variables
-- [x] Standardize localStorage key to `convex-mcp-theme` across all UI views
-- [x] Theme preference now shared across schema browser, dashboard, and diagram views
+- [x] Remove localStorage persistence for theme preference
+- [x] All views now always default to tan (light) mode on page load
+- [x] Theme toggle works during session but does not persist between page loads
 
 ## Completed (v1.2.7)
 

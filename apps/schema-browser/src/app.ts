@@ -170,22 +170,19 @@ class SchemaBrowserApp {
   }
 
   private initTheme(): void {
-    // Check for saved theme preference or system preference
-    const savedTheme = localStorage.getItem("convex-mcp-theme");
-    if (savedTheme === "dark" || savedTheme === "light") {
-      this.currentTheme = savedTheme;
-    } else if (
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    ) {
-      // Don't auto-switch to dark, keep tan as default
-      this.currentTheme = "light";
-    }
+    // Always default to tan (light) mode - no persistence
+    this.currentTheme = "light";
     this.applyTheme();
   }
 
   private applyTheme(): void {
-    document.documentElement.setAttribute("data-theme", this.currentTheme);
+    // Only set data-theme attribute for dark mode
+    // Light mode is the default (uses :root CSS variables)
+    if (this.currentTheme === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
   }
 
   private showShortcutsModal(): void {
@@ -204,7 +201,6 @@ class SchemaBrowserApp {
 
   private toggleTheme(): void {
     this.currentTheme = this.currentTheme === "light" ? "dark" : "light";
-    localStorage.setItem("convex-mcp-theme", this.currentTheme);
     this.applyTheme();
     // Redraw graph if in graph view
     if (this.viewMode === "graph") {

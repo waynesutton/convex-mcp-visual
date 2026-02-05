@@ -88,28 +88,19 @@ class RealtimeDashboardApp {
   }
 
   private initTheme(): void {
-    // Check localStorage for saved theme preference
-    const savedTheme = localStorage.getItem("convex-mcp-theme") as
-      | "light"
-      | "dark"
-      | null;
-    if (savedTheme) {
-      this.currentTheme = savedTheme;
-    } else {
-      // Check system preference
-      if (
-        window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-      ) {
-        this.currentTheme = "light"; // Keep light as default even if system prefers dark
-      }
-    }
+    // Always default to tan (light) mode - no persistence
+    this.currentTheme = "light";
     this.applyTheme();
   }
 
   private applyTheme(): void {
-    document.documentElement.setAttribute("data-theme", this.currentTheme);
-    localStorage.setItem("convex-mcp-theme", this.currentTheme);
+    // Only set data-theme attribute for dark mode
+    // Light mode is the default (uses :root CSS variables)
+    if (this.currentTheme === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
   }
 
   private toggleTheme(): void {

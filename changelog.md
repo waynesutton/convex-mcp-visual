@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All tool UIs now use consistent tan (light) and dark mode matching schema_browser
 - Tool descriptions updated to clarify when each tool should be used
 - schema_diagram now only triggers for explicit Mermaid ER diagram requests
-- Theme toggle persists via localStorage across all tool views
+- Theme toggle available in all tool views (session only, no persistence)
 - Codebase subway map redesigned from horizontal to vertical layout for better readability
 - Subway map lines now run vertically with stations stacked top to bottom
 - Station labels now appear to the right of stations instead of above
@@ -52,8 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Graph node headers in schema browser now use flat colors instead of gradients
 - Schema diagram view now has theme toggle button and uses CSS variables for light/dark mode
-- All UI views now share same localStorage key (`convex-mcp-theme`) for consistent theme preference
-- Theme selection in one view now applies across all views (schema browser, dashboard, diagram)
+- All UI views now always default to tan (light) mode on page load
+- Removed localStorage persistence for theme preference (toggle works during session only)
 - Subway map now uses its own viewer instead of schema diagram
 - Subway map completely redesigned to look like actual transit map (NYC subway style)
 - Each folder is now a colored line with files as stations along the route
