@@ -63,6 +63,8 @@ Current development tasks and progress.
 - [x] Remove localStorage persistence for theme preference
 - [x] All views now always default to tan (light) mode on page load
 - [x] Theme toggle works during session but does not persist between page loads
+- [x] Scope app CSS variables by data-app to prevent bundled overrides
+- [x] Update resource fallbacks to use tan default theme
 
 ## Completed (v1.2.7)
 

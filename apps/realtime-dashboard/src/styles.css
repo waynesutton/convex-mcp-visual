@@ -16,7 +16,7 @@ body {
   overflow-y: auto;
 }
 
-:root {
+:root[data-app="realtime-dashboard"] {
   /* Light Mode (Tan) - Default */
   --bg-primary: #faf8f5;
   --bg-secondary: #f5f3f0;
@@ -39,7 +39,7 @@ body {
 }
 
 /* Dark Mode (VS Code Style) */
-[data-theme="dark"] {
+:root[data-app="realtime-dashboard"][data-theme="dark"] {
   --bg-primary: #1e1e1e;
   --bg-secondary: #252526;
   --bg-hover: #37373d;

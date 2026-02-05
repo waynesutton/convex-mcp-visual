@@ -4,18 +4,18 @@
  * Serves the bundled Realtime Dashboard HTML UI.
  */
 
-import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, existsSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export async function getDashboardResourceContent(): Promise<string> {
   // Try to load the bundled HTML file
-  const bundledPath = join(__dirname, '..', 'apps', 'realtime-dashboard.html');
+  const bundledPath = join(__dirname, "..", "apps", "realtime-dashboard.html");
 
   if (existsSync(bundledPath)) {
-    return readFileSync(bundledPath, 'utf-8');
+    return readFileSync(bundledPath, "utf-8");
   }
 
   // Fallback: return inline HTML for development/testing
@@ -37,14 +37,14 @@ function getInlineDashboardUI(): string {
     }
 
     :root {
-      --bg-primary: #1a1a2e;
-      --bg-secondary: #16213e;
-      --bg-tertiary: #0f3460;
-      --text-primary: #eee;
-      --text-secondary: #aaa;
-      --accent: #e94560;
-      --border: #333;
-      --success: #4caf50;
+      --bg-primary: #faf8f5;
+      --bg-secondary: #f5f3f0;
+      --bg-tertiary: #ebe9e6;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6b6b;
+      --accent: #eb5601;
+      --border: #e6e4e1;
+      --success: #4a8c5c;
     }
 
     body {

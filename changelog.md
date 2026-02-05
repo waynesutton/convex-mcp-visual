@@ -54,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Schema diagram view now has theme toggle button and uses CSS variables for light/dark mode
 - All UI views now always default to tan (light) mode on page load
 - Removed localStorage persistence for theme preference (toggle works during session only)
+- Scoped app CSS variables by `data-app` to prevent bundled styles from overriding defaults
 - Subway map now uses its own viewer instead of schema diagram
 - Subway map completely redesigned to look like actual transit map (NYC subway style)
 - Each folder is now a colored line with files as stations along the route

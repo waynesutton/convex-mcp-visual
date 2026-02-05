@@ -63,6 +63,7 @@ Each app contains:
 - All UI apps default to tan (light) mode on page load
 - Theme toggle available in all views (no persistence between sessions)
 - Kanban board has separate theme management
+- CSS variables are scoped per app via `data-app` to avoid bundled style collisions
 
 **Dashboard app features:**
 

@@ -11,7 +11,7 @@ body {
   overflow: hidden;
 }
 
-:root {
+:root[data-app="schema-browser"] {
   /* Light Mode (Tan) - Default */
   --bg-primary: #faf8f5;
   --bg-secondary: #f5f3f0;
@@ -56,7 +56,7 @@ body {
 }
 
 /* Dark Mode (VS Code Style) */
-[data-theme="dark"] {
+:root[data-app="schema-browser"][data-theme="dark"] {
   --bg-primary: #1e1e1e;
   --bg-secondary: #252526;
   --bg-tertiary: #2d2d2d;
