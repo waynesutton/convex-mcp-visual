@@ -40,8 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cross-line connections now use horizontal bezier curves
 - Added title and stats header to subway map SVG
 - Added legend box showing all line colors and names
-- Increased line spacing from 180px to 280px for better visibility
-- Subway map now centered in the container
+- Increased line spacing to 480px between lines for better visibility
+- Subway map content properly centered in container
+- Added separate header height (80px) and margin top (80px) for better layout
+- Line labels positioned between header and first station (no overlap)
 - Lines sorted by station count (multi-station lines first, single-station at end)
 - Single-station lines now show a vertical stub instead of invisible point
 - Kanban board theme toggle now uses sun/moon icons (no text label)

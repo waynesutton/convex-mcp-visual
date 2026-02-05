@@ -560,8 +560,9 @@ function buildSubwaySvg(
 
   // Vertical layout constants - wider spacing for better readability
   const STATION_SPACING_Y = 70;
-  const LINE_SPACING_X = 280; // Increased from 180 for more space between lines
-  const MARGIN_TOP = 100;
+  const LINE_SPACING_X = 480; // Wide spacing between lines
+  const MARGIN_TOP = 80; // Space for line labels above first station
+  const HEADER_HEIGHT = 80; // Space for title and subtitle at top
   const STATION_RADIUS = 10;
   const TRANSFER_RADIUS = 14;
   const LINE_WIDTH = 8;
@@ -575,21 +576,22 @@ function buildSubwaySvg(
     return b.stations.length - a.stations.length;
   });
 
-  // Calculate content width and center it
+  // Calculate dimensions
   const maxStations = Math.max(...sortedLines.map((l) => l.stations.length), 1);
-  const contentWidth = sortedLines.length * LINE_SPACING_X + 200;
-  const minWidth = 1400;
-  const width = Math.max(minWidth, contentWidth);
+  const totalLinesWidth = (sortedLines.length - 1) * LINE_SPACING_X + 300; // Extra space for labels
+  const minWidth = 1600;
+  const width = Math.max(minWidth, totalLinesWidth + 200);
   const height = Math.max(
-    700,
-    MARGIN_TOP + maxStations * STATION_SPACING_Y + 120,
+    800,
+    HEADER_HEIGHT + MARGIN_TOP + maxStations * STATION_SPACING_Y + 150,
   );
 
   // Center the lines horizontally within the SVG
-  const totalLinesWidth = (sortedLines.length - 1) * LINE_SPACING_X;
-  const marginLeft = Math.max(150, (width - totalLinesWidth - 200) / 2);
+  const marginLeft = Math.max(100, (width - totalLinesWidth) / 2);
 
   // Set station positions (vertical layout) - using sortedLines now
+  // Stations start after header + margin for line labels
+  const stationsStartY = HEADER_HEIGHT + MARGIN_TOP;
   for (let lineIndex = 0; lineIndex < sortedLines.length; lineIndex++) {
     const line = sortedLines[lineIndex];
     for (
@@ -599,7 +601,7 @@ function buildSubwaySvg(
     ) {
       line.stations[stationIndex].x = marginLeft + lineIndex * LINE_SPACING_X;
       line.stations[stationIndex].y =
-        MARGIN_TOP + stationIndex * STATION_SPACING_Y;
+        stationsStartY + stationIndex * STATION_SPACING_Y;
     }
   }
 
@@ -740,13 +742,14 @@ function buildSubwaySvg(
   }
   svgParts.push(`</g>`);
 
-  // Line labels at top of each vertical line
+  // Line labels at top of each vertical line (between header and first station)
   svgParts.push(`<g id="line-labels">`);
+  const lineLabelY = HEADER_HEIGHT + 30; // Position below header, above stations
   for (const line of sortedLines) {
     if (line.stations.length === 0) continue;
     const firstStation = line.stations[0];
     const labelX = firstStation.x;
-    const labelY = MARGIN_TOP - 30;
+    const labelY = lineLabelY;
 
     svgParts.push(
       `<g id="label-${line.id}" class="line-label" data-line="${line.id}">`,

@@ -1,6 +1,6 @@
 {
   "name": "convex-mcp-visual",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Visual MCP tools for exploring Convex databases - schema browser, dashboard, ER diagrams. Works as CLI, MCP server, or Claude Code plugin.",
   "type": "module",
   "main": "dist/index.js",
