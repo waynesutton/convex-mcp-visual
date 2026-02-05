@@ -17,6 +17,7 @@ Overview of the codebase structure.
 | `tools/table-heatmap.ts`         | Table heatmap tool for recent writes per minute                      |
 | `tools/schema-drift.ts`          | Schema drift tool for declared vs inferred fields                    |
 | `tools/write-conflict-report.ts` | Write conflict report tool for log-based analysis                    |
+| `tools/kanban-board.ts`          | Kanban board tool for scheduled jobs and AI agent threads            |
 | `tools/shared-styles.ts`         | Shared CSS and HTML utilities for tan/dark mode and theme toggle     |
 | `resources/schema-browser.ts`    | Fallback HTML for schema browser                                     |
 | `resources/dashboard.ts`         | Fallback HTML for dashboard                                          |
@@ -49,6 +50,7 @@ Overview of the codebase structure.
 | --------------------- | -------------------------------------------------------------------- |
 | `schema-browser/`     | Interactive schema explorer (graph view default, list view optional) |
 | `realtime-dashboard/` | Real-time metrics and charts dashboard                               |
+| `kanban-board/`       | Kanban board for scheduled functions and AI agent threads            |
 
 Each app contains:
 

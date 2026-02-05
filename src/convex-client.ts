@@ -846,4 +846,374 @@ export class ConvexClient {
 
     return response?.value;
   }
+
+  /**
+   * Get scheduled functions from the _scheduled_functions system table
+   * Returns pending, running, completed, and failed scheduled functions
+   * Requires admin access
+   */
+  async getScheduledFunctions(): Promise<ScheduledFunction[]> {
+    if (!this.deploymentUrl || !this.adminKey) {
+      return [];
+    }
+
+    try {
+      // Query the _scheduled_functions system table
+      const response = await this.fetchConvex("/api/query", {
+        path: "_system/cli/tableData",
+        args: {
+          table: "_scheduled_functions",
+          order: "desc",
+          paginationOpts: {
+            cursor: null,
+            numItems: 100,
+          },
+        },
+        format: "json",
+      });
+
+      const result = response?.value;
+      if (!result || !result.page) {
+        return [];
+      }
+
+      return (result.page || []).map((doc: any) => ({
+        _id: doc._id,
+        _creationTime: doc._creationTime,
+        name: doc.name || doc.udfPath || "unknown",
+        scheduledTime: doc.scheduledTime,
+        completedTime: doc.completedTime,
+        state: this.parseScheduledState(doc.state),
+        args: doc.args,
+      }));
+    } catch (error) {
+      console.error("Failed to get scheduled functions:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Parse the state object from scheduled functions
+   */
+  private parseScheduledState(
+    state: any,
+  ): "pending" | "inProgress" | "success" | "failed" | "canceled" {
+    if (!state) return "pending";
+
+    // State can be an object with a kind property or a string
+    if (typeof state === "string") {
+      return state as any;
+    }
+
+    if (state.kind) {
+      return state.kind;
+    }
+
+    // Check for specific state indicators
+    if (state.inProgress) return "inProgress";
+    if (state.success) return "success";
+    if (state.failed) return "failed";
+    if (state.canceled) return "canceled";
+
+    return "pending";
+  }
+
+  /**
+   * Get cron jobs configuration
+   * Parses cron jobs from the deployment's cron configuration
+   * Requires admin access
+   */
+  async getCronJobs(): Promise<CronJob[]> {
+    if (!this.deploymentUrl || !this.adminKey) {
+      return [];
+    }
+
+    try {
+      // Try to get cron jobs from the _cron_jobs system table
+      const response = await this.fetchConvex("/api/query", {
+        path: "_system/cli/tableData",
+        args: {
+          table: "_cron_jobs",
+          order: "desc",
+          paginationOpts: {
+            cursor: null,
+            numItems: 50,
+          },
+        },
+        format: "json",
+      });
+
+      const result = response?.value;
+      if (!result || !result.page) {
+        return [];
+      }
+
+      return (result.page || []).map((doc: any) => ({
+        _id: doc._id,
+        _creationTime: doc._creationTime,
+        name: doc.name || "unnamed",
+        cronSpec: doc.cronSpec,
+        functionPath: doc.args?.name || doc.functionPath || "unknown",
+        lastRun: doc.lastRun,
+        nextRun: doc.nextRun,
+      }));
+    } catch {
+      // Cron jobs table might not exist or be accessible
+      return [];
+    }
+  }
+
+  /**
+   * Detect if the @convex-dev/agent component is installed
+   * Checks for agent-specific tables in the schema
+   *
+   * NOTE: The agent component uses namespaced tables. Common patterns include:
+   * - agent:threads, agent:messages, agent:steps (component namespace)
+   * - Custom tables if user defined their own agent storage
+   *
+   * This detection is best-effort and may not work for all agent configurations.
+   */
+  async detectAgentComponent(): Promise<AgentComponentInfo> {
+    if (!this.deploymentUrl) {
+      return { installed: false, tables: [] };
+    }
+
+    try {
+      const shapes = await this.fetchConvex("/api/shapes2");
+      const allTables = Object.keys(shapes);
+
+      // Look for agent-related table patterns
+      // The @convex-dev/agent component typically creates tables like:
+      // - threads (or agent:threads)
+      // - messages (or agent:messages)
+      // - steps (or agent:steps)
+      const agentPatterns = [
+        /^agent:/i, // Component namespace
+        /threads?$/i, // Thread tables
+        /messages?$/i, // Message tables
+        /^ai_/i, // AI-prefixed tables
+        /agent/i, // Tables with "agent" in name
+      ];
+
+      const agentTables = allTables.filter((table) =>
+        agentPatterns.some((pattern) => pattern.test(table)),
+      );
+
+      // Check for specific @convex-dev/agent component tables
+      const hasAgentComponent =
+        agentTables.some((t) => t.startsWith("agent:")) ||
+        (agentTables.includes("threads") && agentTables.includes("messages"));
+
+      return {
+        installed: hasAgentComponent || agentTables.length > 0,
+        tables: agentTables,
+        isOfficialComponent: agentTables.some((t) => t.startsWith("agent:")),
+      };
+    } catch {
+      return { installed: false, tables: [] };
+    }
+  }
+
+  /**
+   * Get agent threads from the agent component
+   * Works with @convex-dev/agent or custom agent implementations
+   *
+   * NOTE: This requires the agent component to be installed.
+   * If using a custom agent implementation, specify the table name.
+   */
+  async getAgentThreads(tableName?: string): Promise<AgentThread[]> {
+    if (!this.deploymentUrl || !this.adminKey) {
+      return [];
+    }
+
+    // Default to agent:threads (official component) or threads
+    const table = tableName || "agent:threads";
+
+    try {
+      const response = await this.fetchConvex("/api/query", {
+        path: "_system/cli/tableData",
+        args: {
+          table,
+          order: "desc",
+          paginationOpts: {
+            cursor: null,
+            numItems: 50,
+          },
+        },
+        format: "json",
+      });
+
+      const result = response?.value;
+      if (!result || !result.page) {
+        // Try fallback table name "threads"
+        if (table === "agent:threads") {
+          return this.getAgentThreads("threads");
+        }
+        return [];
+      }
+
+      return (result.page || []).map((doc: any) => ({
+        _id: doc._id,
+        _creationTime: doc._creationTime,
+        title: doc.title || doc.name || "Untitled Thread",
+        status: doc.status || this.inferThreadStatus(doc),
+        agentId: doc.agentId || doc.agent,
+        userId: doc.userId || doc.user,
+        messageCount: doc.messageCount || 0,
+        lastMessageAt: doc.lastMessageAt || doc.updatedAt || doc._creationTime,
+      }));
+    } catch {
+      // Table might not exist
+      if (table === "agent:threads") {
+        return this.getAgentThreads("threads");
+      }
+      return [];
+    }
+  }
+
+  /**
+   * Infer thread status from document fields
+   */
+  private inferThreadStatus(
+    doc: any,
+  ): "idle" | "processing" | "waiting" | "completed" | "error" {
+    if (doc.error) return "error";
+    if (doc.completed || doc.done) return "completed";
+    if (doc.waiting || doc.pendingTool) return "waiting";
+    if (doc.processing || doc.streaming) return "processing";
+    return "idle";
+  }
+
+  /**
+   * Get agent messages for a specific thread or all recent messages
+   */
+  async getAgentMessages(
+    threadId?: string,
+    tableName?: string,
+  ): Promise<AgentMessage[]> {
+    if (!this.deploymentUrl || !this.adminKey) {
+      return [];
+    }
+
+    const table = tableName || "agent:messages";
+
+    try {
+      const response = await this.fetchConvex("/api/query", {
+        path: "_system/cli/tableData",
+        args: {
+          table,
+          order: "desc",
+          paginationOpts: {
+            cursor: null,
+            numItems: 100,
+          },
+        },
+        format: "json",
+      });
+
+      const result = response?.value;
+      if (!result || !result.page) {
+        if (table === "agent:messages") {
+          return this.getAgentMessages(threadId, "messages");
+        }
+        return [];
+      }
+
+      let messages = (result.page || []).map((doc: any) => ({
+        _id: doc._id,
+        _creationTime: doc._creationTime,
+        threadId: doc.threadId || doc.thread,
+        role: doc.role || "user",
+        content:
+          typeof doc.content === "string"
+            ? doc.content.slice(0, 100)
+            : "[complex content]",
+        status: doc.status || "completed",
+        agentId: doc.agentId || doc.agent,
+      }));
+
+      // Filter by threadId if provided
+      if (threadId) {
+        messages = messages.filter(
+          (m: AgentMessage) => m.threadId === threadId,
+        );
+      }
+
+      return messages;
+    } catch {
+      if (table === "agent:messages") {
+        return this.getAgentMessages(threadId, "messages");
+      }
+      return [];
+    }
+  }
+}
+
+/**
+ * Scheduled function from _scheduled_functions system table
+ */
+export interface ScheduledFunction {
+  _id: string;
+  _creationTime: number;
+  name: string;
+  scheduledTime: number;
+  completedTime?: number;
+  state: "pending" | "inProgress" | "success" | "failed" | "canceled";
+  args?: unknown;
+}
+
+/**
+ * Cron job configuration
+ */
+export interface CronJob {
+  _id: string;
+  _creationTime: number;
+  name: string;
+  cronSpec?: string;
+  functionPath: string;
+  lastRun?: number;
+  nextRun?: number;
+}
+
+/**
+ * Agent component detection result
+ *
+ * NOTE: The @convex-dev/agent component must be installed for agent features.
+ * See: https://www.convex.dev/components/agent
+ */
+export interface AgentComponentInfo {
+  installed: boolean;
+  tables: string[];
+  isOfficialComponent?: boolean;
+}
+
+/**
+ * Agent thread from agent component
+ *
+ * NOTE: Requires @convex-dev/agent component or compatible agent implementation.
+ * The agent component manages threads where conversations happen between
+ * users and AI agents.
+ */
+export interface AgentThread {
+  _id: string;
+  _creationTime: number;
+  title: string;
+  status: "idle" | "processing" | "waiting" | "completed" | "error";
+  agentId?: string;
+  userId?: string;
+  messageCount: number;
+  lastMessageAt: number;
+}
+
+/**
+ * Agent message from agent component
+ */
+export interface AgentMessage {
+  _id: string;
+  _creationTime: number;
+  threadId: string;
+  role: string;
+  content: string;
+  status: string;
+  agentId?: string;
 }

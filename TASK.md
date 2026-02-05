@@ -4,6 +4,19 @@ Current development tasks and progress.
 
 ## Completed (Unreleased)
 
+- [x] Add kanban board CLI command (`convex-mcp-visual kanban`)
+- [x] Add `--jobs` flag for scheduled functions and cron jobs only
+- [x] Add `--agents` flag for AI agent threads only (requires @convex-dev/agent)
+- [x] Create `src/tools/kanban-board.ts` with MCP tool definition and handler
+- [x] Add ConvexClient methods: `getScheduledFunctions()`, `getCronJobs()`
+- [x] Add ConvexClient methods: `detectAgentComponent()`, `getAgentThreads()`, `getAgentMessages()`
+- [x] Create `apps/kanban-board/` browser UI with interactive columns
+- [x] Register `kanban_board` MCP tool in server.ts
+- [x] Add kanban-board to UIServerConfig app types
+- [x] Add kanban-board to vite.config.ts build inputs
+- [x] Update files.md with kanban board files
+- [x] Update changelog.md with kanban board feature
+- [x] Verify TypeScript type safety (tsc --noEmit passes)
 - [x] Add `--install-codex` and `--uninstall-codex` flags for Codex CLI support
 - [x] Add Codex to MCP_CLIENT_PATHS with TOML config path (`~/.codex/config.toml`)
 - [x] Create TOML config reader/writer functions for Codex

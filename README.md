@@ -198,15 +198,15 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
-  "mcpServers": {
-    "convex-visual": {
-      "command": "npx",
-      "args": ["convex-mcp-visual", "--stdio"],
-      "env": {
-        "CONVEX_DEPLOY_KEY": "prod:your-deployment|your-key"
-      }
+"mcpServers": {
+  "convex-visual": {
+    "command": "npx",
+    "args": ["convex-mcp-visual", "--stdio"],
+    "env": {
+      "CONVEX_DEPLOY_KEY": "prod:your-deployment|your-key"
     }
   }
+}
 }
 ```
 
@@ -216,12 +216,12 @@ Add to `~/.cursor/mcp.json`:
 
 ```json
 {
-  "mcpServers": {
-    "convex-visual": {
-      "command": "npx",
-      "args": ["convex-mcp-visual", "--stdio"]
-    }
+"mcpServers": {
+  "convex-visual": {
+    "command": "npx",
+    "args": ["convex-mcp-visual", "--stdio"]
   }
+}
 }
 ```
 
@@ -231,12 +231,12 @@ Add to `~/.config/opencode/opencode.json`:
 
 ```json
 {
-  "mcp": {
-    "convex-visual": {
-      "command": "npx",
-      "args": ["convex-mcp-visual", "--stdio"]
-    }
+"mcp": {
+  "convex-visual": {
+    "command": "npx",
+    "args": ["convex-mcp-visual", "--stdio"]
   }
+}
 }
 ```
 
@@ -302,23 +302,23 @@ convex-mcp-visual write-conflicts --log-file logs.txt
 convex-mcp-visual [options]
 
 MCP Client Install:
-  --install            Install to all MCP clients
-  --install-cursor     Install to Cursor
-  --install-opencode   Install to OpenCode
-  --install-claude     Install to Claude Desktop
-  --install-codex      Install to Codex CLI
-  --uninstall          Remove from all MCP clients
+--install            Install to all MCP clients
+--install-cursor     Install to Cursor
+--install-opencode   Install to OpenCode
+--install-claude     Install to Claude Desktop
+--install-codex      Install to Codex CLI
+--uninstall          Remove from all MCP clients
 
 Server Options:
-  --stdio              Run in stdio mode (default for MCP)
-  --http               Run in HTTP mode
-  --port <num>         Port for HTTP mode (default: 3001)
-  --deployment <name>  Connect to specific deployment
-  --test               Test Convex connection
-  --setup              Interactive setup wizard
-  --config             Show all detected config sources
-  -v, --version        Show version number
-  -h, --help           Show help
+--stdio              Run in stdio mode (default for MCP)
+--http               Run in HTTP mode
+--port <num>         Port for HTTP mode (default: 3001)
+--deployment <name>  Connect to specific deployment
+--test               Test Convex connection
+--setup              Interactive setup wizard
+--config             Show all detected config sources
+-v, --version        Show version number
+-h, --help           Show help
 ```
 
 ## Upgrading

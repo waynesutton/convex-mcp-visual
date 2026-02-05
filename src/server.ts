@@ -35,6 +35,7 @@ import {
   writeConflictReportTool,
   handleWriteConflictReport,
 } from "./tools/write-conflict-report.js";
+import { kanbanBoardTool, handleKanbanBoard } from "./tools/kanban-board.js";
 import { getSchemaResourceContent } from "./resources/schema-browser.js";
 import { getDashboardResourceContent } from "./resources/dashboard.js";
 import { ConvexClient } from "./convex-client.js";
@@ -81,6 +82,7 @@ export async function createServer(): Promise<ConvexMcpServer> {
         tableHeatmapTool,
         schemaDriftTool,
         writeConflictReportTool,
+        kanbanBoardTool,
       ],
     };
   });
@@ -111,6 +113,9 @@ export async function createServer(): Promise<ConvexMcpServer> {
         break;
       case "write_conflict_report":
         result = await handleWriteConflictReport(args);
+        break;
+      case "kanban_board":
+        result = await handleKanbanBoard(convexClient, args);
         break;
       default:
         throw new Error(`Unknown tool: ${name}`);

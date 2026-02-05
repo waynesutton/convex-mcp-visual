@@ -93,7 +93,8 @@ export interface UIServerConfig {
     | "codebase-subway-map"
     | "table-heatmap"
     | "schema-drift"
-    | "write-conflicts";
+    | "write-conflicts"
+    | "kanban-board";
   config: Record<string, unknown>;
   port?: number;
   autoClose?: number; // Auto-close after N milliseconds (0 = never)

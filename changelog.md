@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Kanban board CLI and MCP tool for visualizing scheduled functions, cron jobs, and AI agent threads
+- New CLI command: `convex-mcp-visual kanban` with `--jobs` and `--agents` flags
+- Kanban board browser UI at `apps/kanban-board/` with interactive columns
+- Support for @convex-dev/agent component detection and thread visualization
+- Support for other Convex agent patterns with similar table structures
+- ConvexClient methods: `getScheduledFunctions()`, `getCronJobs()`, `detectAgentComponent()`, `getAgentThreads()`, `getAgentMessages()`
 - Codex CLI support with `--install-codex` and `--uninstall-codex` flags
 - TOML config writer for Codex at `~/.codex/config.toml`
 - Codex documentation in README.md and docs/setup.md

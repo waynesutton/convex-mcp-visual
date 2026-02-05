@@ -35,7 +35,8 @@ type Subcommand =
   | "subway"
   | "table-heatmap"
   | "schema-drift"
-  | "write-conflicts";
+  | "write-conflicts"
+  | "kanban";
 
 async function main() {
   // Check for subcommands first (schema, dashboard, diagram, subway, heatmap)
@@ -50,7 +51,8 @@ async function main() {
     subcommand === "subway" ||
     subcommand === "table-heatmap" ||
     subcommand === "schema-drift" ||
-    subcommand === "write-conflicts"
+    subcommand === "write-conflicts" ||
+    subcommand === "kanban"
   ) {
     await handleDirectCLI(subcommand, args.slice(1));
     return;
@@ -174,6 +176,7 @@ COMMANDS (Direct CLI):
   table-heatmap       Show writes per minute heatmap (opens browser + terminal output)
   schema-drift         Compare declared vs inferred schemas (opens browser + terminal output)
   write-conflicts     Summarize write conflicts from logs (opens browser + terminal output)
+  kanban              Kanban board view of scheduled jobs and AI agents
 
 MCP CLIENT INSTALL (adds MCP config automatically):
   --install           Install to all detected MCP clients
@@ -224,6 +227,9 @@ DIRECT CLI EXAMPLES:
   convex-mcp-visual table-heatmap             # Heatmap of recent writes
   convex-mcp-visual schema-drift              # Compare declared vs inferred schemas
   convex-mcp-visual write-conflicts --log-file logs.txt
+  convex-mcp-visual kanban                    # Auto-detect jobs and agents
+  convex-mcp-visual kanban --jobs             # Show scheduled functions/crons only
+  convex-mcp-visual kanban --agents           # Show AI agent threads only
 
 MCP SERVER EXAMPLES:
   convex-mcp-visual --stdio                   # For Claude Code/Desktop/Cursor
@@ -285,6 +291,10 @@ async function handleDirectCLI(
       options.sinceMinutes = args[++i];
     } else if (arg === "--max-lines" && args[i + 1]) {
       options.maxLines = args[++i];
+    } else if (arg === "--jobs") {
+      options.jobs = true;
+    } else if (arg === "--agents") {
+      options.agents = true;
     } else if (arg === "--deployment" && args[i + 1]) {
       const deploymentName = args[++i];
       process.env.CONVEX_URL = `https://${deploymentName}.convex.cloud`;
@@ -430,6 +440,28 @@ async function handleDirectCLI(
         logFile: options.logFile,
         sinceMinutes: options.sinceMinutes,
         maxLines: options.maxLines,
+        theme: options.theme,
+        noBrowser: options.noBrowser,
+      });
+      if (options.json) {
+        console.log(
+          JSON.stringify({ output: result.content[0].text }, null, 2),
+        );
+      } else {
+        console.log(result.content[0].text);
+      }
+      break;
+    }
+
+    case "kanban": {
+      const { handleKanbanBoard } = await import("./tools/kanban-board.js");
+      // Determine mode from flags
+      let mode: "jobs" | "agents" | "auto" = "auto";
+      if (options.jobs) mode = "jobs";
+      if (options.agents) mode = "agents";
+
+      const result = await handleKanbanBoard(client!, {
+        mode,
         theme: options.theme,
         noBrowser: options.noBrowser,
       });
@@ -600,6 +632,37 @@ OPTIONS:
 EXAMPLES:
   npx convex logs --limit 1000 > logs.txt
   convex-mcp-visual write-conflicts --log-file logs.txt
+`);
+      break;
+
+    case "kanban":
+      console.log(`
+convex-mcp-visual kanban
+
+Display a kanban board view of Convex scheduled functions, cron jobs, and AI agent threads.
+
+MODE OPTIONS:
+  --jobs                Show only scheduled functions and cron jobs
+  --agents              Show only AI agent threads (requires @convex-dev/agent component)
+  (default)             Auto-detect and show both if available
+
+DISPLAY OPTIONS:
+  --theme <name>        Color theme: github-dark, github-light
+  --json                Output JSON only (no browser)
+  --no-browser          Terminal output only
+  --deployment <name>   Connect to specific deployment
+  -h, --help            Show this help
+
+NOTES:
+  The agents view requires the @convex-dev/agent component to be installed.
+  Other Convex agent patterns may also be detected if they use similar table structures.
+  See: https://www.convex.dev/components/agent
+
+EXAMPLES:
+  convex-mcp-visual kanban                    # Auto-detect jobs and agents
+  convex-mcp-visual kanban --jobs             # Scheduled functions and crons only
+  convex-mcp-visual kanban --agents           # AI agent threads only
+  convex-mcp-visual kanban --theme github-light
 `);
       break;
   }
