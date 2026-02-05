@@ -558,10 +558,9 @@ function buildSubwaySvg(
     return '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="400"><text x="50%" y="200" text-anchor="middle" fill="#999" font-size="18">No files to map</text></svg>';
   }
 
-  // Vertical layout constants
+  // Vertical layout constants - wider spacing for better readability
   const STATION_SPACING_Y = 70;
-  const LINE_SPACING_X = 180;
-  const MARGIN_LEFT = 60;
+  const LINE_SPACING_X = 280; // Increased from 180 for more space between lines
   const MARGIN_TOP = 100;
   const STATION_RADIUS = 10;
   const TRANSFER_RADIUS = 14;
@@ -569,26 +568,36 @@ function buildSubwaySvg(
   const FONT_SIZE = 12;
   const LABEL_OFFSET_X = 20;
 
-  // Calculate dimensions based on vertical layout
-  const maxStations = Math.max(...lines.map((l) => l.stations.length), 1);
-  const width = Math.max(
-    1000,
-    MARGIN_LEFT + lines.length * LINE_SPACING_X + 200,
-  );
+  // Sort lines: put multi-station lines first, single-station lines at the end
+  const sortedLines = [...lines].sort((a, b) => {
+    if (a.stations.length === 1 && b.stations.length > 1) return 1;
+    if (a.stations.length > 1 && b.stations.length === 1) return -1;
+    return b.stations.length - a.stations.length;
+  });
+
+  // Calculate content width and center it
+  const maxStations = Math.max(...sortedLines.map((l) => l.stations.length), 1);
+  const contentWidth = sortedLines.length * LINE_SPACING_X + 200;
+  const minWidth = 1400;
+  const width = Math.max(minWidth, contentWidth);
   const height = Math.max(
-    600,
-    MARGIN_TOP + maxStations * STATION_SPACING_Y + 80,
+    700,
+    MARGIN_TOP + maxStations * STATION_SPACING_Y + 120,
   );
 
-  // Set station positions (vertical layout)
-  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-    const line = lines[lineIndex];
+  // Center the lines horizontally within the SVG
+  const totalLinesWidth = (sortedLines.length - 1) * LINE_SPACING_X;
+  const marginLeft = Math.max(150, (width - totalLinesWidth - 200) / 2);
+
+  // Set station positions (vertical layout) - using sortedLines now
+  for (let lineIndex = 0; lineIndex < sortedLines.length; lineIndex++) {
+    const line = sortedLines[lineIndex];
     for (
       let stationIndex = 0;
       stationIndex < line.stations.length;
       stationIndex++
     ) {
-      line.stations[stationIndex].x = MARGIN_LEFT + lineIndex * LINE_SPACING_X;
+      line.stations[stationIndex].x = marginLeft + lineIndex * LINE_SPACING_X;
       line.stations[stationIndex].y =
         MARGIN_TOP + stationIndex * STATION_SPACING_Y;
     }
@@ -596,7 +605,7 @@ function buildSubwaySvg(
 
   // Build station lookup for connections
   const stationMap = new Map<string, Station>();
-  for (const line of lines) {
+  for (const line of sortedLines) {
     for (const station of line.stations) {
       stationMap.set(station.id, station);
     }
@@ -643,7 +652,10 @@ function buildSubwaySvg(
   <rect width="100%" height="100%" fill="url(#subway-grid)"/>`);
 
   // Title at top
-  const totalStations = lines.reduce((sum, l) => sum + l.stations.length, 0);
+  const totalStations = sortedLines.reduce(
+    (sum, l) => sum + l.stations.length,
+    0,
+  );
   const totalConnections = connectionData.length;
   svgParts.push(
     `<text x="${width / 2}" y="36" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="var(--subway-text, #1a1a1a)">Codebase Metro Map</text>`,
@@ -669,25 +681,34 @@ function buildSubwaySvg(
 
   // Group for vertical line routes
   svgParts.push(`<g id="line-routes">`);
-  for (const line of lines) {
+  for (const line of sortedLines) {
     if (line.stations.length === 0) continue;
     const stationIds = line.stations.map((s) => s.id).join(",");
-    const pathPoints = line.stations.map((s) => `${s.x},${s.y}`).join(" L");
+
+    // For single-station lines, draw a short vertical stub
+    let pathD: string;
+    if (line.stations.length === 1) {
+      const s = line.stations[0];
+      const stubLength = 40; // Short vertical line above and below the station
+      pathD = `M${s.x},${s.y - stubLength} L${s.x},${s.y + stubLength}`;
+    } else {
+      pathD = "M" + line.stations.map((s) => `${s.x},${s.y}`).join(" L");
+    }
 
     // Glow effect
     svgParts.push(
-      `<path id="glow-${line.id}" class="line-glow" data-line="${line.id}" data-stations="${stationIds}" d="M${pathPoints}" fill="none" stroke="${line.color}" stroke-width="${LINE_WIDTH + 6}" stroke-linecap="round" stroke-linejoin="round" opacity="0.12"/>`,
+      `<path id="glow-${line.id}" class="line-glow" data-line="${line.id}" data-stations="${stationIds}" d="${pathD}" fill="none" stroke="${line.color}" stroke-width="${LINE_WIDTH + 6}" stroke-linecap="round" stroke-linejoin="round" opacity="0.12"/>`,
     );
     // Main line
     svgParts.push(
-      `<path id="path-${line.id}" class="line-path" data-line="${line.id}" data-stations="${stationIds}" d="M${pathPoints}" fill="none" stroke="${line.color}" stroke-width="${LINE_WIDTH}" stroke-linecap="round" stroke-linejoin="round"/>`,
+      `<path id="path-${line.id}" class="line-path" data-line="${line.id}" data-stations="${stationIds}" d="${pathD}" fill="none" stroke="${line.color}" stroke-width="${LINE_WIDTH}" stroke-linecap="round" stroke-linejoin="round"/>`,
     );
   }
   svgParts.push(`</g>`);
 
   // Group for stations
   svgParts.push(`<g id="stations">`);
-  for (const line of lines) {
+  for (const line of sortedLines) {
     for (const station of line.stations) {
       const r = station.isTransfer ? TRANSFER_RADIUS : STATION_RADIUS;
       svgParts.push(
@@ -721,7 +742,7 @@ function buildSubwaySvg(
 
   // Line labels at top of each vertical line
   svgParts.push(`<g id="line-labels">`);
-  for (const line of lines) {
+  for (const line of sortedLines) {
     if (line.stations.length === 0) continue;
     const firstStation = line.stations[0];
     const labelX = firstStation.x;
@@ -974,10 +995,14 @@ function buildMapHtml(
       padding: 24px;
       min-height: calc(100vh - 160px);
       background: var(--subway-bg);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
     }
     
     .subway-map {
       display: block;
+      margin: 0 auto;
     }
     
     .path-bar {

@@ -51,6 +51,11 @@ Current development tasks and progress.
 - [x] Horizontal bezier curve connections between lines
 - [x] Added title and stats header to subway map SVG
 - [x] Added legend showing line colors and names
+- [x] Increased subway map line spacing to 280px for better visibility
+- [x] Centered subway map in container
+- [x] Sort lines by station count (multi-station first, single-station at end)
+- [x] Single-station lines show vertical stub instead of invisible point
+- [x] Kanban board theme toggle uses sun/moon icons (removed text label)
 
 ## Completed (v1.2.7)
 

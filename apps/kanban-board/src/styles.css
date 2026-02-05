@@ -90,19 +90,44 @@ body {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  padding: 6px 10px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   cursor: pointer;
   color: var(--text-secondary);
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  transition: background 0.15s;
+  justify-content: center;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .theme-toggle:hover {
   background: var(--bg-tertiary);
   color: var(--text-primary);
+}
+
+.theme-toggle svg {
+  display: block;
+}
+
+/* Dark mode (default): show sun icon, hide moon */
+.theme-toggle .sun-icon {
+  display: block;
+}
+
+.theme-toggle .moon-icon {
+  display: none;
+}
+
+/* Light mode: show moon icon, hide sun */
+[data-theme="github-light"] .theme-toggle .sun-icon {
+  display: none;
+}
+
+[data-theme="github-light"] .theme-toggle .moon-icon {
+  display: block;
 }
 
 /* Mode tabs */
