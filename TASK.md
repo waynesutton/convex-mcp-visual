@@ -58,6 +58,10 @@ Current development tasks and progress.
 - [x] Sort lines by station count (multi-station first, single-station at end)
 - [x] Single-station lines show vertical stub instead of invisible point
 - [x] Kanban board theme toggle uses sun/moon icons (removed text label)
+- [x] Fix graph node headers in schema browser (flat colors instead of gradients)
+- [x] Add theme toggle to schema diagram view with CSS variables
+- [x] Standardize localStorage key to `convex-mcp-theme` across all UI views
+- [x] Theme preference now shared across schema browser, dashboard, and diagram views
 
 ## Completed (v1.2.7)
 

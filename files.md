@@ -58,6 +58,12 @@ Each app contains:
 - `src/app.ts` - Main application logic
 - `src/styles.css` - Component styles
 
+**Theme management:**
+
+- All UI apps share the same localStorage key: `convex-mcp-theme`
+- Theme preference (light/dark) syncs across schema browser, dashboard, and diagram views
+- Default theme is light (tan background)
+
 **Dashboard app features:**
 
 - Tables Overview: horizontal bar chart with scrollable container

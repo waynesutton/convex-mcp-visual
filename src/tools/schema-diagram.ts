@@ -354,14 +354,8 @@ function simplifyType(type: string): string {
 function generateDiagramHtml(
   svg: string,
   mermaidCode: string,
-  theme: string,
+  _theme: string,
 ): string {
-  const isDark =
-    theme.includes("dark") ||
-    theme === "tokyo-night" ||
-    theme === "dracula" ||
-    theme === "nord";
-
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -370,10 +364,32 @@ function generateDiagramHtml(
   <title>Schema Diagram</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      /* Light Mode (Tan) - Default */
+      --bg-primary: #faf8f5;
+      --bg-secondary: #f5f3f0;
+      --bg-hover: #ebe9e6;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6b6b;
+      --border: #e6e4e1;
+      --card-bg: #ffffff;
+    }
+    
+    [data-theme="dark"] {
+      --bg-primary: #1e1e1e;
+      --bg-secondary: #252526;
+      --bg-hover: #37373d;
+      --text-primary: #cccccc;
+      --text-secondary: #8b8b8b;
+      --border: #3c3c3c;
+      --card-bg: #252526;
+    }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: ${isDark ? "#1e1e1e" : "#faf8f5"};
-      color: ${isDark ? "#cccccc" : "#1a1a1a"};
+      background: var(--bg-primary);
+      color: var(--text-primary);
       min-height: 100vh;
       padding: 20px;
     }
@@ -383,7 +399,12 @@ function generateDiagramHtml(
       align-items: center;
       margin-bottom: 20px;
       padding-bottom: 16px;
-      border-bottom: 1px solid ${isDark ? "#3c3c3c" : "#e6e4e1"};
+      border-bottom: 1px solid var(--border);
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
     h1 {
       font-size: 20px;
@@ -397,9 +418,40 @@ function generateDiagramHtml(
       border-radius: 50%;
       background: #4a8c5c;
     }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+    }
+    .theme-toggle:hover {
+      background: #eb5601;
+      border-color: #eb5601;
+      color: white;
+    }
+    .theme-toggle svg {
+      width: 18px;
+      height: 18px;
+    }
+    .theme-toggle .sun-icon { display: none; }
+    .theme-toggle .moon-icon { display: block; }
+    [data-theme="dark"] .theme-toggle .sun-icon { display: block; }
+    [data-theme="dark"] .theme-toggle .moon-icon { display: none; }
     .diagram-container {
-      background: ${isDark ? "#252526" : "#ffffff"};
-      border: 1px solid ${isDark ? "#3c3c3c" : "#e6e4e1"};
+      background: var(--card-bg);
+      border: 1px solid var(--border);
       border-radius: 12px;
       padding: 20px;
       overflow: auto;
@@ -423,33 +475,53 @@ function generateDiagramHtml(
       font-weight: 600;
     }
     .copy-btn {
-      background: ${isDark ? "#37373d" : "#f5f3f0"};
-      border: 1px solid ${isDark ? "#3c3c3c" : "#e6e4e1"};
-      color: ${isDark ? "#cccccc" : "#1a1a1a"};
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
       padding: 6px 12px;
       border-radius: 6px;
       cursor: pointer;
       font-size: 12px;
     }
     .copy-btn:hover {
-      background: ${isDark ? "#4a4a4f" : "#ebe9e6"};
+      background: var(--bg-hover);
     }
     pre {
-      background: ${isDark ? "#1e1e1e" : "#f5f3f0"};
-      border: 1px solid ${isDark ? "#3c3c3c" : "#e6e4e1"};
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
       border-radius: 8px;
       padding: 16px;
       overflow-x: auto;
       font-family: 'SF Mono', Monaco, monospace;
       font-size: 13px;
       line-height: 1.5;
+      color: var(--text-primary);
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1><span class="status-dot"></span> Schema Diagram</h1>
-    <span style="font-size: 12px; color: ${isDark ? "#8b8b8b" : "#6b6b6b"};">Theme: ${theme}</span>
+    <div class="header-left">
+      <h1><span class="status-dot"></span> Schema Diagram</h1>
+    </div>
+    <div class="header-actions">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">
+        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </button>
+    </div>
   </div>
   
   <div class="diagram-container">
@@ -465,6 +537,14 @@ function generateDiagramHtml(
   </div>
   
   <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('convex-mcp-theme', newTheme);
+    }
+    
     function copyCode() {
       const code = document.getElementById('mermaid-code').textContent;
       navigator.clipboard.writeText(code).then(() => {
@@ -473,6 +553,15 @@ function generateDiagramHtml(
         setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
       });
     }
+    
+    // Initialize theme from localStorage or default to light
+    (function() {
+      const stored = localStorage.getItem('convex-mcp-theme');
+      if (stored === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      // Default is light (no data-theme attribute needed)
+    })();
   </script>
 </body>
 </html>`;

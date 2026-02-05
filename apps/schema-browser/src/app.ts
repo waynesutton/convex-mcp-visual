@@ -171,7 +171,7 @@ class SchemaBrowserApp {
 
   private initTheme(): void {
     // Check for saved theme preference or system preference
-    const savedTheme = localStorage.getItem("convex-schema-theme");
+    const savedTheme = localStorage.getItem("convex-mcp-theme");
     if (savedTheme === "dark" || savedTheme === "light") {
       this.currentTheme = savedTheme;
     } else if (
@@ -204,7 +204,7 @@ class SchemaBrowserApp {
 
   private toggleTheme(): void {
     this.currentTheme = this.currentTheme === "light" ? "dark" : "light";
-    localStorage.setItem("convex-schema-theme", this.currentTheme);
+    localStorage.setItem("convex-mcp-theme", this.currentTheme);
     this.applyTheme();
     // Redraw graph if in graph view
     if (this.viewMode === "graph") {
@@ -1744,19 +1744,8 @@ class SchemaBrowserApp {
     ctx.lineWidth = isSelected ? 2 : 1;
     ctx.stroke();
 
-    // Header background with gradient effect
-    const headerGradient = ctx.createLinearGradient(x, y, x, y + headerHeight);
-    if (isSelected) {
-      headerGradient.addColorStop(0, colors.accentInteractive);
-      headerGradient.addColorStop(1, colors.accentHover);
-    } else {
-      headerGradient.addColorStop(0, colors.nodeHeader);
-      headerGradient.addColorStop(
-        1,
-        isDark ? colors.bgSecondary : colors.bgHover,
-      );
-    }
-    ctx.fillStyle = headerGradient;
+    // Header background (flat color, no gradient)
+    ctx.fillStyle = isSelected ? colors.accentInteractive : colors.nodeHeader;
     ctx.beginPath();
     ctx.roundRect(x, y, w, headerHeight, [radius, radius, 0, 0]);
     ctx.fill();

@@ -50,6 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Graph node headers in schema browser now use flat colors instead of gradients
+- Schema diagram view now has theme toggle button and uses CSS variables for light/dark mode
+- All UI views now share same localStorage key (`convex-mcp-theme`) for consistent theme preference
+- Theme selection in one view now applies across all views (schema browser, dashboard, diagram)
 - Subway map now uses its own viewer instead of schema diagram
 - Subway map completely redesigned to look like actual transit map (NYC subway style)
 - Each folder is now a colored line with files as stations along the route

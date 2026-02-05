@@ -89,7 +89,7 @@ class RealtimeDashboardApp {
 
   private initTheme(): void {
     // Check localStorage for saved theme preference
-    const savedTheme = localStorage.getItem("convex-dashboard-theme") as
+    const savedTheme = localStorage.getItem("convex-mcp-theme") as
       | "light"
       | "dark"
       | null;
@@ -109,7 +109,7 @@ class RealtimeDashboardApp {
 
   private applyTheme(): void {
     document.documentElement.setAttribute("data-theme", this.currentTheme);
-    localStorage.setItem("convex-dashboard-theme", this.currentTheme);
+    localStorage.setItem("convex-mcp-theme", this.currentTheme);
   }
 
   private toggleTheme(): void {
