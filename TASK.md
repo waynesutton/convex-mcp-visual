@@ -4,6 +4,15 @@ Current development tasks and progress.
 
 ## Completed (Unreleased)
 
+- [x] Fix docs/setup.md: --setup description now says .env.local instead of ~/.convex-mcp-visual.json
+- [x] Fix docs/setup.md: switching deployments note now references .env.local and --config
+- [x] Add warning to Method 2 (global export) in docs/setup.md about multi-project conflicts
+- [x] Add undo instructions for global CONVEX_DEPLOY_KEY export in docs/setup.md
+- [x] Add warning to README.md export example about multi-project conflicts
+- [x] Add Troubleshooting section to README.md with stuck deploy key fix and config priority
+- [x] Add "Wrong deployment or stuck deploy key" section to docs/troubleshooting.md
+- [x] Add "Multiple Convex projects" section to docs/troubleshooting.md
+- [x] Verify TypeScript type safety (tsc --noEmit passes)
 - [x] Add MCP Apps support (SEP-1865) for embedded UI rendering in ChatGPT, Claude web, VS Code
 - [x] Add `_meta.ui.resourceUri` to all 8 tool definitions for MCP Apps compatibility
 - [x] Register 8 UI resources with `text/html;profile=mcp-app` MIME type

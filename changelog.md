@@ -7,8 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Setup docs now correctly state `--setup` saves to `.env.local` (not `~/.convex-mcp-visual.json`)
+- Added warning to Method 2 (global export) in setup docs about multi-project conflicts
+- Added undo instructions for global `CONVEX_DEPLOY_KEY` export
+
 ### Added
 
+- Troubleshooting section in README for stuck deploy keys and wrong deployments
+- "Wrong deployment or stuck deploy key" section in docs/troubleshooting.md with step-by-step cleanup
+- "Multiple Convex projects" section in docs/troubleshooting.md with config priority table
 - MCP Apps support (SEP-1865) for embedded UI rendering in ChatGPT, Claude web, VS Code, and other compatible hosts
 - Tool metadata with `_meta.ui.resourceUri` linking each tool to its HTML resource
 - 8 UI resources registered with `text/html;profile=mcp-app` MIME type for MCP Apps compatibility

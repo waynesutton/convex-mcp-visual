@@ -75,10 +75,10 @@ Each app contains:
 
 | File                           | Description                                  |
 | ------------------------------ | -------------------------------------------- |
-| `setup.md`                     | Installation, config, MCP clients, Docker    |
+| `setup.md`                     | Installation, per-project config, MCP clients, Docker |
 | `tools.md`                     | Tool parameters and keyboard shortcuts       |
 | `architecture.md`              | Technical architecture and design            |
-| `troubleshooting.md`           | Common issues and solutions                  |
+| `troubleshooting.md`           | Common issues, stuck deploy keys, multi-project config |
 | `limitations.md`               | Known limitations and compatibility          |
 | `OVERVIEW.md`                  | Project summary for GitHub/marketplace       |
 | `deployplugin.md`              | Claude Code plugin distribution guide        |

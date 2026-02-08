@@ -99,11 +99,15 @@ npx convex-mcp-visual --setup
 
 The setup wizard detects your project from `.env.local` and shows which deployment to look for in the dashboard. Just copy and paste the key.
 
-Or set the environment variable manually:
+Or set the environment variable for the current session:
 
 ```bash
 export CONVEX_DEPLOY_KEY="prod:your-deployment|your-key"
 ```
+
+> **Note:** If you work with multiple Convex apps, use per-project `.env.local` files
+> instead of a global export. A global `CONVEX_DEPLOY_KEY` overrides all local configs
+> and connects every project to the same deployment. See [Troubleshooting](#troubleshooting).
 
 Get your deploy key from [dashboard.convex.dev](https://dashboard.convex.dev) under Settings > Deploy Keys.
 
@@ -363,6 +367,62 @@ codex mcp remove convex-visual
 # Remove global package
 npm uninstall -g convex-mcp-visual
 ```
+
+## Troubleshooting
+
+### Wrong deployment or stuck deploy key
+
+If the tool keeps connecting to the wrong Convex deployment, a global config is overriding your local project settings.
+
+**1. Check what config is active:**
+
+```bash
+npx convex-mcp-visual --config
+```
+
+**2. Clear the global environment variable:**
+
+```bash
+unset CONVEX_DEPLOY_KEY
+echo $CONVEX_DEPLOY_KEY
+```
+
+If the variable reappears in new terminals, remove the `export CONVEX_DEPLOY_KEY` line from your shell profile (`~/.zshrc`, `~/.bashrc`, or `~/.zprofile`).
+
+**3. Remove the legacy global config file:**
+
+```bash
+rm ~/.convex-mcp-visual.json
+```
+
+This file was created by older versions of `--setup`. Removing it lets per-project `.env.local` files take priority.
+
+**4. Use per-project config:**
+
+In each Convex project folder, run `--setup` or create a `.env.local` file:
+
+```
+CONVEX_DEPLOY_KEY="prod:your-deployment-name|your-admin-key"
+```
+
+**5. Verify:**
+
+```bash
+npx convex-mcp-visual --test
+```
+
+### Config priority
+
+The first source found wins:
+
+1. `CONVEX_DEPLOY_KEY` environment variable (highest priority)
+2. `CONVEX_URL` environment variable
+3. `.env.local` in the current directory
+4. `.convex/deployment.json` in the current directory
+5. `~/.convex/config.json` (Convex CLI login session)
+6. `~/.convex-mcp-visual.json` (legacy global fallback)
+
+For more issues, see [Troubleshooting docs](docs/troubleshooting.md).
 
 ## Contributing
 

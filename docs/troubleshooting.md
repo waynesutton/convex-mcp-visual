@@ -19,11 +19,12 @@ claude mcp add convex-visual -- npx convex-mcp-visual --stdio
 You need to set up your deploy key:
 
 ```bash
-# Run the setup wizard
+# Run the setup wizard from your project folder
+cd my-convex-app/
 npx convex-mcp-visual --setup
 
-# Or set the environment variable
-export CONVEX_DEPLOY_KEY="prod:your-deployment|your-key"
+# Or create a .env.local in your project folder
+echo 'CONVEX_DEPLOY_KEY="prod:your-deployment|your-key"' > .env.local
 ```
 
 ### "403 Forbidden" or "Connection failed"
@@ -78,6 +79,73 @@ If tables show 0 documents:
 1. Verify you have admin access: `npx convex-mcp-visual --test` should show "Admin access: Yes"
 2. Check your deploy key has read access
 3. Verify your deployment actually has data
+
+### Wrong deployment or stuck deploy key
+
+If the tool connects to the wrong Convex deployment regardless of which project folder you are in, a global config is overriding your local settings.
+
+**Step 1: See which config source is active**
+
+```bash
+npx convex-mcp-visual --config
+```
+
+**Step 2: Clear the global environment variable**
+
+```bash
+unset CONVEX_DEPLOY_KEY
+echo $CONVEX_DEPLOY_KEY
+```
+
+If the variable is still set after opening a new terminal, check your shell profile for an `export CONVEX_DEPLOY_KEY` line and remove it:
+
+- `~/.zshrc` (macOS default)
+- `~/.bashrc` or `~/.bash_profile` (Linux/older macOS)
+- `~/.zprofile`
+
+**Step 3: Remove the legacy global config file**
+
+```bash
+rm ~/.convex-mcp-visual.json
+```
+
+This file was created by older versions of `--setup`. Current versions save to `.env.local` in the project directory instead. Removing the global file lets per-project configs take priority.
+
+**Step 4: Set up per-project config**
+
+In each Convex project folder, run:
+
+```bash
+cd my-convex-app/
+npx convex-mcp-visual --setup
+```
+
+Or create a `.env.local` file manually:
+
+```
+CONVEX_DEPLOY_KEY="prod:your-deployment-name|your-admin-key"
+```
+
+**Step 5: Verify**
+
+```bash
+npx convex-mcp-visual --test
+```
+
+### Multiple Convex projects
+
+If you work with multiple Convex apps, do not set `CONVEX_DEPLOY_KEY` as a global environment variable. Use per-project `.env.local` files instead.
+
+Config priority (first source found wins):
+
+1. `CONVEX_DEPLOY_KEY` environment variable (highest, overrides everything)
+2. `CONVEX_URL` environment variable
+3. `.env.local` in the current directory
+4. `.convex/deployment.json` in the current directory
+5. `~/.convex/config.json` (Convex CLI login session)
+6. `~/.convex-mcp-visual.json` (legacy global fallback)
+
+Switching between projects is as simple as changing directories. Each folder reads its own `.env.local`.
 
 ## Debug Mode
 

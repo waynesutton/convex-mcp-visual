@@ -50,12 +50,17 @@ This will:
 - Detect your project from `.env.local` or `.convex/deployment.json`
 - Open the Convex dashboard and tell you which project to select
 - Prompt you to paste your deploy key
-- Save the config to `~/.convex-mcp-visual.json`
+- Save the deploy key to `.env.local` in the current directory (per-project)
 - Test the connection
 
 When run inside a Convex project folder, the wizard shows which deployment it detected so you know which project to select in the dashboard.
 
 ### Method 2: Environment Variable
+
+> **Warning:** Setting `CONVEX_DEPLOY_KEY` in your shell profile applies to ALL
+> Convex projects. If you work with multiple Convex apps, use Method 1 (per-project
+> `.env.local`) instead. A global export will override every local config file and
+> cause all projects to connect to the same deployment.
 
 Add to your shell profile:
 
@@ -77,6 +82,15 @@ source ~/.bashrc
 
 ```powershell
 [Environment]::SetEnvironmentVariable("CONVEX_DEPLOY_KEY", "prod:your-deployment|your-key", "User")
+```
+
+To undo a global export:
+
+```bash
+# Remove from current session
+unset CONVEX_DEPLOY_KEY
+
+# Then remove the export line from ~/.zshrc or ~/.bashrc
 ```
 
 ### Method 3: MCP Client Config
@@ -133,7 +147,7 @@ Run the setup wizard again.
 npx convex-mcp-visual --setup
 ```
 
-The setup wizard only writes `~/.convex-mcp-visual.json`. It does not modify your shell profile or MCP client config. If the deployment does not change, another config source is taking priority. The first source found wins.
+The setup wizard writes to `.env.local` in the current directory. It does not modify your shell profile or MCP client config. If the deployment does not change, a higher-priority config source is taking priority (such as a `CONVEX_DEPLOY_KEY` environment variable). Run `npx convex-mcp-visual --config` to see which source is active.
 
 ### Deploy Key Priority
 
