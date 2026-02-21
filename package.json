@@ -1,7 +1,7 @@
 {
   "name": "convex-mcp-visual",
-  "version": "1.4.7",
-  "description": "Visual MCP tools for exploring Convex databases - schema browser, dashboard, ER diagrams. Works as CLI, MCP server, or Claude Code plugin.",
+  "version": "1.5.0",
+  "description": "Visual MCP tools for exploring Convex databases - schema browser, component browser, dashboard, ER diagrams. Works as CLI, MCP server, or Claude Code plugin.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -44,6 +44,8 @@
     "mcp",
     "model-context-protocol",
     "schema-browser",
+    "component-browser",
+    "components",
     "database",
     "visualization",
     "graph",

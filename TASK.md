@@ -2,7 +2,29 @@
 
 Current development tasks and progress.
 
-## Completed (Unreleased)
+## Completed (v1.5.0)
+
+- [x] Add Component Browser tool (`component_browser`) for viewing installed Convex components
+- [x] Add Components tab to Schema Browser UI with overview and detail views
+- [x] Add CLI command: `convex-mcp-visual components` with filtering options
+- [x] Add ConvexClient methods: `listComponents()`, `getComponentSchema()`, `getTablesGroupedByComponent()`
+- [x] Add detection of known component types: agent, auth, ratelimiter, migrations, crons, aggregate, workflow, shardedCounter
+- [x] Add Schema Diagram support for component filtering with `--component` and `--groupByComponent` options
+- [x] Add component card grid and detail views in Schema Browser UI
+- [x] Add CSS styles for component browser views
+- [x] Update Schema Browser to support three view modes: List, Graph, and Components
+- [x] Update Schema Diagram to sanitize component table names for Mermaid compatibility
+- [x] Register `component_browser` MCP tool in server.ts
+- [x] Add `components` subcommand to CLI with `--component`, `--no-tables`, `--no-fields` flags
+- [x] Update README.md with component browser documentation
+- [x] Update docs/tools.md with component_browser tool reference
+- [x] Update changelog.md with v1.5.0 changes
+- [x] Update files.md with component-browser.ts
+- [x] Update package.json description and keywords with components
+- [x] Bump version to 1.5.0
+- [x] Verify TypeScript type safety (npm run build passes)
+
+## Completed (v1.4.8)
 
 - [x] Fix docs/setup.md: --setup description now says .env.local instead of ~/.convex-mcp-visual.json
 - [x] Fix docs/setup.md: switching deployments note now references .env.local and --config

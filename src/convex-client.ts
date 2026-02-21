@@ -123,10 +123,13 @@ export class ConvexClient {
     if (existsSync(envLocalPath)) {
       try {
         const envContent = readFileSync(envLocalPath, "utf-8");
+        // Use multiline regex to skip commented lines (lines starting with #)
         const keyMatch = envContent.match(
-          /CONVEX_DEPLOY_KEY=["']?([^"'\n]+)["']?/,
+          /^(?!#).*?CONVEX_DEPLOY_KEY=["']?([^"'\n]+)["']?/m,
         );
-        const urlMatch = envContent.match(/CONVEX_URL=["']?([^"'\n]+)["']?/);
+        const urlMatch = envContent.match(
+          /^(?!#).*?CONVEX_URL=["']?([^"'\n]+)["']?/m,
+        );
 
         if (keyMatch || urlMatch) {
           let deployment: string | undefined;
@@ -266,9 +269,9 @@ export class ConvexClient {
         try {
           const envContent = readFileSync(envLocalPath, "utf-8");
 
-          // Check for CONVEX_DEPLOY_KEY first
+          // Check for CONVEX_DEPLOY_KEY first (skip commented lines)
           const keyMatch = envContent.match(
-            /CONVEX_DEPLOY_KEY=["']?([^"'\n]+)["']?/,
+            /^(?!#).*?CONVEX_DEPLOY_KEY=["']?([^"'\n]+)["']?/m,
           );
           if (keyMatch && !this.adminKey) {
             const fileDeployKey = keyMatch[1];
@@ -293,8 +296,10 @@ export class ConvexClient {
             }
           }
 
-          // Check for CONVEX_URL
-          const urlMatch = envContent.match(/CONVEX_URL=["']?([^"'\n]+)["']?/);
+          // Check for CONVEX_URL (skip commented lines)
+          const urlMatch = envContent.match(
+            /^(?!#).*?CONVEX_URL=["']?([^"'\n]+)["']?/m,
+          );
           if (urlMatch && !this.deploymentUrl) {
             this.deploymentUrl = urlMatch[1].trim();
             this.urlSource = ".env.local";
@@ -964,6 +969,180 @@ export class ConvexClient {
   }
 
   /**
+   * List all installed Convex components by detecting namespaced tables
+   * Components use the "componentName:tableName" naming convention
+   */
+  async listComponents(): Promise<ConvexComponent[]> {
+    if (!this.deploymentUrl) {
+      return [];
+    }
+
+    try {
+      const shapes = await this.fetchConvex("/api/shapes2");
+      const allTables = Object.keys(shapes);
+
+      // Group tables by component namespace (tables with ":" separator)
+      const componentMap = new Map<string, string[]>();
+      const appTables: string[] = [];
+
+      for (const tableName of allTables) {
+        if (tableName.startsWith("_")) continue;
+
+        const colonIndex = tableName.indexOf(":");
+        if (colonIndex > 0) {
+          const componentName = tableName.substring(0, colonIndex);
+          const tables = componentMap.get(componentName) || [];
+          tables.push(tableName);
+          componentMap.set(componentName, tables);
+        } else {
+          appTables.push(tableName);
+        }
+      }
+
+      // Build component info for each detected component
+      const components: ConvexComponent[] = [];
+
+      for (const [componentName, tableNames] of componentMap) {
+        const tables: ComponentTable[] = [];
+        let totalDocs = 0;
+
+        for (const fullName of tableNames) {
+          const shortName = fullName.substring(componentName.length + 1);
+          const tableSchema = await this.getTableSchema(fullName);
+          const docCount = await this.getTableCount(fullName);
+          totalDocs += docCount;
+
+          tables.push({
+            name: shortName,
+            fullName,
+            documentCount: docCount,
+            indexes: [],
+            fields: tableSchema.inferredFields.length > 0
+              ? tableSchema.inferredFields
+              : tableSchema.declaredFields,
+          });
+        }
+
+        // Detect known component types
+        const { isKnown, type } = this.detectKnownComponentType(componentName, tables);
+
+        components.push({
+          name: componentName,
+          tables,
+          tableCount: tables.length,
+          totalDocuments: totalDocs,
+          isKnownComponent: isKnown,
+          knownComponentType: type,
+        });
+      }
+
+      return components.sort((a, b) => a.name.localeCompare(b.name));
+    } catch (error) {
+      console.error("Failed to list components:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Detect if a component matches a known Convex component type
+   */
+  private detectKnownComponentType(
+    name: string,
+    tables: ComponentTable[],
+  ): { isKnown: boolean; type?: string } {
+    const tableNames = tables.map(t => t.name.toLowerCase());
+
+    // @convex-dev/agent component
+    if (
+      name === "agent" ||
+      (tableNames.includes("threads") && tableNames.includes("messages"))
+    ) {
+      return { isKnown: true, type: "AI Agent (@convex-dev/agent)" };
+    }
+
+    // @convex-dev/auth component
+    if (
+      name === "auth" ||
+      (tableNames.includes("users") && tableNames.includes("sessions"))
+    ) {
+      return { isKnown: true, type: "Authentication (@convex-dev/auth)" };
+    }
+
+    // @convex-dev/ratelimiter component
+    if (name === "ratelimiter" || tableNames.includes("rateLimitCounters")) {
+      return { isKnown: true, type: "Rate Limiter (@convex-dev/ratelimiter)" };
+    }
+
+    // @convex-dev/migrations component
+    if (name === "migrations" || tableNames.includes("migrations")) {
+      return { isKnown: true, type: "Migrations (@convex-dev/migrations)" };
+    }
+
+    // @convex-dev/crons component
+    if (name === "crons") {
+      return { isKnown: true, type: "Crons (@convex-dev/crons)" };
+    }
+
+    // @convex-dev/aggregate component
+    if (name === "aggregate" || tableNames.includes("aggregates")) {
+      return { isKnown: true, type: "Aggregate (@convex-dev/aggregate)" };
+    }
+
+    // @convex-dev/workflow component
+    if (name === "workflow" || tableNames.includes("workflows")) {
+      return { isKnown: true, type: "Workflow (@convex-dev/workflow)" };
+    }
+
+    // @convex-dev/shardedCounter component
+    if (name === "shardedCounter" || tableNames.includes("shards")) {
+      return { isKnown: true, type: "Sharded Counter (@convex-dev/shardedCounter)" };
+    }
+
+    return { isKnown: false };
+  }
+
+  /**
+   * Get detailed schema for a specific component
+   */
+  async getComponentSchema(componentName: string): Promise<ConvexComponent | null> {
+    const components = await this.listComponents();
+    return components.find(c => c.name === componentName) || null;
+  }
+
+  /**
+   * Get all tables grouped by component (including app-level tables)
+   */
+  async getTablesGroupedByComponent(): Promise<{
+    app: TableInfo[];
+    components: ConvexComponent[];
+  }> {
+    if (!this.deploymentUrl) {
+      return { app: [], components: [] };
+    }
+
+    try {
+      const allTables = await this.listTables();
+      const components = await this.listComponents();
+
+      // Get component table names for filtering
+      const componentTableNames = new Set<string>();
+      for (const component of components) {
+        for (const table of component.tables) {
+          componentTableNames.add(table.fullName);
+        }
+      }
+
+      // Filter app tables (not belonging to any component)
+      const appTables = allTables.filter(t => !componentTableNames.has(t.name));
+
+      return { app: appTables, components };
+    } catch (error) {
+      console.error("Failed to group tables:", error);
+      return { app: [], components: [] };
+    }
+  }
+
+  /**
    * Detect if the @convex-dev/agent component is installed
    * Checks for agent-specific tables in the schema
    *
@@ -1216,4 +1395,28 @@ export interface AgentMessage {
   content: string;
   status: string;
   agentId?: string;
+}
+
+/**
+ * Convex Component information
+ * Components use namespaced tables with "componentName:tableName" format
+ */
+export interface ConvexComponent {
+  name: string;
+  tables: ComponentTable[];
+  tableCount: number;
+  totalDocuments: number;
+  isKnownComponent: boolean;
+  knownComponentType?: string;
+}
+
+/**
+ * Table belonging to a component
+ */
+export interface ComponentTable {
+  name: string;
+  fullName: string;
+  documentCount: number;
+  indexes: string[];
+  fields: SchemaField[];
 }

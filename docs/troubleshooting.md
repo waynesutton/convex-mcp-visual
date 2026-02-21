@@ -97,11 +97,25 @@ unset CONVEX_DEPLOY_KEY
 echo $CONVEX_DEPLOY_KEY
 ```
 
-If the variable is still set after opening a new terminal, check your shell profile for an `export CONVEX_DEPLOY_KEY` line and remove it:
+If the variable reappears after opening a new terminal, it was added to a shell profile. Open the file in your editor, find the `export CONVEX_DEPLOY_KEY=...` line, and delete it.
 
-- `~/.zshrc` (macOS default)
-- `~/.bashrc` or `~/.bash_profile` (Linux/older macOS)
-- `~/.zprofile`
+**Where to look by OS:**
+
+| OS | Shell | File to check |
+| --- | --- | --- |
+| macOS | zsh (default since Catalina) | `~/.zshrc` or `~/.zprofile` |
+| macOS | bash | `~/.bash_profile` or `~/.bashrc` |
+| Linux | bash | `~/.bashrc` or `~/.profile` |
+| Linux | zsh | `~/.zshrc` |
+| Windows | PowerShell | Run `[Environment]::SetEnvironmentVariable("CONVEX_DEPLOY_KEY", $null, "User")` |
+| Windows | System env | Settings > System > Advanced > Environment Variables, remove `CONVEX_DEPLOY_KEY` |
+
+After removing the line, open a new terminal and verify:
+
+```bash
+echo $CONVEX_DEPLOY_KEY
+# Should print nothing
+```
 
 **Step 3: Remove the legacy global config file**
 

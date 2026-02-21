@@ -37,16 +37,36 @@ interface Document {
   [key: string]: unknown;
 }
 
+interface ComponentTable {
+  name: string;
+  fullName: string;
+  documentCount: number;
+  indexes: string[];
+  fields: SchemaField[];
+}
+
+interface ConvexComponent {
+  name: string;
+  tables: ComponentTable[];
+  tableCount: number;
+  totalDocuments: number;
+  isKnownComponent: boolean;
+  knownComponentType?: string;
+}
+
 interface AppConfig {
   deploymentUrl: string | null;
   selectedTable: string | null;
   showInferred: boolean;
   pageSize: number;
-  viewMode?: "list" | "graph";
+  viewMode?: "list" | "graph" | "components";
   tables: TableInfo[];
   selectedSchema: TableSchema | null;
   allDocuments?: Record<string, Document[]>;
   hasAdminAccess?: boolean;
+  components?: ConvexComponent[];
+  appTables?: TableInfo[];
+  selectedComponent?: string | null;
 }
 
 interface GraphNode {
@@ -100,11 +120,12 @@ type WindowWithConfig = Window & {
   __CONVEX_CONFIG__?: AppConfig;
 };
 
-type ViewMode = "list" | "graph";
+type ViewMode = "list" | "graph" | "components";
 
 class SchemaBrowserApp {
   private config: AppConfig | null = null;
   private selectedTable: string | null = null;
+  private selectedComponent: string | null = null;
   private currentPage = 1;
   private pageSize = 50;
   private searchQuery = "";
@@ -255,9 +276,14 @@ class SchemaBrowserApp {
 
     this.pageSize = this.config?.pageSize || 50;
 
-    // Set view mode from config (defaults to list)
-    if (this.config?.viewMode === "graph" || this.config?.viewMode === "list") {
+    // Set view mode from config (defaults to graph)
+    if (this.config?.viewMode === "graph" || this.config?.viewMode === "list" || this.config?.viewMode === "components") {
       this.viewMode = this.config.viewMode;
+    }
+
+    // Set selected component from config
+    if (this.config?.selectedComponent) {
+      this.selectedComponent = this.config.selectedComponent;
     }
 
     this.render();
@@ -281,8 +307,11 @@ class SchemaBrowserApp {
     const deploymentUrl = this.config?.deploymentUrl || "Not connected";
     const isConnected = !!this.config?.deploymentUrl;
 
+    const componentCount = this.config?.components?.length || 0;
+    const viewModeClass = this.viewMode === "graph" ? "graph-mode" : this.viewMode === "components" ? "components-mode" : "list-mode";
+
     app.innerHTML = `
-      <div class="app-container ${this.viewMode === "graph" ? "graph-mode" : "list-mode"}">
+      <div class="app-container ${viewModeClass}">
         <div class="header">
           <h1>
             <span class="status-dot ${isConnected ? "" : "error"}" title="${isConnected ? "Connected to Convex" : "Not connected"}"></span>
@@ -305,6 +334,15 @@ class SchemaBrowserApp {
                 <path d="M4 6v4l4 2M12 6v4l-4 2" stroke="currentColor" stroke-width="1.5" fill="none"/>
               </svg>
             </button>
+            <button class="view-btn ${this.viewMode === "components" ? "active" : ""}" data-view="components" title="Components View - Browse installed Convex components${componentCount > 0 ? ` (${componentCount} installed)` : ''}">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <rect x="1" y="1" width="6" height="6" rx="1"/>
+                <rect x="9" y="1" width="6" height="6" rx="1"/>
+                <rect x="1" y="9" width="6" height="6" rx="1"/>
+                <rect x="9" y="9" width="6" height="6" rx="1"/>
+              </svg>
+              ${componentCount > 0 ? `<span class="component-badge">${componentCount}</span>` : ''}
+            </button>
           </div>
           <div class="header-actions">
             <button class="btn" id="shortcutsBtn" title="Keyboard shortcuts">
@@ -326,7 +364,7 @@ class SchemaBrowserApp {
           </div>
         </div>
 
-        ${this.viewMode === "graph" ? this.renderGraphView() : this.renderListView()}
+        ${this.viewMode === "graph" ? this.renderGraphView() : this.viewMode === "components" ? this.renderComponentsView() : this.renderListView()}
         
         <!-- Keyboard shortcuts modal -->
         <div class="shortcuts-modal" id="shortcutsModal" style="display: none;">
@@ -643,6 +681,341 @@ class SchemaBrowserApp {
         </div>
       </div>
     `;
+  }
+
+  private renderComponentsView(): string {
+    const components = this.config?.components || [];
+    const appTables = this.config?.appTables || this.config?.tables?.filter(t => !t.name.includes(':')) || [];
+    const collapsedClass = this.sidebarCollapsed ? "collapsed" : "";
+
+    return `
+      <div class="main components-view">
+        <div class="sidebar-container ${collapsedClass}" id="sidebarContainer">
+          <div class="sidebar" style="width: ${this.sidebarWidth}px">
+            <div class="sidebar-header">
+              <span>COMPONENTS</span>
+              <span id="componentCount">${components.length}</span>
+              <button class="sidebar-collapse-btn" id="sidebarToggle" title="${this.sidebarCollapsed ? "Expand" : "Collapse"}">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M8 2L4 6L8 10"/>
+                </svg>
+              </button>
+            </div>
+            <div class="sidebar-search">
+              <input type="text" id="componentSearchInput" placeholder="Search components..." autocomplete="off" />
+            </div>
+            <ul class="component-list" id="componentList">
+              ${this.renderComponentList(components)}
+            </ul>
+          </div>
+          <div class="resize-handle" id="resizeHandle"></div>
+        </div>
+
+        <div class="content">
+          <div id="componentsViewContent">
+            ${this.renderComponentsContent(components, appTables)}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderComponentList(components: ConvexComponent[]): string {
+    if (components.length === 0) {
+      return `
+        <li class="component-list-empty">
+          <div class="empty-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+          </div>
+          <span>No components detected</span>
+        </li>
+      `;
+    }
+
+    const filteredComponents = this.searchQuery
+      ? components.filter(c => c.name.toLowerCase().includes(this.searchQuery.toLowerCase()))
+      : components;
+
+    return filteredComponents.map(comp => {
+      const isSelected = comp.name === this.selectedComponent;
+      return `
+        <li class="component-list-item ${isSelected ? "active" : ""}" data-component="${comp.name}">
+          <div class="component-item-main">
+            <svg class="component-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="1" y="1" width="5" height="5" rx="1"/>
+              <rect x="8" y="1" width="5" height="5" rx="1"/>
+              <rect x="1" y="8" width="5" height="5" rx="1"/>
+              <rect x="8" y="8" width="5" height="5" rx="1"/>
+            </svg>
+            <span class="component-name">${comp.name}</span>
+            ${comp.isKnownComponent ? '<span class="known-badge" title="Known component type">Known</span>' : ''}
+          </div>
+          <div class="component-item-meta">
+            <span class="table-count" title="${comp.tableCount} tables">${comp.tableCount} tables</span>
+            <span class="doc-count" title="${this.formatCount(comp.totalDocuments)} documents">${this.formatCount(comp.totalDocuments)}</span>
+          </div>
+        </li>
+      `;
+    }).join('');
+  }
+
+  private renderComponentsContent(components: ConvexComponent[], appTables: TableInfo[]): string {
+    if (components.length === 0) {
+      return this.renderNoComponentsState();
+    }
+
+    const selectedComp = this.selectedComponent
+      ? components.find(c => c.name === this.selectedComponent)
+      : null;
+
+    if (selectedComp) {
+      return this.renderSelectedComponentDetail(selectedComp);
+    }
+
+    return this.renderComponentsOverview(components, appTables);
+  }
+
+  private renderNoComponentsState(): string {
+    return `
+      <div class="empty-state" style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </div>
+        <h2>No Components Detected</h2>
+        <p>Components are detected by namespaced tables (e.g., <code>agent:threads</code>).</p>
+        <p style="margin-top: 16px; color: var(--text-secondary);">
+          Install a Convex component to see it here:
+        </p>
+        <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <a href="https://www.convex.dev/components/agent" target="_blank" class="component-link">@convex-dev/agent</a>
+          <a href="https://www.convex.dev/components/auth" target="_blank" class="component-link">@convex-dev/auth</a>
+          <a href="https://www.convex.dev/components" target="_blank" class="component-link">Browse all components</a>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderComponentsOverview(components: ConvexComponent[], appTables: TableInfo[]): string {
+    const totalComponentTables = components.reduce((sum, c) => sum + c.tableCount, 0);
+    const totalComponentDocs = components.reduce((sum, c) => sum + c.totalDocuments, 0);
+    const totalAppDocs = appTables.reduce((sum, t) => sum + t.documentCount, 0);
+
+    return `
+      <div class="components-overview">
+        <div class="overview-header">
+          <h2>Components Overview</h2>
+          <p>Your deployment has ${components.length} component${components.length !== 1 ? 's' : ''} installed.</p>
+        </div>
+
+        <div class="overview-stats">
+          <div class="stat-card">
+            <div class="stat-value">${components.length}</div>
+            <div class="stat-label">Components</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${totalComponentTables}</div>
+            <div class="stat-label">Component Tables</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${this.formatCount(totalComponentDocs)}</div>
+            <div class="stat-label">Component Docs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${appTables.length}</div>
+            <div class="stat-label">App Tables</div>
+          </div>
+        </div>
+
+        <div class="components-grid">
+          ${components.map(comp => this.renderComponentCard(comp)).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderComponentCard(comp: ConvexComponent): string {
+    return `
+      <div class="component-card" data-component="${comp.name}">
+        <div class="component-card-header">
+          <div class="component-card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+          </div>
+          <div class="component-card-title">
+            <h3>${comp.name}</h3>
+            ${comp.isKnownComponent && comp.knownComponentType ? `<span class="component-type">${comp.knownComponentType}</span>` : ''}
+          </div>
+        </div>
+        <div class="component-card-stats">
+          <div class="mini-stat">
+            <span class="mini-stat-value">${comp.tableCount}</span>
+            <span class="mini-stat-label">tables</span>
+          </div>
+          <div class="mini-stat">
+            <span class="mini-stat-value">${this.formatCount(comp.totalDocuments)}</span>
+            <span class="mini-stat-label">documents</span>
+          </div>
+        </div>
+        <div class="component-card-tables">
+          ${comp.tables.slice(0, 4).map(t => `<span class="mini-table-tag">${t.name}</span>`).join('')}
+          ${comp.tables.length > 4 ? `<span class="mini-table-tag more">+${comp.tables.length - 4}</span>` : ''}
+        </div>
+        <button class="component-card-view-btn" data-component="${comp.name}">View Details</button>
+      </div>
+    `;
+  }
+
+  private renderSelectedComponentDetail(comp: ConvexComponent): string {
+    return `
+      <div class="component-detail">
+        <div class="component-detail-header">
+          <button class="back-btn" id="backToOverview">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 4L6 8L10 12"/>
+            </svg>
+            Back to Overview
+          </button>
+          <div class="component-detail-title">
+            <h2>${comp.name}</h2>
+            ${comp.isKnownComponent && comp.knownComponentType ? `<span class="component-type-badge">${comp.knownComponentType}</span>` : ''}
+          </div>
+        </div>
+
+        <div class="component-detail-stats">
+          <div class="detail-stat">
+            <span class="detail-stat-value">${comp.tableCount}</span>
+            <span class="detail-stat-label">Tables</span>
+          </div>
+          <div class="detail-stat">
+            <span class="detail-stat-value">${this.formatCount(comp.totalDocuments)}</span>
+            <span class="detail-stat-label">Total Documents</span>
+          </div>
+        </div>
+
+        <div class="component-tables-section">
+          <h3>Tables</h3>
+          <div class="component-tables-list">
+            ${comp.tables.map(table => this.renderComponentTableCard(table, comp.name)).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderComponentTableCard(table: ComponentTable, componentName: string): string {
+    const displayFields = table.fields.slice(0, 6);
+    const systemFields = displayFields.filter(f => f.name.startsWith('_'));
+    const userFields = displayFields.filter(f => !f.name.startsWith('_'));
+
+    return `
+      <div class="component-table-card">
+        <div class="component-table-header">
+          <div class="component-table-name">
+            <svg class="table-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="1" y="1" width="14" height="14" rx="2"/>
+              <path d="M1 5H15M5 5V15"/>
+            </svg>
+            <span>${table.name}</span>
+            <span class="full-name" title="Full table name: ${table.fullName}">${table.fullName}</span>
+          </div>
+          <div class="component-table-meta">
+            <span class="doc-badge">${this.formatCount(table.documentCount)} docs</span>
+            <span class="field-badge">${table.fields.length} fields</span>
+          </div>
+        </div>
+        <div class="component-table-fields">
+          ${userFields.map(f => `
+            <div class="field-row">
+              <span class="field-name">${f.name}</span>
+              <span class="field-type">${f.type}</span>
+              ${f.optional ? '<span class="optional-badge">?</span>' : ''}
+            </div>
+          `).join('')}
+          ${systemFields.length > 0 ? `
+            <div class="system-fields-divider">System Fields</div>
+            ${systemFields.map(f => `
+              <div class="field-row system">
+                <span class="field-name">${f.name}</span>
+                <span class="field-type">${f.type}</span>
+              </div>
+            `).join('')}
+          ` : ''}
+          ${table.fields.length > 6 ? `<div class="more-fields">+${table.fields.length - 6} more fields</div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  private setupComponentsViewEventListeners(): void {
+    // Component list click handlers
+    document.querySelectorAll('.component-list-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const compName = (item as HTMLElement).dataset.component;
+        if (compName) {
+          this.selectedComponent = compName;
+          this.refreshComponentsView();
+        }
+      });
+    });
+
+    // Component card click handlers
+    document.querySelectorAll('.component-card, .component-card-view-btn').forEach(item => {
+      item.addEventListener('click', (e) => {
+        const target = e.currentTarget as HTMLElement;
+        const compName = target.dataset.component;
+        if (compName) {
+          this.selectedComponent = compName;
+          this.refreshComponentsView();
+        }
+      });
+    });
+
+    // Back button
+    document.getElementById('backToOverview')?.addEventListener('click', () => {
+      this.selectedComponent = null;
+      this.refreshComponentsView();
+    });
+
+    // Search input
+    document.getElementById('componentSearchInput')?.addEventListener('input', (e) => {
+      this.searchQuery = (e.target as HTMLInputElement).value;
+      const list = document.getElementById('componentList');
+      if (list) {
+        list.innerHTML = this.renderComponentList(this.config?.components || []);
+        this.setupComponentsViewEventListeners();
+      }
+    });
+  }
+
+  private refreshComponentsView(): void {
+    const content = document.getElementById('componentsViewContent');
+    if (content) {
+      content.innerHTML = this.renderComponentsContent(
+        this.config?.components || [],
+        this.config?.appTables || []
+      );
+      this.setupComponentsViewEventListeners();
+    }
+
+    // Update sidebar selection
+    document.querySelectorAll('.component-list-item').forEach(item => {
+      const compName = (item as HTMLElement).dataset.component;
+      item.classList.toggle('active', compName === this.selectedComponent);
+    });
   }
 
   private renderGraphView(): string {
@@ -2797,6 +3170,11 @@ class SchemaBrowserApp {
         this.searchQuery = (e.target as HTMLInputElement).value.toLowerCase();
         this.renderTableList();
       });
+    }
+
+    // Components view event listeners
+    if (this.viewMode === "components") {
+      this.setupComponentsViewEventListeners();
     }
   }
 

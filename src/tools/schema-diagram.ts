@@ -49,6 +49,15 @@ For file dependency maps, use codebase_subway_map instead.`,
         items: { type: "string" },
         description: "Specific tables to include (default: all tables)",
       },
+      groupByComponent: {
+        type: "boolean",
+        description: "Group tables by component namespace (default: false)",
+        default: false,
+      },
+      component: {
+        type: "string",
+        description: "Show only tables from a specific component",
+      },
     },
     required: [],
   },
@@ -74,10 +83,14 @@ export async function handleSchemaDiagram(
     theme = "github-dark",
     ascii = false,
     tables: filterTables,
+    groupByComponent = false,
+    component,
   } = args as {
     theme?: string;
     ascii?: boolean;
     tables?: string[];
+    groupByComponent?: boolean;
+    component?: string;
   };
 
   if (!client.isConnected()) {
@@ -101,7 +114,13 @@ To connect:
   try {
     // Get all tables
     const allTables = await client.listTables();
-    const tableNames = allTables.map((t) => t.name);
+    let tableNames = allTables.map((t) => t.name);
+
+    // Filter by component if specified
+    if (component) {
+      const prefix = component + ":";
+      tableNames = tableNames.filter(t => t.startsWith(prefix));
+    }
 
     // Filter tables if specified
     const tablesToInclude = filterTables
@@ -127,8 +146,11 @@ To connect:
     // Detect relationships from field names
     const relations = detectRelationships(tableSchemas, tableNames);
 
+    // Group tables by component if requested
+    const componentGroups = groupByComponent ? groupTablesByComponent(tableSchemas) : null;
+
     // Generate Mermaid ER diagram syntax
-    const mermaidCode = generateMermaidER(tableSchemas, relations);
+    const mermaidCode = generateMermaidER(tableSchemas, relations, componentGroups);
 
     // Render ASCII for terminal
     let asciiDiagram = "";
@@ -300,6 +322,25 @@ function detectRelationships(
 }
 
 /**
+ * Group tables by component namespace
+ */
+function groupTablesByComponent(
+  tables: Array<{ name: string; fields: Array<{ name: string; type: string }>; documentCount: number }>
+): Map<string, Array<{ name: string; fields: Array<{ name: string; type: string }>; documentCount: number }>> {
+  const groups = new Map<string, typeof tables>();
+
+  for (const table of tables) {
+    const colonIdx = table.name.indexOf(":");
+    const componentName = colonIdx > 0 ? table.name.substring(0, colonIdx) : "app";
+    const existing = groups.get(componentName) || [];
+    existing.push(table);
+    groups.set(componentName, existing);
+  }
+
+  return groups;
+}
+
+/**
  * Generate Mermaid ER diagram syntax
  */
 function generateMermaidER(
@@ -309,24 +350,49 @@ function generateMermaidER(
     documentCount: number;
   }>,
   relations: TableRelation[],
+  componentGroups?: Map<string, typeof tables> | null,
 ): string {
   const lines: string[] = [];
   lines.push("erDiagram");
 
-  // Add tables with their fields
-  for (const table of tables) {
-    lines.push(`    ${table.name} {`);
-    for (const field of table.fields) {
-      const fieldType = simplifyType(field.type);
-      const marker = field.optional ? "?" : "";
-      lines.push(`        ${fieldType} ${field.name}${marker}`);
+  // Sanitize table name for Mermaid (replace : with _)
+  const sanitizeName = (name: string) => name.replace(/:/g, "_");
+
+  if (componentGroups && componentGroups.size > 1) {
+    // Add tables grouped by component with comments
+    for (const [componentName, groupTables] of componentGroups) {
+      lines.push("");
+      lines.push(`    %% Component: ${componentName}`);
+      for (const table of groupTables) {
+        const safeName = sanitizeName(table.name);
+        lines.push(`    ${safeName} {`);
+        for (const field of table.fields) {
+          const fieldType = simplifyType(field.type);
+          const marker = field.optional ? "?" : "";
+          lines.push(`        ${fieldType} ${field.name}${marker}`);
+        }
+        lines.push("    }");
+      }
     }
-    lines.push("    }");
+  } else {
+    // Add tables without grouping
+    for (const table of tables) {
+      const safeName = sanitizeName(table.name);
+      lines.push(`    ${safeName} {`);
+      for (const field of table.fields) {
+        const fieldType = simplifyType(field.type);
+        const marker = field.optional ? "?" : "";
+        lines.push(`        ${fieldType} ${field.name}${marker}`);
+      }
+      lines.push("    }");
+    }
   }
 
-  // Add relationships
+  // Add relationships (with sanitized names)
   for (const rel of relations) {
-    lines.push(`    ${rel.to} ${rel.cardinality} ${rel.from} : "${rel.field}"`);
+    const fromSafe = sanitizeName(rel.from);
+    const toSafe = sanitizeName(rel.to);
+    lines.push(`    ${toSafe} ${rel.cardinality} ${fromSafe} : "${rel.field}"`);
   }
 
   return lines.join("\n");

@@ -55,43 +55,28 @@ This will:
 
 When run inside a Convex project folder, the wizard shows which deployment it detected so you know which project to select in the dashboard.
 
-### Method 2: Environment Variable
+### Method 2: Environment Variable (Current Session Only)
 
-> **Warning:** Setting `CONVEX_DEPLOY_KEY` in your shell profile applies to ALL
-> Convex projects. If you work with multiple Convex apps, use Method 1 (per-project
-> `.env.local`) instead. A global export will override every local config file and
-> cause all projects to connect to the same deployment.
+Set the variable for a single terminal session. The key is active until you close the terminal.
 
-Add to your shell profile:
-
-**macOS/Linux (zsh):**
+**macOS/Linux:**
 
 ```bash
-echo 'export CONVEX_DEPLOY_KEY="prod:your-deployment|your-key"' >> ~/.zshrc
-source ~/.zshrc
-```
-
-**macOS/Linux (bash):**
-
-```bash
-echo 'export CONVEX_DEPLOY_KEY="prod:your-deployment|your-key"' >> ~/.bashrc
-source ~/.bashrc
+export CONVEX_DEPLOY_KEY="prod:your-deployment|your-key"
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-[Environment]::SetEnvironmentVariable("CONVEX_DEPLOY_KEY", "prod:your-deployment|your-key", "User")
+$env:CONVEX_DEPLOY_KEY = "prod:your-deployment|your-key"
 ```
 
-To undo a global export:
+> **Do not add this to your shell profile** (`~/.zshrc`, `~/.bashrc`, `~/.zprofile`, or similar).
+> A global export overrides all per-project `.env.local` files and causes every project
+> to connect to the same deployment. Use Method 1 (`--setup`) for persistent config.
 
-```bash
-# Remove from current session
-unset CONVEX_DEPLOY_KEY
-
-# Then remove the export line from ~/.zshrc or ~/.bashrc
-```
+If you previously added `export CONVEX_DEPLOY_KEY=...` to a shell profile, see
+[Removing a global export](#removing-a-global-export) below to undo it.
 
 ### Method 3: MCP Client Config
 
@@ -172,6 +157,46 @@ rm ~/.convex-mcp-visual.json
 
 ```bash
 npx convex-mcp-visual --test
+```
+
+### Removing a Global Export
+
+If you previously added `export CONVEX_DEPLOY_KEY=...` to a shell profile, follow these steps to remove it. A global export overrides all per-project `.env.local` files.
+
+**Step 1: Clear the current session**
+
+```bash
+unset CONVEX_DEPLOY_KEY
+```
+
+**Step 2: Remove the line from your shell profile**
+
+Open the file in your editor and delete the `export CONVEX_DEPLOY_KEY=...` line.
+
+| OS | Shell | File to check |
+| --- | --- | --- |
+| macOS | zsh (default since Catalina) | `~/.zshrc` or `~/.zprofile` |
+| macOS | bash | `~/.bash_profile` or `~/.bashrc` |
+| Linux | bash | `~/.bashrc` or `~/.profile` |
+| Linux | zsh | `~/.zshrc` |
+| Windows | PowerShell | Run `[Environment]::SetEnvironmentVariable("CONVEX_DEPLOY_KEY", $null, "User")` |
+| Windows | System env | Settings > System > Advanced > Environment Variables, remove `CONVEX_DEPLOY_KEY` |
+
+**Step 3: Restart your terminal**
+
+Open a new terminal window and verify the variable is gone:
+
+```bash
+echo $CONVEX_DEPLOY_KEY
+```
+
+If it still prints a value, you have the export in more than one file. Check all files listed in the table above.
+
+**Step 4: Re-run setup**
+
+```bash
+cd my-convex-app/
+npx convex-mcp-visual --setup
 ```
 
 ### Multiple Deployments

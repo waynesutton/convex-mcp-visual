@@ -7,6 +7,7 @@ Schema visualizer and dashboard tools for exploring Convex databases. Opens inte
 **Features:**
 
 - Schema browser with graph view, list view, and document browser
+- Component browser for viewing installed Convex components
 - Real-time dashboard with metrics and charts
 - Mermaid ER diagrams with relationship detection
 - Codebase subway map for files and imports
@@ -45,6 +46,7 @@ convex-mcp-visual --setup
 
 # Use it
 convex-mcp-visual schema      # Browse schema
+convex-mcp-visual components  # Browse installed components
 convex-mcp-visual dashboard   # View metrics
 convex-mcp-visual diagram     # Generate ER diagram
 convex-mcp-visual subway      # Codebase subway map
@@ -97,17 +99,12 @@ cd my-convex-app/
 npx convex-mcp-visual --setup
 ```
 
-The setup wizard detects your project from `.env.local` and shows which deployment to look for in the dashboard. Just copy and paste the key.
+The setup wizard detects your project from `.env.local` and saves the deploy key per-project. Just copy and paste the key from the Convex dashboard.
 
-Or set the environment variable for the current session:
-
-```bash
-export CONVEX_DEPLOY_KEY="prod:your-deployment|your-key"
-```
-
-> **Note:** If you work with multiple Convex apps, use per-project `.env.local` files
-> instead of a global export. A global `CONVEX_DEPLOY_KEY` overrides all local configs
-> and connects every project to the same deployment. See [Troubleshooting](#troubleshooting).
+> **Do not add `export CONVEX_DEPLOY_KEY=...` to your shell profile** (`~/.zshrc`,
+> `~/.bashrc`, etc.). A global export overrides all per-project `.env.local` files and
+> connects every project to the same deployment. If you already did this, see
+> [Troubleshooting](#troubleshooting) for removal steps.
 
 Get your deploy key from [dashboard.convex.dev](https://dashboard.convex.dev) under Settings > Deploy Keys.
 
@@ -148,6 +145,9 @@ npx convex-mcp-visual --test
 | "What tables do I have?"              | `schema_browser` (graph view)     |
 | "Browse my database"                  | `schema_browser` (graph view)     |
 | "Show schema for users table"         | `schema_browser` with table param |
+| "Show installed components"           | `component_browser`               |
+| "What components are installed?"      | `component_browser`               |
+| "Show agent component"                | `component_browser` with filter   |
 | "Create a dashboard for my data"      | `dashboard_view`                  |
 | "Show me metrics for my app"          | `dashboard_view`                  |
 | "Generate a diagram of my schema"     | `schema_diagram` (Mermaid ER)     |
@@ -169,6 +169,14 @@ All tools open an interactive browser UI and return output to the terminal. The 
 - ASCII/Unicode output for terminal
 - SVG diagram in browser with theme options
 - Exportable Mermaid code
+- Component grouping support
+
+**Component Browser Features:**
+
+- Lists all installed Convex components
+- Detects known component types (agent, auth, ratelimiter, etc.)
+- Shows component table schemas and document counts
+- Components tab integrated in Schema Browser UI
 
 ## Documentation
 
@@ -387,7 +395,18 @@ unset CONVEX_DEPLOY_KEY
 echo $CONVEX_DEPLOY_KEY
 ```
 
-If the variable reappears in new terminals, remove the `export CONVEX_DEPLOY_KEY` line from your shell profile (`~/.zshrc`, `~/.bashrc`, or `~/.zprofile`).
+If the variable reappears in new terminals, it was added to a shell profile. Open the file in your editor and delete the `export CONVEX_DEPLOY_KEY=...` line:
+
+| OS | File to check |
+| --- | --- |
+| macOS (zsh) | `~/.zshrc` or `~/.zprofile` |
+| macOS (bash) | `~/.bash_profile` or `~/.bashrc` |
+| Linux (bash) | `~/.bashrc` or `~/.profile` |
+| Linux (zsh) | `~/.zshrc` |
+| Windows (PowerShell) | Run `[Environment]::SetEnvironmentVariable("CONVEX_DEPLOY_KEY", $null, "User")` |
+| Windows (System) | Settings > System > Advanced > Environment Variables |
+
+After removing the line, open a new terminal to confirm it is gone.
 
 **3. Remove the legacy global config file:**
 

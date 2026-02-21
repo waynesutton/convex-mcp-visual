@@ -7,14 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- Setup docs now correctly state `--setup` saves to `.env.local` (not `~/.convex-mcp-visual.json`)
-- Added warning to Method 2 (global export) in setup docs about multi-project conflicts
-- Added undo instructions for global `CONVEX_DEPLOY_KEY` export
+## [1.5.0] - 2025-02-21
 
 ### Added
 
+- Component Browser tool (`component_browser`) for viewing installed Convex components
+- Components tab in Schema Browser UI with overview and detail views
+- CLI command: `convex-mcp-visual components` with `--component`, `--no-tables`, `--no-fields` flags
+- ConvexClient methods: `listComponents()`, `getComponentSchema()`, `getTablesGroupedByComponent()`
+- Detection of known component types: agent, auth, ratelimiter, migrations, crons, aggregate, workflow, shardedCounter
+- Schema Diagram support for component filtering with `--component` and `--groupByComponent` options
+- Component card grid and detail views in Schema Browser UI
+- CSS styles for component browser views
+
+### Changed
+
+- Schema Browser now has three view modes: List, Graph, and Components
+- Schema Diagram sanitizes component table names (replaces `:` with `_`) for Mermaid compatibility
+
+## [1.4.8] - 2025-02-21
+
+### Changed
+
+- Setup docs now correctly state `--setup` saves to `.env.local` (not `~/.convex-mcp-visual.json`)
+- Removed `echo >> ~/.zshrc` instructions from setup docs to prevent accidental global exports
+- Method 2 (env var) in setup docs now shows session-only usage, not shell profile modification
+- README deploy key section no longer shows `export` as a primary alternative
+- `--setup` wizard now shows platform-specific shell profile paths when a global env var is detected
+- `--setup` wizard warns that saved `.env.local` will be ignored until the global env var is removed
+- `.env.local` parser now skips commented lines (lines starting with `#`)
+
+### Added
+
+- OS-specific removal instructions (macOS, Linux, Windows) in README troubleshooting
+- OS-specific removal instructions in docs/troubleshooting.md with table format
+- "Removing a global export" section in docs/setup.md with per-OS file table
 - Troubleshooting section in README for stuck deploy keys and wrong deployments
 - "Wrong deployment or stuck deploy key" section in docs/troubleshooting.md with step-by-step cleanup
 - "Multiple Convex projects" section in docs/troubleshooting.md with config priority table

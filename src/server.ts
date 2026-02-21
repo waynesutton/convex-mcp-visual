@@ -39,6 +39,10 @@ import {
   handleWriteConflictReport,
 } from "./tools/write-conflict-report.js";
 import { kanbanBoardTool, handleKanbanBoard } from "./tools/kanban-board.js";
+import {
+  componentBrowserTool,
+  handleComponentBrowser,
+} from "./tools/component-browser.js";
 import { getSchemaResourceContent } from "./resources/schema-browser.js";
 import { getDashboardResourceContent } from "./resources/dashboard.js";
 import { getKanbanResourceContent } from "./resources/kanban-board.js";
@@ -85,6 +89,7 @@ const RESOURCE_URIS = {
   schemaDrift: "ui://convex-visual/schema-drift.html",
   writeConflicts: "ui://convex-visual/write-conflicts.html",
   kanbanBoard: "ui://convex-visual/kanban-board.html",
+  componentBrowser: "ui://convex-visual/component-browser.html",
 };
 
 export interface ConvexMcpServer {
@@ -135,6 +140,7 @@ export async function createServer(): Promise<ConvexMcpServer> {
         withMcpAppsMetadata(schemaDriftTool, RESOURCE_URIS.schemaDrift),
         withMcpAppsMetadata(writeConflictReportTool, RESOURCE_URIS.writeConflicts),
         withMcpAppsMetadata(kanbanBoardTool, RESOURCE_URIS.kanbanBoard),
+        withMcpAppsMetadata(componentBrowserTool, RESOURCE_URIS.componentBrowser),
       ],
     };
   });
@@ -168,6 +174,9 @@ export async function createServer(): Promise<ConvexMcpServer> {
         break;
       case "kanban_board":
         result = await handleKanbanBoard(convexClient, args);
+        break;
+      case "component_browser":
+        result = await handleComponentBrowser(convexClient, args);
         break;
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -235,6 +244,12 @@ export async function createServer(): Promise<ConvexMcpServer> {
           uri: RESOURCE_URIS.kanbanBoard,
           name: "Kanban Board",
           description: "Kanban view of scheduled functions and agents",
+          mimeType: MCP_APPS_MIME_TYPE,
+        },
+        {
+          uri: RESOURCE_URIS.componentBrowser,
+          name: "Component Browser",
+          description: "Browse installed Convex components and their schemas",
           mimeType: MCP_APPS_MIME_TYPE,
         },
       ],

@@ -63,6 +63,64 @@ convex-mcp-visual schema --list   # List view (table-based)
 
 ---
 
+## component_browser
+
+Browse installed Convex components and their schemas. Components are detected by namespaced tables (e.g., `agent:threads`).
+
+### Usage
+
+In Claude, ask:
+
+- "Show installed components"
+- "What components are installed?"
+- "Show the agent component"
+
+### CLI Flags
+
+```bash
+convex-mcp-visual components                    # List all components
+convex-mcp-visual components --component agent  # Focus on specific component
+convex-mcp-visual components --no-tables        # Hide table details
+convex-mcp-visual components --no-fields        # Hide field schemas
+```
+
+### Parameters
+
+| Parameter    | Type    | Default | Description                             |
+| ------------ | ------- | ------- | --------------------------------------- |
+| `component`  | string  | none    | Filter to a specific component by name  |
+| `showTables` | boolean | true    | Include table details in output         |
+| `showFields` | boolean | true    | Include field schemas in output         |
+
+### Known Component Types
+
+The tool automatically detects these Convex components:
+
+- `@convex-dev/agent` - AI agent threads and messages
+- `@convex-dev/auth` - Authentication sessions and tokens
+- `@convex-dev/ratelimiter` - Rate limiting state
+- `@convex-dev/migrations` - Schema migration tracking
+- `@convex-dev/crons` - Cron job scheduling
+- `@convex-dev/aggregate` - Aggregation state
+- `@convex-dev/workflow` - Workflow execution
+- `@convex-dev/shardedCounter` - Distributed counters
+
+### Views
+
+**Overview** - Summary of all installed components with stats
+
+- Component cards showing table count and document count
+- App tables (non-component) summary
+- Quick navigation to component details
+
+**Component Detail** - Detailed view of a specific component
+
+- Table schemas with field types
+- Document counts per table
+- Index information
+
+---
+
 ## dashboard_view
 
 Real-time dashboard with metrics and charts.
@@ -138,11 +196,21 @@ In Claude, ask:
 
 ### Parameters
 
-| Parameter | Type    | Default       | Description                              |
-| --------- | ------- | ------------- | ---------------------------------------- |
-| `theme`   | string  | "github-dark" | Color theme for SVG output               |
-| `ascii`   | boolean | false         | Use ASCII instead of Unicode box drawing |
-| `tables`  | array   | all           | Specific tables to include               |
+| Parameter          | Type    | Default       | Description                              |
+| ------------------ | ------- | ------------- | ---------------------------------------- |
+| `theme`            | string  | "github-dark" | Color theme for SVG output               |
+| `ascii`            | boolean | false         | Use ASCII instead of Unicode box drawing |
+| `tables`           | array   | all           | Specific tables to include               |
+| `groupByComponent` | boolean | false         | Group tables by component namespace      |
+| `component`        | string  | none          | Show only tables from a specific component |
+
+### CLI Flags
+
+```bash
+convex-mcp-visual diagram                          # All tables
+convex-mcp-visual diagram --groupByComponent       # Group by component
+convex-mcp-visual diagram --component agent        # Only agent tables
+```
 
 ### Available Themes
 

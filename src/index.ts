@@ -36,7 +36,8 @@ type Subcommand =
   | "table-heatmap"
   | "schema-drift"
   | "write-conflicts"
-  | "kanban";
+  | "kanban"
+  | "components";
 
 async function main() {
   // Check for subcommands first (schema, dashboard, diagram, subway, heatmap)
@@ -52,7 +53,8 @@ async function main() {
     subcommand === "table-heatmap" ||
     subcommand === "schema-drift" ||
     subcommand === "write-conflicts" ||
-    subcommand === "kanban"
+    subcommand === "kanban" ||
+    subcommand === "components"
   ) {
     await handleDirectCLI(subcommand, args.slice(1));
     return;
@@ -174,9 +176,10 @@ COMMANDS (Direct CLI):
   diagram             Generate ER diagram (opens browser + terminal output)
   subway              Generate codebase subway map (opens browser + terminal output)
   table-heatmap       Show writes per minute heatmap (opens browser + terminal output)
-  schema-drift         Compare declared vs inferred schemas (opens browser + terminal output)
+  schema-drift        Compare declared vs inferred schemas (opens browser + terminal output)
   write-conflicts     Summarize write conflicts from logs (opens browser + terminal output)
   kanban              Kanban board view of scheduled jobs and AI agents
+  components          Browse installed Convex components and their schemas
 
 MCP CLIENT INSTALL (adds MCP config automatically):
   --install           Install to all detected MCP clients
@@ -230,6 +233,8 @@ DIRECT CLI EXAMPLES:
   convex-mcp-visual kanban                    # Auto-detect jobs and agents
   convex-mcp-visual kanban --jobs             # Show scheduled functions/crons only
   convex-mcp-visual kanban --agents           # Show AI agent threads only
+  convex-mcp-visual components                # List installed components
+  convex-mcp-visual components --component agent  # Focus on specific component
 
 MCP SERVER EXAMPLES:
   convex-mcp-visual --stdio                   # For Claude Code/Desktop/Cursor
@@ -295,6 +300,12 @@ async function handleDirectCLI(
       options.jobs = true;
     } else if (arg === "--agents") {
       options.agents = true;
+    } else if (arg === "--component" && args[i + 1]) {
+      options.component = args[++i];
+    } else if (arg === "--no-tables") {
+      options.noTables = true;
+    } else if (arg === "--no-fields") {
+      options.noFields = true;
     } else if (arg === "--deployment" && args[i + 1]) {
       const deploymentName = args[++i];
       process.env.CONVEX_URL = `https://${deploymentName}.convex.cloud`;
@@ -464,6 +475,23 @@ async function handleDirectCLI(
         mode,
         theme: options.theme,
         noBrowser: options.noBrowser,
+      });
+      if (options.json) {
+        console.log(
+          JSON.stringify({ output: result.content[0].text }, null, 2),
+        );
+      } else {
+        console.log(result.content[0].text);
+      }
+      break;
+    }
+
+    case "components": {
+      const { handleComponentBrowser } = await import("./tools/component-browser.js");
+      const result = await handleComponentBrowser(client!, {
+        component: options.component,
+        showTables: !options.noTables,
+        showFields: !options.noFields,
       });
       if (options.json) {
         console.log(
@@ -665,6 +693,36 @@ EXAMPLES:
   convex-mcp-visual kanban --theme github-light
 `);
       break;
+
+    case "components":
+      console.log(`
+convex-mcp-visual components
+
+Browse installed Convex components and their schemas.
+Components are detected by namespaced tables (e.g., agent:threads).
+
+OPTIONS:
+  --component <name>    Filter to a specific component by name
+  --no-tables           Hide table details
+  --no-fields           Hide field schemas
+  --json                Output JSON only (no browser)
+  --no-browser          Terminal output only
+  --deployment <name>   Connect to specific deployment
+  -h, --help            Show this help
+
+NOTES:
+  Components use the "componentName:tableName" naming convention.
+  For example, @convex-dev/agent creates tables like "agent:threads".
+  Known component types are automatically identified.
+  See: https://www.convex.dev/components
+
+EXAMPLES:
+  convex-mcp-visual components                    # List all components
+  convex-mcp-visual components --component agent  # Focus on agent component
+  convex-mcp-visual components --no-fields        # Hide field details
+  convex-mcp-visual components --json
+`);
+      break;
   }
 }
 
@@ -723,7 +781,9 @@ function detectProjectDeployment(): { name: string; url: string } | null {
   if (existsSync(envLocalPath)) {
     try {
       const content = readFileSync(envLocalPath, "utf-8");
-      const match = content.match(/CONVEX_URL=["']?([^"'\s]+)["']?/);
+      const match = content.match(
+        /^(?!#).*?CONVEX_URL=["']?([^"'\s]+)["']?/m,
+      );
       if (match) {
         const url = match[1];
         // Extract deployment name from URL: https://deployment-name.convex.cloud
@@ -779,11 +839,35 @@ async function runSetupWizard() {
     (s) => s.source === "CONVEX_DEPLOY_KEY env",
   );
   if (envKeySource) {
-    console.log("[WARNING] CONVEX_DEPLOY_KEY is set in your environment.");
-    console.log(`  Deployment: ${envKeySource.deployment || "unknown"}`);
-    console.log("\n  This will override the setup wizard config.");
-    console.log("  To use setup wizard instead, run:");
-    console.log("    unset CONVEX_DEPLOY_KEY\n");
+    console.log(
+      "[WARNING] CONVEX_DEPLOY_KEY is set in your environment and will",
+    );
+    console.log(
+      "  override anything saved by this setup wizard.",
+    );
+    console.log(`  Current deployment: ${envKeySource.deployment || "unknown"}`);
+    console.log("");
+    console.log("  To fix this:");
+    console.log("  1. Run: unset CONVEX_DEPLOY_KEY");
+    console.log(
+      "  2. If it comes back in new terminals, remove the export line from",
+    );
+    // Show the right shell profile based on platform
+    if (process.platform === "win32") {
+      console.log(
+        '     your PowerShell profile or run: [Environment]::SetEnvironmentVariable("CONVEX_DEPLOY_KEY", $null, "User")',
+      );
+    } else if (process.platform === "darwin") {
+      console.log("     ~/.zshrc or ~/.zprofile (macOS default shell is zsh)");
+    } else {
+      console.log("     ~/.bashrc or ~/.profile (or ~/.zshrc if using zsh)");
+    }
+    console.log("  3. Open a new terminal and run this setup again.");
+    console.log("");
+    console.log(
+      "  Continuing setup, but the saved .env.local will be ignored",
+    );
+    console.log("  until the environment variable is removed.\n");
   }
 
   // Check existing .env.local in current directory
@@ -791,7 +875,9 @@ async function runSetupWizard() {
   if (existsSync(currentEnvLocal)) {
     try {
       const content = readFileSync(currentEnvLocal, "utf-8");
-      const match = content.match(/CONVEX_DEPLOY_KEY=["']?([^"'\n]+)["']?/);
+      const match = content.match(
+        /^(?!#).*?CONVEX_DEPLOY_KEY=["']?([^"'\n]+)["']?/m,
+      );
       if (match) {
         console.log(`Found existing deploy key in ${currentEnvLocal}`);
         console.log("  (will be updated)\n");
