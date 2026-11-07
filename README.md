@@ -1,5 +1,9 @@
 # Convex MCP Visual
 
+> [!WARNING]
+> **This project is archived and no longer maintained.**
+> Use the official schema visualizer built into the Convex dashboard instead: https://docs.convex.dev/dashboard/deployments/schema
+
 [![npm version](https://img.shields.io/npm/v/convex-mcp-visual.svg)](https://www.npmjs.com/package/convex-mcp-visual)
 
 Schema visualizer and dashboard tools for exploring Convex databases. Opens interactive browser UIs alongside terminal output.
